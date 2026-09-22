@@ -1,0 +1,34 @@
+from pydantic import BaseModel, Field
+from typing import Dict, Any, Optional
+from datetime import date, datetime
+
+class FarmBase(BaseModel):
+    farm_name: str = Field(..., example="Green Valley Plot A")
+    crop_type: str = Field(..., example="Wheat")
+    sowing_date: date = Field(..., example="2026-06-15")
+    latitude: float = Field(..., example=18.5204)
+    longitude: float = Field(..., example=73.8567)
+    boundary_geojson: Dict[str, Any] = Field(..., description="GeoJSON Polygon feature")
+
+class FarmCreate(FarmBase):
+    pass
+
+class FarmUpdate(BaseModel):
+    farm_name: Optional[str] = None
+    crop_type: Optional[str] = None
+    sowing_date: Optional[date] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    boundary_geojson: Optional[Dict[str, Any]] = None
+
+class FarmResponse(FarmBase):
+    id: str
+    user_id: str
+    area_hectares: Optional[float] = None
+    area_acres: Optional[float] = None
+    status: str
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
