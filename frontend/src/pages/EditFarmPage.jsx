@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import FarmMap from '../components/FarmMap';
 import { farmService, CROP_OPTIONS } from '../services/farmService';
-import { ArrowLeft, Save, AlertCircle, Sprout, Layers, Calendar, FileText } from 'lucide-react';
+import { ArrowLeft, Save, AlertCircle, Sprout, Layers, Calendar, FileText, CheckCircle2 } from 'lucide-react';
 
 export default function EditFarmPage() {
   const { id } = useParams();
@@ -49,6 +49,9 @@ export default function EditFarmPage() {
     setBoundaryGeoJSON(geojson);
     if (error) setError('');
   };
+
+  const calculatedAreaHa = boundaryGeoJSON?.properties?.areaHectares || 0;
+  const calculatedAreaAcres = boundaryGeoJSON?.properties?.areaAcres || 0;
 
   const handleUpdateFarm = async (e) => {
     e.preventDefault();
@@ -115,7 +118,7 @@ export default function EditFarmPage() {
 
       {error && (
         <div style={styles.errorBanner}>
-          <AlertCircle size={20} color="var(--color-danger)" />
+          <AlertCircle size={20} color="var(--color-error)" />
           <span>{error}</span>
         </div>
       )}
@@ -126,7 +129,7 @@ export default function EditFarmPage() {
           <div className="card" style={styles.cardSection}>
             <div style={styles.cardSectionHeader}>
               <Sprout size={20} color="var(--color-primary)" />
-              <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Farm Metadata</h3>
+              <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Farm Information</h3>
             </div>
 
             <div style={styles.formGroup}>
@@ -178,6 +181,19 @@ export default function EditFarmPage() {
                 />
               </div>
             </div>
+
+            {/* Calculated Area Display */}
+            <div style={styles.areaInfoBox}>
+              <span style={styles.areaInfoLabel}>Calculated Field Area:</span>
+              <div style={styles.areaValRow}>
+                <span style={styles.areaValPrimary}>
+                  {calculatedAreaHa > 0 ? `${calculatedAreaHa} Ha` : '—'}
+                </span>
+                <span style={styles.areaValSecondary}>
+                  {calculatedAreaAcres > 0 ? `(${calculatedAreaAcres} Acres)` : ''}
+                </span>
+              </div>
+            </div>
           </div>
 
           <div className="card" style={styles.actionCard}>
@@ -206,16 +222,17 @@ export default function EditFarmPage() {
               </div>
             </div>
 
-            {/* Map Editor with restored initial boundary */}
-            {latitude && longitude && (
-              <FarmMap
-                initialLat={latitude}
-                initialLng={longitude}
-                initialBoundary={boundaryGeoJSON}
-                onLocationChange={handleLocationChange}
-                onBoundaryChange={handleBoundaryChange}
-              />
-            )}
+            <div style={{ height: '380px', width: '100%', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+              {latitude && longitude && (
+                <FarmMap
+                  initialLat={latitude}
+                  initialLng={longitude}
+                  initialBoundary={boundaryGeoJSON}
+                  onLocationChange={handleLocationChange}
+                  onBoundaryChange={handleBoundaryChange}
+                />
+              )}
+            </div>
           </div>
         </div>
       </form>
@@ -251,8 +268,8 @@ const styles = {
     textDecoration: 'none'
   },
   title: {
-    fontSize: '1.35rem',
-    fontWeight: '700',
+    fontSize: '1.4rem',
+    fontWeight: '800',
     color: 'var(--color-text-main)',
     margin: 0
   },
@@ -265,17 +282,17 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '0.625rem',
-    backgroundColor: 'var(--color-danger-light)',
+    backgroundColor: 'var(--color-error-light)',
     border: '1px solid #fecaca',
-    color: 'var(--color-danger)',
+    color: 'var(--color-error)',
     padding: '0.875rem 1.25rem',
-    borderRadius: 'var(--radius-lg)',
+    borderRadius: 'var(--radius-md)',
     fontSize: '0.875rem',
-    fontWeight: '500'
+    fontWeight: '600'
   },
   formLayout: {
     display: 'grid',
-    gridTemplateColumns: '1fr 1.6fr',
+    gridTemplateColumns: '1fr 1.5fr',
     gap: '1.5rem',
     alignItems: 'start'
   },
@@ -315,11 +332,40 @@ const styles = {
     transform: 'translateY(-50%)',
     pointerEvents: 'none'
   },
+  areaInfoBox: {
+    backgroundColor: '#f8fafc',
+    padding: '0.875rem',
+    borderRadius: 'var(--radius-md)',
+    border: '1px solid var(--color-border)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem'
+  },
+  areaInfoLabel: {
+    fontSize: '0.75rem',
+    fontWeight: '700',
+    color: 'var(--color-text-secondary)',
+    textTransform: 'uppercase'
+  },
+  areaValRow: {
+    display: 'flex',
+    alignItems: 'baseline',
+    gap: '0.5rem'
+  },
+  areaValPrimary: {
+    fontSize: '1.2rem',
+    fontWeight: '800',
+    color: 'var(--color-primary)'
+  },
+  areaValSecondary: {
+    fontSize: '0.775rem',
+    color: '#64748b'
+  },
   actionCard: {
     display: 'flex',
     flexDirection: 'column',
     gap: '0.75rem',
-    backgroundColor: '#f9fafb'
+    backgroundColor: '#fafdfa'
   },
   mapCard: {
     display: 'flex',

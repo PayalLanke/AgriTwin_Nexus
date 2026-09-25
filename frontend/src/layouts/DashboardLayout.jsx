@@ -6,20 +6,27 @@ import Topbar from '../components/Topbar';
 export default function DashboardLayout() {
   const location = useLocation();
 
-  // Derive dynamic page title from path
   const getPageTitle = (path) => {
     if (path.startsWith('/farms/add')) return 'Register New Farm';
     if (path.startsWith('/farms/edit')) return 'Edit Farm Boundary';
-    if (path.startsWith('/farms/view')) return 'Farm Digital Twin Details';
-    if (path.startsWith('/farms')) return 'My Registered Farms';
-    return 'Dashboard Overview';
+    if (path.startsWith('/farms/view')) return 'Farm Details';
+    if (path.startsWith('/farms')) return 'My Farms';
+    if (path.startsWith('/digital-twin')) return 'Digital Twin';
+    if (path.startsWith('/satellite')) return 'Satellite Data';
+    if (path.startsWith('/weather')) return 'Weather';
+    if (path.startsWith('/pest-risk')) return 'Risk Analysis';
+    if (path.startsWith('/yield')) return 'Yield Estimation';
+    if (path.startsWith('/recommendations')) return 'Recommendations';
+    if (path.startsWith('/reports')) return 'Reports';
+    if (path.startsWith('/settings')) return 'Settings';
+    return 'Dashboard';
   };
 
   return (
-    <div style={styles.container}>
-      <Sidebar />
-      <div style={styles.mainWrapper}>
-        <Topbar pageTitle={getPageTitle(location.pathname)} />
+    <div style={styles.appContainer}>
+      <Topbar pageTitle={getPageTitle(location.pathname)} />
+      <div style={styles.bodyLayout}>
+        <Sidebar />
         <main style={styles.contentArea}>
           <Outlet />
         </main>
@@ -29,20 +36,21 @@ export default function DashboardLayout() {
 }
 
 const styles = {
-  container: {
+  appContainer: {
     display: 'flex',
+    flexDirection: 'column',
     minHeight: '100vh',
     backgroundColor: 'var(--color-bg)'
   },
-  mainWrapper: {
-    flex: 1,
+  bodyLayout: {
     display: 'flex',
-    flexDirection: 'column',
-    minWidth: 0
+    flex: 1,
+    minHeight: 'calc(100vh - 68px)'
   },
   contentArea: {
     flex: 1,
-    padding: '2rem',
-    overflowY: 'auto'
+    padding: '1.75rem 2rem',
+    overflowY: 'auto',
+    minWidth: 0
   }
 };

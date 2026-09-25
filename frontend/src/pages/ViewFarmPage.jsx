@@ -2,7 +2,22 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { farmService } from '../services/farmService';
 import FarmMap from '../components/FarmMap';
-import { ArrowLeft, Edit2, Sprout, Calendar, Layers, MapPin, Code2, Cpu, ShieldCheck } from 'lucide-react';
+import {
+  ArrowLeft,
+  Edit2,
+  Sprout,
+  Calendar,
+  Layers,
+  MapPin,
+  Code2,
+  Cpu,
+  Satellite,
+  Activity,
+  ShieldAlert,
+  TrendingUp,
+  Sparkles,
+  CloudSun
+} from 'lucide-react';
 
 export default function ViewFarmPage() {
   const { id } = useParams();
@@ -38,7 +53,7 @@ export default function ViewFarmPage() {
   if (error || !farm) {
     return (
       <div className="card" style={styles.errorCard}>
-        <h3 style={{ color: 'var(--color-danger)' }}>Farm Record Not Found</h3>
+        <h3 style={{ color: 'var(--color-error)' }}>Farm Record Not Found</h3>
         <p>{error || 'The requested farm record does not exist.'}</p>
         <Link to="/farms" className="btn btn-secondary">
           <ArrowLeft size={16} />
@@ -59,7 +74,7 @@ export default function ViewFarmPage() {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <h1 style={styles.title}>{farm.farmName}</h1>
-              <span className="badge badge-primary">{farm.status}</span>
+              <span className="badge badge-primary">{farm.status || 'Active'}</span>
             </div>
             <p style={styles.subtitle}>Digital Twin Boundary & Metadata Overview</p>
           </div>
@@ -71,9 +86,9 @@ export default function ViewFarmPage() {
         </Link>
       </div>
 
-      {/* Grid Layout */}
+      {/* Primary Grid Layout */}
       <div style={styles.contentGrid}>
-        {/* Left Column: Farm Specs & GeoJSON Raw Viewer */}
+        {/* Left Column: Farm Specs & GeoJSON Payload Inspector */}
         <div style={styles.leftCol}>
           <div className="card" style={styles.specCard}>
             <div style={styles.cardHeader}>
@@ -100,7 +115,7 @@ export default function ViewFarmPage() {
 
               <div style={styles.specItem}>
                 <div style={styles.specLabelGroup}>
-                  <Layers size={16} color="var(--color-accent)" />
+                  <Layers size={16} color="var(--color-warning)" />
                   <span style={styles.specLabel}>Calculated Area</span>
                 </div>
                 <span style={styles.specVal}>
@@ -143,22 +158,9 @@ export default function ViewFarmPage() {
               </pre>
             )}
           </div>
-
-          {/* Future Integration Readiness Badge */}
-          <div style={styles.integrationCard}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '0.5rem' }}>
-              <ShieldCheck size={18} color="var(--color-primary)" />
-              <span style={{ fontWeight: '700', fontSize: '0.875rem', color: 'var(--color-primary)' }}>
-                Module 7 Satellite Pipeline Ready
-              </span>
-            </div>
-            <p style={{ fontSize: '0.775rem', color: 'var(--color-text-secondary)', margin: 0, lineHeight: '1.4' }}>
-              This farm's GeoJSON polygon is registered and ready to receive Sentinel-2 multispectral imagery and compute NDVI/NDRE/SAVI indices in Module 7.
-            </p>
-          </div>
         </div>
 
-        {/* Right Column: Leaflet Read-Only Map displaying Polygon */}
+        {/* Right Column: Read-Only Leaflet Map displaying Polygon */}
         <div style={styles.rightCol}>
           <div className="card" style={styles.mapCard}>
             <div style={styles.cardHeader}>
@@ -166,13 +168,125 @@ export default function ViewFarmPage() {
               <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Spatial Boundary Map</h3>
             </div>
 
-            {/* Read-Only Leaflet Map with GeoJSON Boundary */}
-            <FarmMap
-              initialLat={farm.latitude}
-              initialLng={farm.longitude}
-              initialBoundary={farm.boundary}
-              readOnly={true}
-            />
+            <div style={{ height: '360px', width: '100%', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+              <FarmMap
+                initialLat={farm.latitude}
+                initialLng={farm.longitude}
+                initialBoundary={farm.boundary}
+                readOnly={true}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Farm Digital Twin Foundation Modules Section */}
+      <div style={styles.digitalTwinSection}>
+        <div style={styles.dtSectionHeader}>
+          <div>
+            <h2 style={{ fontSize: '1.2rem', margin: 0 }}>Farm Digital Twin Modules</h2>
+            <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', margin: '2px 0 0 0' }}>
+              Status of analytical modules for field boundary: <b>{farm.farmName}</b>
+            </p>
+          </div>
+          <span className="badge badge-coming-soon">Roadmap View</span>
+        </div>
+
+        <div style={styles.moduleCardsGrid}>
+          {/* Card 1: Satellite Monitoring */}
+          <div className="card" style={styles.moduleCard}>
+            <div style={styles.moduleCardHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Satellite size={18} color="var(--color-teal)" />
+                <h4 style={{ margin: 0, fontSize: '0.95rem' }}>Satellite Monitoring</h4>
+              </div>
+              <span className="badge badge-coming-soon">Coming Soon</span>
+            </div>
+            <div style={styles.emptyStateContainer}>
+              <p style={styles.emptyStateText}>
+                Satellite analysis will appear after satellite data integration.
+              </p>
+            </div>
+          </div>
+
+          {/* Card 2: Crop Health */}
+          <div className="card" style={styles.moduleCard}>
+            <div style={styles.moduleCardHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Activity size={18} color="var(--color-primary)" />
+                <h4 style={{ margin: 0, fontSize: '0.95rem' }}>Crop Health</h4>
+              </div>
+              <span className="badge badge-coming-soon">Coming Soon</span>
+            </div>
+            <div style={styles.emptyStateContainer}>
+              <p style={styles.emptyStateText}>
+                Crop health analysis will appear after satellite processing.
+              </p>
+            </div>
+          </div>
+
+          {/* Card 3: Weather Insights */}
+          <div className="card" style={styles.moduleCard}>
+            <div style={styles.moduleCardHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <CloudSun size={18} color="var(--color-warning)" />
+                <h4 style={{ margin: 0, fontSize: '0.95rem' }}>Weather Telemetry</h4>
+              </div>
+              <span className="badge badge-coming-soon">Coming Soon</span>
+            </div>
+            <div style={styles.emptyStateContainer}>
+              <p style={styles.emptyStateText}>
+                Weather information will appear after weather service integration.
+              </p>
+            </div>
+          </div>
+
+          {/* Card 4: Risk Analysis */}
+          <div className="card" style={styles.moduleCard}>
+            <div style={styles.moduleCardHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <ShieldAlert size={18} color="var(--color-error)" />
+                <h4 style={{ margin: 0, fontSize: '0.95rem' }}>Risk Analysis</h4>
+              </div>
+              <span className="badge badge-coming-soon">Coming Soon</span>
+            </div>
+            <div style={styles.emptyStateContainer}>
+              <p style={styles.emptyStateText}>
+                Risk analysis will appear after the risk model is integrated.
+              </p>
+            </div>
+          </div>
+
+          {/* Card 5: Yield Estimation */}
+          <div className="card" style={styles.moduleCard}>
+            <div style={styles.moduleCardHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <TrendingUp size={18} color="var(--color-primary)" />
+                <h4 style={{ margin: 0, fontSize: '0.95rem' }}>Yield Estimation</h4>
+              </div>
+              <span className="badge badge-coming-soon">Coming Soon</span>
+            </div>
+            <div style={styles.emptyStateContainer}>
+              <p style={styles.emptyStateText}>
+                Yield estimation will appear after the prediction model is integrated.
+              </p>
+            </div>
+          </div>
+
+          {/* Card 6: Recommendations */}
+          <div className="card" style={styles.moduleCard}>
+            <div style={styles.moduleCardHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Sparkles size={18} color="var(--color-teal)" />
+                <h4 style={{ margin: 0, fontSize: '0.95rem' }}>Recommendations</h4>
+              </div>
+              <span className="badge badge-coming-soon">Coming Soon</span>
+            </div>
+            <div style={styles.emptyStateContainer}>
+              <p style={styles.emptyStateText}>
+                Agronomic recommendations will appear after analytical engines are active.
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -219,7 +333,7 @@ const styles = {
   },
   title: {
     fontSize: '1.4rem',
-    fontWeight: '700',
+    fontWeight: '800',
     color: 'var(--color-text-main)',
     margin: 0
   },
@@ -230,7 +344,7 @@ const styles = {
   },
   contentGrid: {
     display: 'grid',
-    gridTemplateColumns: '1fr 1.6fr',
+    gridTemplateColumns: '1fr 1.5fr',
     gap: '1.5rem',
     alignItems: 'start'
   },
@@ -300,15 +414,49 @@ const styles = {
     overflowY: 'auto',
     fontFamily: 'monospace'
   },
-  integrationCard: {
-    padding: '1rem 1.25rem',
-    backgroundColor: 'var(--color-primary-light)',
-    border: '1px solid #bbf7d0',
-    borderRadius: 'var(--radius-lg)'
-  },
   mapCard: {
     display: 'flex',
     flexDirection: 'column',
     gap: '1rem'
+  },
+  digitalTwinSection: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+    paddingTop: '0.5rem'
+  },
+  dtSectionHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingBottom: '0.5rem',
+    borderBottom: '1px solid var(--color-border)'
+  },
+  moduleCardsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+    gap: '1.25rem'
+  },
+  moduleCard: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem'
+  },
+  moduleCardHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between'
+  },
+  emptyStateContainer: {
+    padding: '0.875rem',
+    backgroundColor: '#f8fafc',
+    borderRadius: 'var(--radius-md)',
+    border: '1px dashed #cbd5e1'
+  },
+  emptyStateText: {
+    fontSize: '0.8125rem',
+    color: 'var(--color-text-secondary)',
+    fontStyle: 'italic',
+    margin: 0
   }
 };

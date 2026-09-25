@@ -1,23 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { farmService } from '../services/farmService';
-import { getFarmIndicesAnalysis } from '../utils/indicesEngine';
-import DigitalTwinCanvas from '../components/DigitalTwinCanvas';
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer
-} from 'recharts';
-import { Cpu, Sprout, Activity, Layers, RefreshCw, Sparkles, Zap } from 'lucide-react';
+import FarmMap from '../components/FarmMap';
+import { Cpu, Sprout, Layers, Code2, Clock } from 'lucide-react';
 
 export default function DigitalTwinPage() {
   const [farms, setFarms] = useState([]);
   const [selectedFarm, setSelectedFarm] = useState(null);
-  const [indicesData, setIndicesData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -31,7 +19,6 @@ export default function DigitalTwinPage() {
       setFarms(data);
       if (data.length > 0) {
         setSelectedFarm(data[0]);
-        setIndicesData(getFarmIndicesAnalysis(data[0].cropType, data[0].sowingDate));
       }
     } catch (e) {
       console.error(e);
@@ -40,29 +27,17 @@ export default function DigitalTwinPage() {
     }
   };
 
-  const handleSelectFarm = (farmId) => {
-    const farm = farms.find((f) => String(f.id) === String(farmId));
-    if (farm) {
-      setSelectedFarm(farm);
-      setIndicesData(getFarmIndicesAnalysis(farm.cropType, farm.sowingDate));
-    }
-  };
-
-  if (isLoading) {
-    return <div style={{ padding: '3rem', textAlign: 'center' }}>Loading Digital Twin Workspace...</div>;
-  }
-
   return (
     <div style={styles.container} className="animate-fade-in">
-      {/* Top Header & Farm Selector */}
+      {/* Page Header */}
       <div style={styles.header}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <h1 style={styles.title}>Farm Digital Twin Engine</h1>
-            <span className="badge badge-teal">Live Simulation Mode</span>
+            <h1 style={styles.title}>Digital Twin Engine</h1>
+            <span className="badge badge-coming-soon">Coming Soon</span>
           </div>
           <p style={styles.subtitle}>
-            Multi-spectral spatial twin modeling, sub-plot micro-zone health, and historical index curves.
+            Multi-spectral spatial twin rendering canopy vigor, soil moisture, and sub-plot spatial layers.
           </p>
         </div>
 
@@ -71,7 +46,10 @@ export default function DigitalTwinPage() {
             <Sprout size={16} color="var(--color-primary)" />
             <select
               value={selectedFarm?.id || ''}
-              onChange={(e) => handleSelectFarm(e.target.value)}
+              onChange={(e) => {
+                const found = farms.find((f) => String(f.id) === e.target.value);
+                if (found) setSelectedFarm(found);
+              }}
               style={styles.farmSelect}
             >
               {farms.map((f) => (
@@ -84,54 +62,98 @@ export default function DigitalTwinPage() {
         )}
       </div>
 
-      {!selectedFarm ? (
-        <div className="card" style={{ padding: '3rem', textAlign: 'center' }}>
-          <h3>No Farm Registered Yet</h3>
-          <p>Register a farm boundary on the Leaflet map to generate its digital twin.</p>
+      {/* Module Overview & Status Banner */}
+      <div className="card" style={styles.bannerCard}>
+        <div style={styles.bannerHeader}>
+          <div style={styles.iconBadge}>
+            <Cpu size={24} color="var(--color-primary)" />
+          </div>
+          <div>
+            <h3 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--color-text-main)' }}>
+              Spatial Digital Twin Canvas (Phase 2 Roadmap)
+            </h3>
+            <p style={{ margin: '4px 0 0 0', fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>
+              This module will render sub-plot micro-zones once Google Earth Engine & Sentinel-2 satellite ingestion pipelines are connected.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Content Area */}
+      {isLoading ? (
+        <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-secondary)' }}>
+          Loading farm boundaries...
+        </div>
+      ) : !selectedFarm ? (
+        <div className="card" style={{ padding: '3.5rem 2rem', textAlign: 'center' }}>
+          <Sprout size={36} color="var(--color-primary)" style={{ margin: '0 auto 0.75rem auto' }} />
+          <h3 style={{ margin: 0, fontSize: '1.2rem' }}>No Farm Registered Yet</h3>
+          <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem', marginTop: '4px' }}>
+            Register your first farm boundary on the map to initialize its spatial digital twin foundation.
+          </p>
         </div>
       ) : (
-        <>
-          {/* Digital Twin Spatial Grid Canvas */}
-          <div className="card" style={{ padding: '1.5rem' }}>
-            <DigitalTwinCanvas farm={selectedFarm} indices={indicesData} />
+        <div style={styles.grid}>
+          {/* Spatial Field Canvas Card */}
+          <div className="card" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={styles.cardSectionHeader}>
+              <Layers size={20} color="var(--color-primary)" />
+              <h3 style={{ margin: 0, fontSize: '1.05rem' }}>
+                Spatial Field Boundary Canvas: {selectedFarm.farmName}
+              </h3>
+            </div>
+
+            <div style={{ height: '380px', width: '100%', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+              <FarmMap
+                initialLat={selectedFarm.latitude}
+                initialLng={selectedFarm.longitude}
+                initialBoundary={selectedFarm.boundary}
+                readOnly={true}
+              />
+            </div>
           </div>
 
-          {/* Time-Series Growth Curve Recharts */}
-          <div className="card" style={styles.chartCard}>
-            <div style={styles.chartHeader}>
-              <div>
-                <h3 style={{ margin: 0, fontSize: '1.15rem' }}>Vegetation Indices Temporal Growth Curve</h3>
-                <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>
-                  Multi-spectral Sentinel-2 NDVI, NDRE, EVI, and SAVI index tracking over sowing growth stages.
-                </p>
+          {/* Module Information Side Card */}
+          <div className="card" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <div style={styles.cardSectionHeader}>
+              <Clock size={20} color="var(--color-teal)" />
+              <h3 style={{ margin: 0, fontSize: '1.05rem' }}>Planned Digital Twin Overlays</h3>
+            </div>
+
+            <div style={styles.featureList}>
+              <div style={styles.featureItem}>
+                <span style={styles.featureBullet}>•</span>
+                <div>
+                  <h4 style={styles.featureTitle}>NDVI Canopy Vigor Layer</h4>
+                  <p style={styles.featureDesc}>Sub-plot chlorophyll absorption mapping via 10m Sentinel-2 Band 4 & Band 8 ratios.</p>
+                </div>
               </div>
-              <span className="badge badge-primary">Sentinel-2 10m Certified</span>
+
+              <div style={styles.featureItem}>
+                <span style={styles.featureBullet}>•</span>
+                <div>
+                  <h4 style={styles.featureTitle}>NDRE & Chlorophyll Index</h4>
+                  <p style={styles.featureDesc}>Red-edge band analysis detecting mid-to-late stage nitrogen deficiency and senescence.</p>
+                </div>
+              </div>
+
+              <div style={styles.featureItem}>
+                <span style={styles.featureBullet}>•</span>
+                <div>
+                  <h4 style={styles.featureTitle}>SAVI Soil-Adjusted Index</h4>
+                  <p style={styles.featureDesc}>Soil brightness correction factor for early crop growth stages before canopy closure.</p>
+                </div>
+              </div>
             </div>
 
-            <div style={{ width: '100%', height: 320, marginTop: '1rem' }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={indicesData?.growthSeries || []}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis dataKey="stage" stroke="#64748b" fontSize={12} />
-                  <YAxis domain={[0, 1]} stroke="#64748b" fontSize={12} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#ffffff',
-                      borderRadius: '8px',
-                      border: '1px solid #e2e8f0',
-                      fontSize: '12px'
-                    }}
-                  />
-                  <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-                  <Line type="monotone" dataKey="NDVI" stroke="#22c55e" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 7 }} />
-                  <Line type="monotone" dataKey="NDRE" stroke="#0f766e" strokeWidth={2.5} dot={{ r: 4 }} />
-                  <Line type="monotone" dataKey="SAVI" stroke="#f59e0b" strokeWidth={2} strokeDasharray="4 4" />
-                  <Line type="monotone" dataKey="EVI" stroke="#7c3aed" strokeWidth={2} strokeDasharray="3 3" />
-                </LineChart>
-              </ResponsiveContainer>
+            <div style={styles.statusBox}>
+              <span className="badge badge-coming-soon" style={{ width: 'fit-content' }}>Data Engine Pending</span>
+              <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.8125rem', color: 'var(--color-text-secondary)' }}>
+                Field boundary (<b>{selectedFarm.areaHectares} Ha</b>) is delineated and stored. High-resolution raster overlays will be rendered upon satellite engine connection.
+              </p>
             </div>
           </div>
-        </>
+        </div>
       )}
     </div>
   );
@@ -152,7 +174,7 @@ const styles = {
   },
   title: {
     fontSize: '1.4rem',
-    fontWeight: '700',
+    fontWeight: '800',
     color: 'var(--color-primary)',
     margin: 0
   },
@@ -179,15 +201,70 @@ const styles = {
     color: 'var(--color-text-main)',
     cursor: 'pointer'
   },
-  chartCard: {
-    display: 'flex',
-    flexDirection: 'column'
+  bannerCard: {
+    padding: '1.25rem 1.5rem'
   },
-  chartHeader: {
+  bannerHeader: {
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingBottom: '0.75rem',
+    gap: '1rem'
+  },
+  iconBadge: {
+    width: '48px',
+    height: '48px',
+    borderRadius: 'var(--radius-md)',
+    backgroundColor: 'var(--color-light-green)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0
+  },
+  grid: {
+    display: 'grid',
+    gridTemplateColumns: '1.5fr 1fr',
+    gap: '1.25rem',
+    alignItems: 'start'
+  },
+  cardSectionHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.625rem',
+    paddingBottom: '0.625rem',
     borderBottom: '1px solid var(--color-border)'
+  },
+  featureList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem'
+  },
+  featureItem: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '0.625rem'
+  },
+  featureBullet: {
+    color: 'var(--color-primary)',
+    fontWeight: '800',
+    fontSize: '1.1rem',
+    lineHeight: '1'
+  },
+  featureTitle: {
+    fontSize: '0.875rem',
+    fontWeight: '700',
+    margin: 0,
+    color: 'var(--color-text-main)'
+  },
+  featureDesc: {
+    fontSize: '0.775rem',
+    color: 'var(--color-text-secondary)',
+    margin: '2px 0 0 0',
+    lineHeight: '1.4'
+  },
+  statusBox: {
+    backgroundColor: '#f8fafc',
+    padding: '1rem',
+    borderRadius: 'var(--radius-md)',
+    border: '1px solid var(--color-border)',
+    marginTop: 'auto'
   }
 };

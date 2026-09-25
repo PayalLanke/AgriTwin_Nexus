@@ -1,241 +1,275 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { farmService } from '../services/farmService';
-import { getFarmIndicesAnalysis } from '../utils/indicesEngine';
-import { weatherService } from '../services/weatherService';
-import { riskEngine } from '../services/riskEngine';
-import { yieldEngine } from '../services/yieldEngine';
+import { useLanguage } from '../context/LanguageContext';
+import FarmMap from '../components/FarmMap';
 import {
   Sprout,
   PlusCircle,
   MapPin,
-  Calendar,
   Layers,
-  ArrowUpRight,
+  ArrowRight,
   Cpu,
   Satellite,
   CloudSun,
-  ShieldAlert,
+  Activity,
   TrendingUp,
-  Sparkles
+  ShieldAlert
 } from 'lucide-react';
 
 export default function DashboardPage() {
+  const { t } = useLanguage();
   const [farms, setFarms] = useState([]);
-  const [activeFarm, setActiveFarm] = useState(null);
-  const [indices, setIndices] = useState(null);
-  const [weather, setWeather] = useState(null);
-  const [risks, setRisks] = useState(null);
-  const [yieldData, setYieldData] = useState(null);
+  const [selectedFarm, setSelectedFarm] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loadDashboardData();
+    loadFarms();
   }, []);
 
-  const loadDashboardData = async () => {
+  const loadFarms = async () => {
     setIsLoading(true);
     try {
       const data = await farmService.getFarms();
       setFarms(data);
       if (data.length > 0) {
-        const farm = data[0];
-        setActiveFarm(farm);
-        const idx = getFarmIndicesAnalysis(farm.cropType, farm.sowingDate);
-        setIndices(idx);
-        const w = await weatherService.getFarmWeather(farm.latitude, farm.longitude);
-        setWeather(w);
-        const r = await riskEngine.evaluateFarmRisks(farm, idx, w);
-        setRisks(r);
-        const y = await yieldEngine.estimateYield(farm, idx);
-        setYieldData(y);
+        setSelectedFarm(data[0]);
       }
     } catch (e) {
-      console.error(e);
+      console.error('Error loading farms:', e);
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Real calculations
   const totalFarms = farms.length;
   const totalAreaHectares = farms.reduce((acc, f) => acc + (f.areaHectares || 0), 0);
   const totalAreaAcres = farms.reduce((acc, f) => acc + (f.areaAcres || 0), 0);
+  
+  // Unique crops
+  const uniqueCrops = Array.from(new Set(farms.map((f) => f.cropType).filter(Boolean)));
+  const cropsText = uniqueCrops.length > 0 ? uniqueCrops.join(', ') : '—';
 
   return (
     <div style={styles.container} className="animate-fade-in">
-      {/* Welcome Banner */}
+      {/* Header / Welcome Banner */}
       <div style={styles.welcomeBanner}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-            <h1 style={styles.bannerTitle}>AgriTwin Digital Twin Command Center</h1>
-            <span className="badge badge-teal">Modules 1–10+ Active</span>
-          </div>
-          <p style={styles.bannerSubtitle}>
-            Real-time multispectral satellite analytics, sub-plot micro-zone health, and AI disease risk prediction.
+          <h1 style={styles.welcomeTitle}>{t('dashboard_overview_title')}</h1>
+          <p style={styles.welcomeSubtitle}>
+            {t('dashboard_overview_subtitle')}
           </p>
         </div>
-        <Link to="/farms/add" className="btn btn-primary" style={styles.addFarmBtn}>
+        <Link to="/farms/add" className="btn btn-primary" style={styles.addBtn}>
           <PlusCircle size={18} />
-          <span>Register New Farm</span>
+          <span>+ {t('add_farm_btn')}</span>
         </Link>
       </div>
 
-      {/* Primary KPI Stats */}
-      <div style={styles.statsGrid}>
-        <div className="card" style={styles.statCard}>
-          <div style={styles.statIconBadge}>
-            <Sprout size={24} color="var(--color-primary)" />
-          </div>
-          <div>
-            <span style={styles.statLabel}>Registered Fields</span>
-            <div style={styles.statValue}>{isLoading ? '...' : totalFarms}</div>
-            <span style={styles.statHelper}>Active digital twin fields</span>
-          </div>
-        </div>
+      {/* SECTION 1: FARM SUMMARY */}
+      <div style={styles.sectionContainer}>
+        <h2 style={styles.sectionHeaderTitle}>{t('quick_actions')}</h2>
 
-        <div className="card" style={styles.statCard}>
-          <div style={{ ...styles.statIconBadge, backgroundColor: 'var(--color-teal-light)' }}>
-            <Cpu size={24} color="var(--color-teal)" />
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <span style={styles.statLabel}>Active Field Digital Twin</span>
-            <div style={{ ...styles.statValue, fontSize: '1.2rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {isLoading ? '...' : (activeFarm ? activeFarm.farmName : 'No farm registered')}
+        <div style={styles.summaryGrid}>
+          {/* Card 1: Total Farms */}
+          <div className="card" style={styles.summaryCard}>
+            <div style={styles.iconContainer}>
+              <Sprout size={22} color="var(--color-primary)" />
             </div>
-            <span style={styles.statHelper}>
-              {activeFarm ? `NDVI: ${indices?.current?.NDVI || 0.76} (${indices?.current?.healthStatus})` : 'Register a farm field'}
-            </span>
+            <div>
+              <span style={styles.cardLabel}>{t('total_farms')}</span>
+              <div style={styles.cardVal}>{isLoading ? '...' : totalFarms}</div>
+              <span style={styles.cardHelper}>{t('view_farms_btn')}</span>
+            </div>
           </div>
-        </div>
 
-        <div className="card" style={styles.statCard}>
-          <div style={{ ...styles.statIconBadge, backgroundColor: '#fffbeb' }}>
-            <Layers size={24} color="var(--color-accent)" />
-          </div>
-          <div>
-            <span style={styles.statLabel}>Total Farm Area</span>
-            <div style={styles.statValue}>
-              {isLoading ? '...' : (totalFarms > 0 ? `${totalAreaHectares.toFixed(2)} Ha` : '0 Ha')}
+          {/* Card 2: Active Farm */}
+          <div className="card" style={styles.summaryCard}>
+            <div style={{ ...styles.iconContainer, backgroundColor: 'var(--color-teal-light)' }}>
+              <MapPin size={22} color="var(--color-teal)" />
             </div>
-            <span style={styles.statHelper}>
-              {totalFarms > 0 ? `${totalAreaAcres.toFixed(2)} Acres total` : 'No spatial data'}
-            </span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <span style={styles.cardLabel}>{t('farm_name')}</span>
+              <div style={styles.cardValTruncated} title={selectedFarm ? selectedFarm.farmName : 'No farm selected'}>
+                {isLoading ? '...' : (selectedFarm ? selectedFarm.farmName : '—')}
+              </div>
+              <span style={styles.cardHelper}>
+                {selectedFarm ? `${t('crop_type')}: ${selectedFarm.cropType}` : t('boundary_none')}
+              </span>
+            </div>
           </div>
-        </div>
 
-        <div className="card" style={styles.statCard}>
-          <div style={{ ...styles.statIconBadge, backgroundColor: 'var(--color-danger-light)' }}>
-            <ShieldAlert size={24} color="var(--color-danger)" />
-          </div>
-          <div>
-            <span style={styles.statLabel}>Pest / Pathogen Risk</span>
-            <div style={styles.statValue}>
-              {isLoading ? '...' : (risks ? `${risks.overallRiskScore}%` : 'N/A')}
+          {/* Card 3: Total Farm Area */}
+          <div className="card" style={styles.summaryCard}>
+            <div style={{ ...styles.iconContainer, backgroundColor: '#fffbeb' }}>
+              <Layers size={22} color="var(--color-warning)" />
             </div>
-            <span style={styles.statHelper}>
-              {risks ? risks.overallRiskLevel : 'Run risk engine'}
-            </span>
+            <div>
+              <span style={styles.cardLabel}>{t('total_area_ha')}</span>
+              <div style={styles.cardVal}>
+                {isLoading
+                  ? '...'
+                  : totalFarms > 0
+                  ? `${totalAreaHectares.toFixed(2)} Ha`
+                  : '—'}
+              </div>
+              <span style={styles.cardHelper}>
+                {totalFarms > 0 ? `${totalAreaAcres.toFixed(2)} ${t('acres')}` : '0 Acres'}
+              </span>
+            </div>
+          </div>
+
+          {/* Card 4: Registered Crops */}
+          <div className="card" style={styles.summaryCard}>
+            <div style={{ ...styles.iconContainer, backgroundColor: 'var(--color-light-green)' }}>
+              <Activity size={22} color="var(--color-primary)" />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <span style={styles.cardLabel}>{t('crop_type')}</span>
+              <div style={styles.cardValTruncated} title={cropsText}>
+                {isLoading ? '...' : cropsText}
+              </div>
+              <span style={styles.cardHelper}>
+                {uniqueCrops.length > 0 ? `${uniqueCrops.length} ${t('crop_type')}` : '—'}
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Active Digital Twin Dashboard Analytics */}
-      {activeFarm && (
-        <div style={styles.modulesGrid}>
-          {/* Module Quick Card 1: Digital Twin Grid */}
-          <div className="card" style={styles.moduleCard}>
-            <div style={styles.moduleHeader}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Cpu size={20} color="var(--color-primary)" />
-                <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Spatial Digital Twin Matrix</h3>
-              </div>
-              <Link to="/digital-twin" className="btn btn-secondary" style={{ padding: '0.375rem 0.75rem', fontSize: '0.75rem' }}>
-                <span>Open Canvas</span>
-                <ArrowUpRight size={14} />
-              </Link>
-            </div>
-            <p style={{ fontSize: '0.8125rem', color: '#475569', margin: '0.5rem 0 1rem 0' }}>
-              Sub-plot micro-zone matrix rendering canopy vigor, soil moisture, and chlorophyll distribution.
+      {/* SECTION 2: FARM MAP */}
+      <div style={styles.sectionContainer}>
+        <div style={styles.sectionHeaderRow}>
+          <div>
+            <h2 style={styles.sectionHeaderTitle}>{t('my_farms_title')}</h2>
+            <p style={styles.sectionHeaderSub}>
+              {t('my_farms_subtitle')}
             </p>
-            <div style={styles.miniStatsRow}>
-              <div>
-                <span style={styles.miniLabel}>NDVI Vigor</span>
-                <span style={styles.miniVal}>{indices?.current?.NDVI}</span>
-              </div>
-              <div>
-                <span style={styles.miniLabel}>NDRE Chlorophyll</span>
-                <span style={styles.miniVal}>{indices?.current?.NDRE}</span>
-              </div>
-              <div>
-                <span style={styles.miniLabel}>Canopy Cover</span>
-                <span style={styles.miniVal}>{indices?.current?.canopyCoverage}</span>
-              </div>
-            </div>
           </div>
-
-          {/* Module Quick Card 2: Weather & Micro-Climate */}
-          <div className="card" style={styles.moduleCard}>
-            <div style={styles.moduleHeader}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <CloudSun size={20} color="var(--color-teal)" />
-                <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Micro-Climate & Soil Telemetry</h3>
-              </div>
-              <Link to="/weather" className="btn btn-secondary" style={{ padding: '0.375rem 0.75rem', fontSize: '0.75rem' }}>
-                <span>Forecast</span>
-                <ArrowUpRight size={14} />
-              </Link>
-            </div>
-            <p style={{ fontSize: '0.8125rem', color: '#475569', margin: '0.5rem 0 1rem 0' }}>
-              Station parameters & spray suitability index ({weather?.current?.spraySuitability}).
-            </p>
-            <div style={styles.miniStatsRow}>
-              <div>
-                <span style={styles.miniLabel}>Air Temp</span>
-                <span style={styles.miniVal}>{weather?.current?.tempCelsius}°C</span>
-              </div>
-              <div>
-                <span style={styles.miniLabel}>Soil Moisture</span>
-                <span style={styles.miniVal}>{weather?.current?.soilMoistureVolumetric}%</span>
-              </div>
-              <div>
-                <span style={styles.miniLabel}>Humidity</span>
-                <span style={styles.miniVal}>{weather?.current?.humidityPercent}%</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Module Quick Card 3: Yield Projection */}
-          <div className="card" style={styles.moduleCard}>
-            <div style={styles.moduleHeader}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <TrendingUp size={20} color="var(--color-accent)" />
-                <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Harvest Yield Projection</h3>
-              </div>
-              <Link to="/yield" className="btn btn-secondary" style={{ padding: '0.375rem 0.75rem', fontSize: '0.75rem' }}>
-                <span>Calculator</span>
-                <ArrowUpRight size={14} />
-              </Link>
-            </div>
-            <p style={{ fontSize: '0.8125rem', color: '#475569', margin: '0.5rem 0 1rem 0' }}>
-              Projected harvest output calculated from cumulative satellite biomass integrals.
-            </p>
-            <div style={styles.miniStatsRow}>
-              <div>
-                <span style={styles.miniLabel}>Yield / Ha</span>
-                <span style={styles.miniVal}>{yieldData?.projectedYieldPerHa} Tons</span>
-              </div>
-              <div>
-                <span style={styles.miniLabel}>Total Metric Tons</span>
-                <span style={styles.miniVal}>{yieldData?.totalYieldTons} Tons</span>
-              </div>
-              <div>
-                <span style={styles.miniLabel}>Quintals Output</span>
-                <span style={styles.miniVal}>{yieldData?.totalYieldQuintals} Qt</span>
-              </div>
-            </div>
-          </div>
+          {totalFarms > 0 && (
+            <span className="badge badge-primary">
+              <MapPin size={12} />
+              <span>{totalFarms} {t('boundary_active')}</span>
+            </span>
+          )}
         </div>
-      )}
+
+        <div className="card" style={styles.mapCard}>
+          {totalFarms === 0 ? (
+            <div style={styles.emptyMapContainer}>
+              <div style={styles.emptyMapBadge}>
+                <Sprout size={36} color="var(--color-primary)" />
+              </div>
+              <h3 style={{ margin: '0.75rem 0 0.25rem 0', fontSize: '1.2rem', color: 'var(--color-text-main)' }}>
+                {t('add_farm_subtitle')}
+              </h3>
+              <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--color-text-secondary)', maxWidth: '420px', lineHeight: '1.5' }}>
+                {t('add_farm_subtitle')}
+              </p>
+              <Link to="/farms/add" className="btn btn-primary" style={{ marginTop: '1rem' }}>
+                <PlusCircle size={16} />
+                <span>{t('add_farm_btn')}</span>
+              </Link>
+            </div>
+          ) : (
+            <div style={{ height: '420px', width: '100%', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+              <FarmMap farms={farms} selectedFarm={selectedFarm} readOnly={true} />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* SECTION 3: QUICK ACTIONS */}
+      <div style={styles.sectionContainer}>
+        <h2 style={styles.sectionHeaderTitle}>{t('quick_actions')}</h2>
+
+        <div style={styles.quickActionsGrid}>
+          <Link to="/farms/add" style={styles.actionCardLink}>
+            <div className="card" style={styles.actionCard}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={styles.actionIconBadge}>
+                  <PlusCircle size={20} color="var(--color-primary)" />
+                </div>
+                <div>
+                  <h4 style={styles.actionTitle}>{t('nav_add_farm')}</h4>
+                  <p style={styles.actionSub}>{t('add_farm_subtitle')}</p>
+                </div>
+              </div>
+              <ArrowRight size={18} color="var(--color-primary)" style={styles.arrowIcon} />
+            </div>
+          </Link>
+
+          <Link to="/farms" style={styles.actionCardLink}>
+            <div className="card" style={styles.actionCard}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ ...styles.actionIconBadge, backgroundColor: 'var(--color-teal-light)' }}>
+                  <Sprout size={20} color="var(--color-teal)" />
+                </div>
+                <div>
+                  <h4 style={styles.actionTitle}>{t('nav_my_farms')}</h4>
+                  <p style={styles.actionSub}>{t('my_farms_subtitle')}</p>
+                </div>
+              </div>
+              <ArrowRight size={18} color="var(--color-teal)" style={styles.arrowIcon} />
+            </div>
+          </Link>
+
+          <Link to="/digital-twin" style={styles.actionCardLink}>
+            <div className="card" style={styles.actionCard}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ ...styles.actionIconBadge, backgroundColor: '#f1f5f9' }}>
+                  <Cpu size={20} color="#475569" />
+                </div>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <h4 style={styles.actionTitle}>{t('nav_digital_twin')}</h4>
+                    <span className="badge badge-coming-soon">Soon</span>
+                  </div>
+                  <p style={styles.actionSub}>{t('digital_twin_subtitle')}</p>
+                </div>
+              </div>
+              <ArrowRight size={18} color="#94a3b8" style={styles.arrowIcon} />
+            </div>
+          </Link>
+
+          <Link to="/satellite" style={styles.actionCardLink}>
+            <div className="card" style={styles.actionCard}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ ...styles.actionIconBadge, backgroundColor: '#f1f5f9' }}>
+                  <Satellite size={20} color="#475569" />
+                </div>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <h4 style={styles.actionTitle}>{t('nav_satellite')}</h4>
+                    <span className="badge badge-coming-soon">Soon</span>
+                  </div>
+                  <p style={styles.actionSub}>{t('layer_rgb')}</p>
+                </div>
+              </div>
+              <ArrowRight size={18} color="#94a3b8" style={styles.arrowIcon} />
+            </div>
+          </Link>
+
+          <Link to="/weather" style={styles.actionCardLink}>
+            <div className="card" style={styles.actionCard}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ ...styles.actionIconBadge, backgroundColor: '#f1f5f9' }}>
+                  <CloudSun size={20} color="#475569" />
+                </div>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <h4 style={styles.actionTitle}>{t('nav_weather')}</h4>
+                    <span className="badge badge-coming-soon">Soon</span>
+                  </div>
+                  <p style={styles.actionSub}>{t('weather_summary')}</p>
+                </div>
+              </div>
+              <ArrowRight size={18} color="#94a3b8" style={styles.arrowIcon} />
+            </div>
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
@@ -244,12 +278,12 @@ const styles = {
   container: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '1.5rem'
+    gap: '2rem'
   },
   welcomeBanner: {
     backgroundColor: '#ffffff',
     padding: '1.5rem 1.75rem',
-    borderRadius: 'var(--radius-xl)',
+    borderRadius: 'var(--radius-lg)',
     border: '1px solid var(--color-border)',
     display: 'flex',
     alignItems: 'center',
@@ -258,94 +292,155 @@ const styles = {
     boxShadow: 'var(--shadow-sm)',
     flexWrap: 'wrap'
   },
-  bannerTitle: {
+  welcomeTitle: {
     fontSize: '1.4rem',
     fontWeight: '800',
     color: 'var(--color-primary)',
     margin: 0
   },
-  bannerSubtitle: {
+  welcomeSubtitle: {
     fontSize: '0.875rem',
     color: 'var(--color-text-secondary)',
-    margin: 0,
-    marginTop: '2px'
+    margin: '2px 0 0 0'
   },
-  addFarmBtn: {
+  addBtn: {
     padding: '0.625rem 1.25rem'
   },
-  statsGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
-    gap: '1.25rem'
+  sectionContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem'
   },
-  statCard: {
+  sectionHeaderRow: {
     display: 'flex',
     alignItems: 'center',
-    gap: '1rem',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: '0.5rem'
+  },
+  sectionHeaderTitle: {
+    fontSize: '1.15rem',
+    fontWeight: '700',
+    color: 'var(--color-text-main)',
+    margin: 0
+  },
+  sectionHeaderSub: {
+    fontSize: '0.8125rem',
+    color: 'var(--color-text-secondary)',
+    margin: 0
+  },
+  summaryGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+    gap: '1.25rem'
+  },
+  summaryCard: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.875rem',
     padding: '1.25rem'
   },
-  statIconBadge: {
-    width: '48px',
-    height: '48px',
-    borderRadius: 'var(--radius-lg)',
-    backgroundColor: 'var(--color-primary-light)',
+  iconContainer: {
+    width: '46px',
+    height: '46px',
+    borderRadius: 'var(--radius-md)',
+    backgroundColor: 'var(--color-light-green)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0
   },
-  statLabel: {
+  cardLabel: {
     fontSize: '0.725rem',
     fontWeight: '700',
     color: 'var(--color-text-secondary)',
-    textTransform: 'uppercase'
+    textTransform: 'uppercase',
+    letterSpacing: '0.03em'
   },
-  statValue: {
+  cardVal: {
     fontSize: '1.35rem',
     fontWeight: '800',
     color: 'var(--color-text-main)',
     lineHeight: '1.2',
     margin: '2px 0'
   },
-  statHelper: {
+  cardValTruncated: {
+    fontSize: '1.15rem',
+    fontWeight: '800',
+    color: 'var(--color-text-main)',
+    lineHeight: '1.2',
+    margin: '2px 0',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis'
+  },
+  cardHelper: {
     fontSize: '0.725rem',
     color: '#94a3b8'
   },
-  modulesGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-    gap: '1.25rem'
+  mapCard: {
+    padding: '0.75rem',
+    backgroundColor: '#ffffff'
   },
-  moduleCard: {
+  emptyMapContainer: {
+    minHeight: '320px',
     display: 'flex',
     flexDirection: 'column',
-    justifyContent: 'space-between'
+    alignItems: 'center',
+    justifyContent: 'center',
+    textAlign: 'center',
+    padding: '2.5rem 1.5rem',
+    backgroundColor: '#fafdfa',
+    borderRadius: 'var(--radius-md)',
+    border: '1px stroke border'
   },
-  moduleHeader: {
+  emptyMapBadge: {
+    width: '64px',
+    height: '64px',
+    borderRadius: '50%',
+    backgroundColor: 'var(--color-light-green)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  quickActionsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+    gap: '1rem'
+  },
+  actionCardLink: {
+    textDecoration: 'none'
+  },
+  actionCard: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingBottom: '0.625rem',
-    borderBottom: '1px solid var(--color-border)'
+    padding: '1rem 1.25rem',
+    cursor: 'pointer',
+    transition: 'all 0.15s ease'
   },
-  miniStatsRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    backgroundColor: '#f8fafc',
-    padding: '0.625rem 0.875rem',
+  actionIconBadge: {
+    width: '40px',
+    height: '40px',
     borderRadius: 'var(--radius-md)',
-    border: '1px solid var(--color-border)'
+    backgroundColor: 'var(--color-light-green)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0
   },
-  miniLabel: {
-    display: 'block',
-    fontSize: '0.675rem',
+  actionTitle: {
+    fontSize: '0.9rem',
+    fontWeight: '700',
+    color: 'var(--color-text-main)',
+    margin: 0
+  },
+  actionSub: {
+    fontSize: '0.75rem',
     color: 'var(--color-text-secondary)',
-    fontWeight: '600'
+    margin: '2px 0 0 0'
   },
-  miniVal: {
-    display: 'block',
-    fontSize: '0.875rem',
-    fontWeight: '800',
-    color: 'var(--color-primary)'
+  arrowIcon: {
+    flexShrink: 0
   }
 };

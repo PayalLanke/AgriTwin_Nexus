@@ -229,12 +229,15 @@ export default function FarmMap({
   };
 
   // OpenStreetMap Nominatim Geocoding Location Search
+  const [searchSuccess, setSearchSuccess] = useState('');
+
   const handleSearchLocation = async (e) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
 
     setIsSearching(true);
     setSearchError('');
+    setSearchSuccess('');
 
     try {
       const response = await fetch(
@@ -248,14 +251,15 @@ export default function FarmMap({
         const searchLng = parseFloat(topResult.lon);
 
         if (mapInstanceRef.current) {
-          mapInstanceRef.current.setView([searchLat, searchLng], 15);
+          mapInstanceRef.current.flyTo([searchLat, searchLng], 15, { duration: 1.5 });
           updateLocation(searchLat, searchLng);
+          setSearchSuccess(`Located: ${topResult.display_name.split(',').slice(0, 3).join(',')}. Zoom in & draw your farm boundary.`);
         }
       } else {
-        setSearchError('Location not found. Please try searching with city or district name.');
+        setSearchError('Location not found. Please try another city, town, or district name.');
       }
     } catch (err) {
-      setSearchError('Failed to search location. Check internet connection.');
+      setSearchError('Location search failed. Please check internet connection.');
     } finally {
       setIsSearching(false);
     }
@@ -306,6 +310,13 @@ export default function FarmMap({
         <div style={styles.searchErrorBox}>
           <AlertCircle size={16} />
           <span>{searchError}</span>
+        </div>
+      )}
+
+      {searchSuccess && (
+        <div style={styles.searchSuccessBox}>
+          <CheckCircle2 size={16} />
+          <span>{searchSuccess}</span>
         </div>
       )}
 
@@ -420,6 +431,18 @@ const styles = {
     color: '#dc2626',
     borderRadius: 'var(--radius-md)',
     fontSize: '0.8125rem'
+  },
+  searchSuccessBox: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    padding: '0.625rem 0.875rem',
+    backgroundColor: 'var(--color-light-green)',
+    border: '1px solid #bbf7d0',
+    color: 'var(--color-primary)',
+    borderRadius: 'var(--radius-md)',
+    fontSize: '0.8125rem',
+    fontWeight: '600'
   },
   mapCanvasWrapper: {
     position: 'relative',
