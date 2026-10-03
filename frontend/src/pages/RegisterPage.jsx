@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authService } from '../services/authService';
+<<<<<<< HEAD
 import { Sprout, User, Mail, Lock, CheckCircle2, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
+=======
+import { Sprout, User, Mail, Phone, Lock, CheckCircle2, ArrowRight } from 'lucide-react';
+>>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
 
 export default function RegisterPage() {
   const navigate = useNavigate();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
+  const [mobileNumber, setMobileNumber] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
@@ -27,6 +32,10 @@ export default function RegisterPage() {
       setError('Please enter a valid email address.');
       return;
     }
+    if (!mobileNumber || mobileNumber.length < 10) {
+      setError('Please enter a valid mobile number.');
+      return;
+    }
     if (!password || password.length < 6) {
       setError('Password must be at least 6 characters long.');
       return;
@@ -38,10 +47,15 @@ export default function RegisterPage() {
 
     setIsLoading(true);
     try {
+<<<<<<< HEAD
       await authService.register({ fullName, email, password });
       setSuccess('Account created successfully! Redirecting to login console...');
+=======
+      await authService.register({ fullName, email, mobileNumber, password });
+      setSuccess('Account created successfully! Redirecting to login...');
+>>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
       setTimeout(() => {
-        navigate('/login');
+        navigate('/farmer/login');
       }, 1500);
     } catch (err) {
       setError(err.message || 'Registration failed.');
@@ -112,6 +126,7 @@ export default function RegisterPage() {
             </div>
           </div>
 
+<<<<<<< HEAD
           <div style={styles.formGrid}>
             <div style={styles.formGroup}>
               <label style={styles.label} htmlFor="password">PASSPHRASE</label>
@@ -127,6 +142,37 @@ export default function RegisterPage() {
                   required
                 />
               </div>
+=======
+          <div>
+            <label htmlFor="mobileNumber">Mobile Number</label>
+            <div style={styles.inputWrapper}>
+              <Phone size={18} color="#9ca3af" style={styles.inputIcon} />
+              <input
+                id="mobileNumber"
+                type="tel"
+                placeholder="+91 98765 43210"
+                value={mobileNumber}
+                onChange={(e) => setMobileNumber(e.target.value)}
+                style={styles.inputWithIcon}
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="password">Password</label>
+            <div style={styles.inputWrapper}>
+              <Lock size={18} color="#9ca3af" style={styles.inputIcon} />
+              <input
+                id="password"
+                type="password"
+                placeholder="At least 6 characters"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                style={styles.inputWithIcon}
+                required
+              />
+>>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
             </div>
 
             <div style={styles.formGroup}>
@@ -167,8 +213,13 @@ export default function RegisterPage() {
           <span style={{ color: '#94a3b8', fontSize: '0.8125rem' }}>
             Already registered?
           </span>
+<<<<<<< HEAD
           <Link to="/login" style={styles.loginLink}>
             Return to Login &rarr;
+=======
+          <Link to="/farmer/login" style={styles.loginLink}>
+            Back to Farmer Login
+>>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
           </Link>
         </div>
       </div>
@@ -255,9 +306,15 @@ const styles = {
     margin: '2px 0 0 0'
   },
   errorAlert: {
+<<<<<<< HEAD
     backgroundColor: 'rgba(239, 68, 68, 0.12)',
     border: '1px solid rgba(239, 68, 68, 0.35)',
     color: '#fca5a5',
+=======
+    backgroundColor: 'var(--color-error-light)',
+    border: '1px solid #fecaca',
+    color: 'var(--color-error)',
+>>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
     padding: '0.75rem 1rem',
     borderRadius: '12px',
     fontSize: '0.8rem',
@@ -265,9 +322,15 @@ const styles = {
     fontWeight: '500'
   },
   successAlert: {
+<<<<<<< HEAD
     backgroundColor: 'rgba(34, 229, 138, 0.12)',
     border: '1px solid rgba(34, 229, 138, 0.35)',
     color: '#22e58a',
+=======
+    backgroundColor: 'var(--color-light-green)',
+    border: '1px solid #bbf7d0',
+    color: 'var(--color-primary)',
+>>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
     padding: '0.75rem 1rem',
     borderRadius: '12px',
     fontSize: '0.825rem',

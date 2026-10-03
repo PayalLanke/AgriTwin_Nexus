@@ -1,23 +1,28 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { farmService } from '../services/farmService';
+<<<<<<< HEAD
 import { getFarmIndicesAnalysis } from '../utils/indicesEngine';
 import { weatherService } from '../services/weatherService';
 import { riskEngine } from '../services/riskEngine';
 import { yieldEngine } from '../services/yieldEngine';
 import DigitalTwinCanvas from '../components/DigitalTwinCanvas';
+=======
+import { useLanguage } from '../context/LanguageContext';
+import FarmMap from '../components/FarmMap';
+>>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
 import {
   Sprout,
   PlusCircle,
   MapPin,
-  Calendar,
   Layers,
-  ArrowUpRight,
+  ArrowRight,
   Cpu,
   Satellite,
   CloudSun,
-  ShieldAlert,
+  Activity,
   TrendingUp,
+<<<<<<< HEAD
   Sparkles,
   Play,
   Pause,
@@ -34,12 +39,15 @@ import {
 
 export default function DashboardPage() {
   const navigate = useNavigate();
+=======
+  ShieldAlert
+} from 'lucide-react';
+
+export default function DashboardPage() {
+  const { t } = useLanguage();
+>>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
   const [farms, setFarms] = useState([]);
-  const [activeFarm, setActiveFarm] = useState(null);
-  const [indices, setIndices] = useState(null);
-  const [weather, setWeather] = useState(null);
-  const [risks, setRisks] = useState(null);
-  const [yieldData, setYieldData] = useState(null);
+  const [selectedFarm, setSelectedFarm] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // 4D Bio-Dynamic Simulation Timeline state
@@ -49,35 +57,28 @@ export default function DashboardPage() {
   const [droneFeedback, setDroneFeedback] = useState(null);
 
   useEffect(() => {
-    loadDashboardData();
+    loadFarms();
   }, []);
 
-  const loadDashboardData = async () => {
+  const loadFarms = async () => {
     setIsLoading(true);
     try {
       const data = await farmService.getFarms();
       setFarms(data);
       if (data.length > 0) {
-        const farm = data[0];
-        setActiveFarm(farm);
-        const idx = getFarmIndicesAnalysis(farm.cropType, farm.sowingDate);
-        setIndices(idx);
-        const w = await weatherService.getFarmWeather(farm.latitude, farm.longitude);
-        setWeather(w);
-        const r = await riskEngine.evaluateFarmRisks(farm, idx, w);
-        setRisks(r);
-        const y = await yieldEngine.estimateYield(farm, idx);
-        setYieldData(y);
+        setSelectedFarm(data[0]);
       }
     } catch (e) {
-      console.error(e);
+      console.error('Error loading farms:', e);
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Real calculations
   const totalFarms = farms.length;
   const totalAreaHectares = farms.reduce((acc, f) => acc + (f.areaHectares || 0), 0);
+<<<<<<< HEAD
 
   const handleSelectFarm = (farm) => {
     setActiveFarm(farm);
@@ -169,9 +170,48 @@ export default function DashboardPage() {
             <span style={{ ...styles.statHelper, color: 'var(--color-secondary)' }}>
               {activeFarm ? `${activeFarm.name} • ${indices?.current?.healthStatus || 'Healthy Vigor'}` : 'Plot B Soybean Pioneer'}
             </span>
-          </div>
-        </div>
+=======
+  const totalAreaAcres = farms.reduce((acc, f) => acc + (f.areaAcres || 0), 0);
+  
+  // Unique crops
+  const uniqueCrops = Array.from(new Set(farms.map((f) => f.cropType).filter(Boolean)));
+  const cropsText = uniqueCrops.length > 0 ? uniqueCrops.join(', ') : '—';
 
+  return (
+    <div style={styles.container} className="animate-fade-in">
+      {/* Header / Welcome Banner */}
+      <div style={styles.welcomeBanner}>
+        <div>
+          <h1 style={styles.welcomeTitle}>{t('dashboard_overview_title')}</h1>
+          <p style={styles.welcomeSubtitle}>
+            {t('dashboard_overview_subtitle')}
+          </p>
+        </div>
+        <Link to="/farms/add" className="btn btn-primary" style={styles.addBtn}>
+          <PlusCircle size={18} />
+          <span>+ {t('add_farm_btn')}</span>
+        </Link>
+      </div>
+
+      {/* SECTION 1: FARM SUMMARY */}
+      <div style={styles.sectionContainer}>
+        <h2 style={styles.sectionHeaderTitle}>{t('quick_actions')}</h2>
+
+        <div style={styles.summaryGrid}>
+          {/* Card 1: Total Farms */}
+          <div className="card" style={styles.summaryCard}>
+            <div style={styles.iconContainer}>
+              <Sprout size={22} color="var(--color-primary)" />
+            </div>
+            <div>
+              <span style={styles.cardLabel}>{t('total_farms')}</span>
+              <div style={styles.cardVal}>{isLoading ? '...' : totalFarms}</div>
+              <span style={styles.cardHelper}>{t('view_farms_btn')}</span>
+            </div>
+>>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
+          </div>
+
+<<<<<<< HEAD
         {/* Metric 3: Root Hydration & Weather Delta-T */}
         <div className="card" style={styles.statCard}>
           <div style={{ ...styles.statIconBadge, backgroundColor: 'rgba(136, 255, 118, 0.15)', borderColor: 'var(--color-tertiary)' }}>
@@ -185,9 +225,25 @@ export default function DashboardPage() {
             <span style={styles.statHelper}>
               {weather?.current?.tempCelsius || 27.4}°C • {weather?.current?.humidityPercent || 65}% RH • Wind 11 km/h
             </span>
+=======
+          {/* Card 2: Active Farm */}
+          <div className="card" style={styles.summaryCard}>
+            <div style={{ ...styles.iconContainer, backgroundColor: 'var(--color-teal-light)' }}>
+              <MapPin size={22} color="var(--color-teal)" />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <span style={styles.cardLabel}>{t('farm_name')}</span>
+              <div style={styles.cardValTruncated} title={selectedFarm ? selectedFarm.farmName : 'No farm selected'}>
+                {isLoading ? '...' : (selectedFarm ? selectedFarm.farmName : '—')}
+              </div>
+              <span style={styles.cardHelper}>
+                {selectedFarm ? `${t('crop_type')}: ${selectedFarm.cropType}` : t('boundary_none')}
+              </span>
+            </div>
+>>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
           </div>
-        </div>
 
+<<<<<<< HEAD
         {/* Metric 4: Pest Vulnerability Index */}
         <div className="card" style={styles.statCard}>
           <div style={{ ...styles.statIconBadge, backgroundColor: 'rgba(239, 68, 68, 0.15)', borderColor: 'rgba(239, 68, 68, 0.4)' }}>
@@ -204,10 +260,47 @@ export default function DashboardPage() {
             <span style={styles.statHelper}>
               Spodoptera: 3 spores/trap (Suppressed)
             </span>
+=======
+          {/* Card 3: Total Farm Area */}
+          <div className="card" style={styles.summaryCard}>
+            <div style={{ ...styles.iconContainer, backgroundColor: '#fffbeb' }}>
+              <Layers size={22} color="var(--color-warning)" />
+            </div>
+            <div>
+              <span style={styles.cardLabel}>{t('total_area_ha')}</span>
+              <div style={styles.cardVal}>
+                {isLoading
+                  ? '...'
+                  : totalFarms > 0
+                  ? `${totalAreaHectares.toFixed(2)} Ha`
+                  : '—'}
+              </div>
+              <span style={styles.cardHelper}>
+                {totalFarms > 0 ? `${totalAreaAcres.toFixed(2)} ${t('acres')}` : '0 Acres'}
+              </span>
+            </div>
+          </div>
+
+          {/* Card 4: Registered Crops */}
+          <div className="card" style={styles.summaryCard}>
+            <div style={{ ...styles.iconContainer, backgroundColor: 'var(--color-light-green)' }}>
+              <Activity size={22} color="var(--color-primary)" />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <span style={styles.cardLabel}>{t('crop_type')}</span>
+              <div style={styles.cardValTruncated} title={cropsText}>
+                {isLoading ? '...' : cropsText}
+              </div>
+              <span style={styles.cardHelper}>
+                {uniqueCrops.length > 0 ? `${uniqueCrops.length} ${t('crop_type')}` : '—'}
+              </span>
+            </div>
+>>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
           </div>
         </div>
       </div>
 
+<<<<<<< HEAD
       {/* Hero Section: PRIMARY 3D DIGITAL TWIN CANVAS (DESIGN 02 HERO) */}
       <div style={{ position: 'relative' }}>
         <DigitalTwinCanvas
@@ -336,8 +429,25 @@ export default function DashboardPage() {
             <Radio size={14} color="var(--color-primary)" />
             <span style={{ color: '#ffffff', fontFamily: 'Space Grotesk, sans-serif' }}>NDVI + UAV Geofence</span>
             <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--color-primary)', boxShadow: '0 0 6px #22e58a' }} />
+=======
+      {/* SECTION 2: FARM MAP */}
+      <div style={styles.sectionContainer}>
+        <div style={styles.sectionHeaderRow}>
+          <div>
+            <h2 style={styles.sectionHeaderTitle}>{t('my_farms_title')}</h2>
+            <p style={styles.sectionHeaderSub}>
+              {t('my_farms_subtitle')}
+            </p>
+>>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
           </div>
+          {totalFarms > 0 && (
+            <span className="badge badge-primary">
+              <MapPin size={12} />
+              <span>{totalFarms} {t('boundary_active')}</span>
+            </span>
+          )}
         </div>
+<<<<<<< HEAD
       </div>
 
       {/* Drone Feedback Banner */}
@@ -493,6 +603,122 @@ export default function DashboardPage() {
             <span>Stage: R3 Beginning Pod</span>
             <span style={{ color: 'var(--color-primary)' }}>+8.4% above regional baseline</span>
           </div>
+=======
+
+        <div className="card" style={styles.mapCard}>
+          {totalFarms === 0 ? (
+            <div style={styles.emptyMapContainer}>
+              <div style={styles.emptyMapBadge}>
+                <Sprout size={36} color="var(--color-primary)" />
+              </div>
+              <h3 style={{ margin: '0.75rem 0 0.25rem 0', fontSize: '1.2rem', color: 'var(--color-text-main)' }}>
+                {t('add_farm_subtitle')}
+              </h3>
+              <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--color-text-secondary)', maxWidth: '420px', lineHeight: '1.5' }}>
+                {t('add_farm_subtitle')}
+              </p>
+              <Link to="/farms/add" className="btn btn-primary" style={{ marginTop: '1rem' }}>
+                <PlusCircle size={16} />
+                <span>{t('add_farm_btn')}</span>
+              </Link>
+            </div>
+          ) : (
+            <div style={{ height: '420px', width: '100%', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+              <FarmMap farms={farms} selectedFarm={selectedFarm} readOnly={true} />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* SECTION 3: QUICK ACTIONS */}
+      <div style={styles.sectionContainer}>
+        <h2 style={styles.sectionHeaderTitle}>{t('quick_actions')}</h2>
+
+        <div style={styles.quickActionsGrid}>
+          <Link to="/farms/add" style={styles.actionCardLink}>
+            <div className="card" style={styles.actionCard}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={styles.actionIconBadge}>
+                  <PlusCircle size={20} color="var(--color-primary)" />
+                </div>
+                <div>
+                  <h4 style={styles.actionTitle}>{t('nav_add_farm')}</h4>
+                  <p style={styles.actionSub}>{t('add_farm_subtitle')}</p>
+                </div>
+              </div>
+              <ArrowRight size={18} color="var(--color-primary)" style={styles.arrowIcon} />
+            </div>
+          </Link>
+
+          <Link to="/farms" style={styles.actionCardLink}>
+            <div className="card" style={styles.actionCard}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ ...styles.actionIconBadge, backgroundColor: 'var(--color-teal-light)' }}>
+                  <Sprout size={20} color="var(--color-teal)" />
+                </div>
+                <div>
+                  <h4 style={styles.actionTitle}>{t('nav_my_farms')}</h4>
+                  <p style={styles.actionSub}>{t('my_farms_subtitle')}</p>
+                </div>
+              </div>
+              <ArrowRight size={18} color="var(--color-teal)" style={styles.arrowIcon} />
+            </div>
+          </Link>
+
+          <Link to="/digital-twin" style={styles.actionCardLink}>
+            <div className="card" style={styles.actionCard}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ ...styles.actionIconBadge, backgroundColor: '#f1f5f9' }}>
+                  <Cpu size={20} color="#475569" />
+                </div>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <h4 style={styles.actionTitle}>{t('nav_digital_twin')}</h4>
+                    <span className="badge badge-coming-soon">Soon</span>
+                  </div>
+                  <p style={styles.actionSub}>{t('digital_twin_subtitle')}</p>
+                </div>
+              </div>
+              <ArrowRight size={18} color="#94a3b8" style={styles.arrowIcon} />
+            </div>
+          </Link>
+
+          <Link to="/satellite" style={styles.actionCardLink}>
+            <div className="card" style={styles.actionCard}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ ...styles.actionIconBadge, backgroundColor: '#f1f5f9' }}>
+                  <Satellite size={20} color="#475569" />
+                </div>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <h4 style={styles.actionTitle}>{t('nav_satellite')}</h4>
+                    <span className="badge badge-coming-soon">Soon</span>
+                  </div>
+                  <p style={styles.actionSub}>{t('layer_rgb')}</p>
+                </div>
+              </div>
+              <ArrowRight size={18} color="#94a3b8" style={styles.arrowIcon} />
+            </div>
+          </Link>
+
+          <Link to="/weather" style={styles.actionCardLink}>
+            <div className="card" style={styles.actionCard}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ ...styles.actionIconBadge, backgroundColor: '#f1f5f9' }}>
+                  <CloudSun size={20} color="#475569" />
+                </div>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <h4 style={styles.actionTitle}>{t('nav_weather')}</h4>
+                    <span className="badge badge-coming-soon">Soon</span>
+                  </div>
+                  <p style={styles.actionSub}>{t('weather_summary')}</p>
+                </div>
+              </div>
+              <ArrowRight size={18} color="#94a3b8" style={styles.arrowIcon} />
+            </div>
+          </Link>
+>>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
         </div>
       </div>
     </div>
@@ -503,6 +729,7 @@ const styles = {
   container: {
     display: 'flex',
     flexDirection: 'column',
+<<<<<<< HEAD
     gap: '1.25rem'
   },
   topRibbon: {
@@ -510,6 +737,14 @@ const styles = {
     backdropFilter: 'blur(20px)',
     padding: '1.25rem 1.5rem',
     borderRadius: 'var(--radius-xl)',
+=======
+    gap: '2rem'
+  },
+  welcomeBanner: {
+    backgroundColor: '#ffffff',
+    padding: '1.5rem 1.75rem',
+    borderRadius: 'var(--radius-lg)',
+>>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
     border: '1px solid var(--color-border)',
     display: 'flex',
     alignItems: 'center',
@@ -517,13 +752,19 @@ const styles = {
     gap: '1rem',
     flexWrap: 'wrap'
   },
+<<<<<<< HEAD
   ribbonTitle: {
     fontSize: '1.35rem',
+=======
+  welcomeTitle: {
+    fontSize: '1.4rem',
+>>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
     fontWeight: '800',
     color: '#ffffff',
     margin: 0,
     fontFamily: 'Space Grotesk, sans-serif'
   },
+<<<<<<< HEAD
   ribbonSubtitle: {
     fontSize: '0.82rem',
     color: 'var(--color-text-secondary)',
@@ -546,11 +787,25 @@ const styles = {
   statsGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
+=======
+  welcomeSubtitle: {
+    fontSize: '0.875rem',
+    color: 'var(--color-text-secondary)',
+    margin: '2px 0 0 0'
+  },
+  addBtn: {
+    padding: '0.625rem 1.25rem'
+  },
+  sectionContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+>>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
     gap: '1rem'
   },
-  statCard: {
+  sectionHeaderRow: {
     display: 'flex',
     alignItems: 'center',
+<<<<<<< HEAD
     gap: '0.85rem',
     padding: '1.1rem'
   },
@@ -560,19 +815,61 @@ const styles = {
     borderRadius: 'var(--radius-md)',
     backgroundColor: 'var(--color-primary-light)',
     border: '1px solid var(--color-border)',
+=======
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: '0.5rem'
+  },
+  sectionHeaderTitle: {
+    fontSize: '1.15rem',
+    fontWeight: '700',
+    color: 'var(--color-text-main)',
+    margin: 0
+  },
+  sectionHeaderSub: {
+    fontSize: '0.8125rem',
+    color: 'var(--color-text-secondary)',
+    margin: 0
+  },
+  summaryGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+    gap: '1.25rem'
+  },
+  summaryCard: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.875rem',
+    padding: '1.25rem'
+  },
+  iconContainer: {
+    width: '46px',
+    height: '46px',
+    borderRadius: 'var(--radius-md)',
+    backgroundColor: 'var(--color-light-green)',
+>>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0
   },
+<<<<<<< HEAD
   statLabel: {
     fontSize: '0.68rem',
     fontWeight: '700',
     color: 'var(--color-text-secondary)',
     textTransform: 'uppercase',
     fontFamily: 'Space Grotesk, sans-serif'
+=======
+  cardLabel: {
+    fontSize: '0.725rem',
+    fontWeight: '700',
+    color: 'var(--color-text-secondary)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.03em'
+>>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
   },
-  statValue: {
+  cardVal: {
     fontSize: '1.35rem',
     fontWeight: '800',
     color: '#ffffff',
@@ -580,6 +877,7 @@ const styles = {
     margin: '2px 0',
     fontFamily: 'Space Grotesk, sans-serif'
   },
+<<<<<<< HEAD
   statHelper: {
     fontSize: '0.7rem',
     color: 'var(--color-text-secondary)',
@@ -597,21 +895,60 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: '1rem'
+=======
+  cardValTruncated: {
+    fontSize: '1.15rem',
+    fontWeight: '800',
+    color: 'var(--color-text-main)',
+    lineHeight: '1.2',
+    margin: '2px 0',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis'
   },
-  modulesGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-    gap: '1.25rem'
+  cardHelper: {
+    fontSize: '0.725rem',
+    color: '#94a3b8'
+>>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
   },
-  moduleCard: {
+  mapCard: {
+    padding: '0.75rem',
+    backgroundColor: '#ffffff'
+  },
+  emptyMapContainer: {
+    minHeight: '320px',
     display: 'flex',
     flexDirection: 'column',
-    justifyContent: 'space-between'
+    alignItems: 'center',
+    justifyContent: 'center',
+    textAlign: 'center',
+    padding: '2.5rem 1.5rem',
+    backgroundColor: '#fafdfa',
+    borderRadius: 'var(--radius-md)',
+    border: '1px stroke border'
   },
-  moduleHeader: {
+  emptyMapBadge: {
+    width: '64px',
+    height: '64px',
+    borderRadius: '50%',
+    backgroundColor: 'var(--color-light-green)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  quickActionsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+    gap: '1rem'
+  },
+  actionCardLink: {
+    textDecoration: 'none'
+  },
+  actionCard: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
+<<<<<<< HEAD
     paddingBottom: '0.65rem',
     borderBottom: '1px solid var(--color-border-subtle)'
   },
@@ -636,5 +973,34 @@ const styles = {
     fontWeight: '800',
     color: 'var(--color-primary)',
     fontFamily: 'Space Grotesk, sans-serif'
+=======
+    padding: '1rem 1.25rem',
+    cursor: 'pointer',
+    transition: 'all 0.15s ease'
+  },
+  actionIconBadge: {
+    width: '40px',
+    height: '40px',
+    borderRadius: 'var(--radius-md)',
+    backgroundColor: 'var(--color-light-green)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0
+  },
+  actionTitle: {
+    fontSize: '0.9rem',
+    fontWeight: '700',
+    color: 'var(--color-text-main)',
+    margin: 0
+  },
+  actionSub: {
+    fontSize: '0.75rem',
+    color: 'var(--color-text-secondary)',
+    margin: '2px 0 0 0'
+  },
+  arrowIcon: {
+    flexShrink: 0
+>>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
   }
 };

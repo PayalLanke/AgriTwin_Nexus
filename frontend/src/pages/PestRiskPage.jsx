@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React, { useEffect, useState } from 'react';
 import { farmService } from '../services/farmService';
 import { getFarmIndicesAnalysis } from '../utils/indicesEngine';
@@ -70,11 +71,18 @@ export default function PestRiskPage() {
     );
   }
 
+=======
+import React from 'react';
+import { ShieldAlert, Bug, Flame, Zap } from 'lucide-react';
+
+export default function PestRiskPage() {
+>>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
   return (
     <div style={styles.container} className="animate-fade-in">
       {/* Header */}
       <div style={styles.header}>
         <div>
+<<<<<<< HEAD
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
             <h1 style={styles.title}>Pathogen & Pest Bio-Vulnerability Radar</h1>
             <span style={styles.radarBadge}>
@@ -197,9 +205,54 @@ export default function PestRiskPage() {
                 </div>
               );
             })}
+=======
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <h1 style={styles.title}>Risk Analysis</h1>
+            <span className="badge badge-coming-soon">Coming Soon</span>
           </div>
-        </>
-      )}
+          <p style={styles.subtitle}>
+            Predictive pest outbreak, fungal pathogen, and thermal stress risk models.
+          </p>
+        </div>
+      </div>
+
+      {/* Main Status & Info Card */}
+      <div className="card" style={styles.mainCard}>
+        <div style={styles.iconContainer}>
+          <ShieldAlert size={40} color="var(--color-error)" />
+        </div>
+        <h3 style={{ margin: '0.5rem 0 0.25rem 0', fontSize: '1.25rem', color: 'var(--color-text-main)' }}>
+          Risk Evaluation Model Under Development
+        </h3>
+        <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem', maxWidth: '520px', lineHeight: '1.6', margin: 0, textAlign: 'center' }}>
+          Risk analysis will appear after the risk model is integrated. This module will correlate canopy humidity, temperature degree-days, and vegetation index anomalies to calculate disease risk scores.
+        </p>
+
+        <div style={styles.specsGrid}>
+          <div style={styles.specBox}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Bug size={16} color="var(--color-error)" />
+              <span style={styles.specTitle}>Pathogen Risk Model</span>
+            </div>
+            <span style={styles.specDetail}>Rust, Blight, and Mildew spore germination algorithms</span>
+          </div>
+          <div style={styles.specBox}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Flame size={16} color="var(--color-warning)" />
+              <span style={styles.specTitle}>Thermal Stress</span>
+            </div>
+            <span style={styles.specDetail}>Canopy temperature differential tracking heat load</span>
+>>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
+          </div>
+          <div style={styles.specBox}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Zap size={16} color="var(--color-primary)" />
+              <span style={styles.specTitle}>Action Thresholds</span>
+            </div>
+            <span style={styles.specDetail}>Early warning notifications before economic injury levels</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -229,11 +282,10 @@ const styles = {
   header: {
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    flexWrap: 'wrap',
-    gap: '1rem'
+    justifyContent: 'space-between'
   },
   title: {
+<<<<<<< HEAD
     fontSize: '1.45rem',
     fontWeight: '800',
     color: '#ffffff',
@@ -281,8 +333,24 @@ const styles = {
     border: '1px solid rgba(34, 229, 138, 0.18)'
   },
   riskBanner: {
+=======
+    fontSize: '1.4rem',
+    fontWeight: '800',
+    color: 'var(--color-primary)',
+    margin: 0
+  },
+  subtitle: {
+    fontSize: '0.875rem',
+    color: 'var(--color-text-secondary)',
+    margin: '2px 0 0 0'
+  },
+  mainCard: {
+    padding: '3.5rem 2rem',
+>>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
     display: 'flex',
+    flexDirection: 'column',
     alignItems: 'center',
+<<<<<<< HEAD
     justifyContent: 'space-between',
     flexWrap: 'wrap',
     gap: '1.5rem',
@@ -348,15 +416,41 @@ const styles = {
     fontSize: '0.75rem',
     fontWeight: '700',
     fontFamily: 'Space Grotesk, sans-serif'
+=======
+    gap: '1rem'
   },
-  diseaseGrid: {
+  iconContainer: {
+    width: '72px',
+    height: '72px',
+    borderRadius: '50%',
+    backgroundColor: 'var(--color-error-light)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: '0.5rem'
+>>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
+  },
+  specsGrid: {
     display: 'grid',
+<<<<<<< HEAD
     gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
     gap: '1.25rem'
+=======
+    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+    gap: '1rem',
+    width: '100%',
+    maxWidth: '750px',
+    marginTop: '1.5rem'
+>>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
   },
-  diseaseCard: {
+  specBox: {
+    backgroundColor: '#f8fafc',
+    padding: '1rem',
+    borderRadius: 'var(--radius-md)',
+    border: '1px solid var(--color-border)',
     display: 'flex',
     flexDirection: 'column',
+<<<<<<< HEAD
     gap: '1.125rem',
     background: 'rgba(15, 27, 21, 0.72)',
     backdropFilter: 'blur(20px)',
@@ -451,5 +545,18 @@ const styles = {
     fontSize: '0.775rem',
     color: '#94a3b8',
     lineHeight: '1.4'
+=======
+    gap: '0.5rem'
+  },
+  specTitle: {
+    fontSize: '0.75rem',
+    fontWeight: '700',
+    color: 'var(--color-text-main)',
+    textTransform: 'uppercase'
+  },
+  specDetail: {
+    fontSize: '0.8125rem',
+    color: 'var(--color-text-secondary)'
+>>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
   }
 };

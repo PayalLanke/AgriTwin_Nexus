@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { farmService } from '../services/farmService';
+import { useLanguage } from '../context/LanguageContext';
 import Modal from '../components/Modal';
-import { Sprout, PlusCircle, Eye, Edit2, Trash2, Calendar, MapPin, Layers, Cpu, Search } from 'lucide-react';
+import { Sprout, PlusCircle, Eye, Edit2, Trash2, Calendar, MapPin, Layers, Search } from 'lucide-react';
 
 export default function MyFarmsPage() {
+  const { t } = useLanguage();
   const [farms, setFarms] = useState([]);
   const [filteredFarms, setFilteredFarms] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -47,13 +49,11 @@ export default function MyFarmsPage() {
     }
   }, [searchQuery, farms]);
 
-  // Open delete confirmation modal
   const promptDeleteFarm = (farm) => {
     setSelectedFarmToDelete(farm);
     setIsDeleteModalOpen(true);
   };
 
-  // Confirm delete handler (STEP 13)
   const handleConfirmDelete = async () => {
     if (!selectedFarmToDelete) return;
     try {
@@ -68,53 +68,65 @@ export default function MyFarmsPage() {
 
   return (
     <div style={styles.container} className="animate-fade-in">
-      {/* Page Header */}
+      {/* Header */}
       <div style={styles.header}>
         <div>
-          <h1 style={styles.title}>My Registered Farms</h1>
-          <p style={styles.subtitle}>Manage active field boundaries, crop schedules, and spatial digital twins</p>
+          <h1 style={styles.title}>{t('my_farms_title')}</h1>
+          <p style={styles.subtitle}>{t('my_farms_subtitle')}</p>
         </div>
         <Link to="/farms/add" className="btn btn-primary">
           <PlusCircle size={18} />
-          <span>Register New Farm</span>
+          <span>+ {t('add_farm_btn')}</span>
         </Link>
       </div>
 
       {/* Filter / Search Bar */}
-      <div style={styles.filterRow}>
-        <div style={styles.searchBox}>
-          <Search size={16} color="#9ca3af" style={styles.searchIcon} />
-          <input
-            type="text"
-            placeholder="Search farm by name or crop type..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            style={{ paddingLeft: '2.25rem' }}
-          />
+      {farms.length > 0 && (
+        <div style={styles.filterRow}>
+          <div style={styles.searchBox}>
+            <Search size={16} color="#9ca3af" style={styles.searchIcon} />
+            <input
+              type="text"
+              placeholder={t('search_location_placeholder')}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{ paddingLeft: '2.25rem' }}
+            />
+          </div>
+          <div style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>
+            Showing <b>{filteredFarms.length}</b> of {farms.length} {t('total_farms')}
+          </div>
         </div>
-        <div style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>
-          Showing <b>{filteredFarms.length}</b> of {farms.length} farms
-        </div>
-      </div>
+      )}
 
-      {/* Farms List / Grid */}
+      {/* Farms Grid or Professional Empty State */}
       {isLoading ? (
         <div style={styles.loadingBox}>
-          <p>Loading registered farm digital twins...</p>
+          <p>Loading registered farms...</p>
+        </div>
+      ) : farms.length === 0 ? (
+        <div className="card" style={styles.emptyCard}>
+          <div style={styles.emptyIconBadge}>
+            <Sprout size={36} color="var(--color-primary)" />
+          </div>
+          <h3 style={{ margin: '0.5rem 0 0.25rem 0', fontSize: '1.25rem', color: 'var(--color-text-main)' }}>
+            {t('my_farms_title')}
+          </h3>
+          <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem', maxWidth: '420px', lineHeight: '1.5', margin: 0 }}>
+            {t('add_farm_subtitle')}
+          </p>
+          <Link to="/farms/add" className="btn btn-primary" style={{ marginTop: '0.75rem' }}>
+            <PlusCircle size={18} />
+            <span>+ {t('add_farm_btn')}</span>
+          </Link>
         </div>
       ) : filteredFarms.length === 0 ? (
         <div className="card" style={styles.emptyCard}>
-          <Sprout size={40} color="var(--color-primary)" />
-          <h3>No matching registered farms found</h3>
-          <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>
-            {searchQuery ? 'Try altering your search term.' : 'Click below to register your first farm field boundary.'}
+          <Search size={32} color="var(--color-text-secondary)" />
+          <h3>No matching farms found</h3>
+          <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem', margin: 0 }}>
+            No farm matched "{searchQuery}". Try altering your search query.
           </p>
-          {!searchQuery && (
-            <Link to="/farms/add" className="btn btn-primary" style={{ marginTop: '0.5rem' }}>
-              <PlusCircle size={18} />
-              <span>Register New Farm</span>
-            </Link>
-          )}
         </div>
       ) : (
         <div style={styles.grid}>
@@ -125,32 +137,32 @@ export default function MyFarmsPage() {
                   <h3 style={styles.farmName}>{farm.farmName}</h3>
                   <span style={styles.cropBadge}>{farm.cropType}</span>
                 </div>
-                <span className="badge badge-primary">{farm.status}</span>
+                <span className="badge badge-primary">{farm.status || t('boundary_active')}</span>
               </div>
 
               <div style={styles.cardDetails}>
                 <div style={styles.detailRow}>
                   <div style={styles.detailIconGroup}>
                     <Calendar size={15} color="var(--color-teal)" />
-                    <span style={styles.detailLabel}>Sowing Date:</span>
+                    <span style={styles.detailLabel}>{t('sowing_date')}:</span>
                   </div>
                   <span style={styles.detailVal}>{farm.sowingDate}</span>
                 </div>
 
                 <div style={styles.detailRow}>
                   <div style={styles.detailIconGroup}>
-                    <Layers size={15} color="var(--color-accent)" />
-                    <span style={styles.detailLabel}>Farm Area:</span>
+                    <Layers size={15} color="var(--color-warning)" />
+                    <span style={styles.detailLabel}>{t('field_area')}:</span>
                   </div>
                   <span style={styles.detailVal}>
-                    <b>{farm.areaHectares} Ha</b> ({farm.areaAcres} Acres)
+                    <b>{farm.areaHectares} {t('hectares')}</b> ({farm.areaAcres} {t('acres')})
                   </span>
                 </div>
 
                 <div style={styles.detailRow}>
                   <div style={styles.detailIconGroup}>
                     <MapPin size={15} color="var(--color-primary)" />
-                    <span style={styles.detailLabel}>Coordinates:</span>
+                    <span style={styles.detailLabel}>{t('location')}:</span>
                   </div>
                   <span style={styles.detailVal}>
                     {farm.latitude.toFixed(4)}° N, {farm.longitude.toFixed(4)}° E
@@ -158,25 +170,25 @@ export default function MyFarmsPage() {
                 </div>
               </div>
 
-              {/* Action Buttons (STEP 11: View, Edit, Delete) */}
+              {/* Actions: View, Edit, Delete */}
               <div style={styles.cardActions}>
                 <Link to={`/farms/view/${farm.id}`} className="btn btn-teal" style={styles.actionBtn}>
                   <Eye size={15} />
-                  <span>View</span>
+                  <span>{t('view')}</span>
                 </Link>
                 <Link to={`/farms/edit/${farm.id}`} className="btn btn-secondary" style={styles.actionBtn}>
                   <Edit2 size={15} />
-                  <span>Edit</span>
+                  <span>{t('edit')}</span>
                 </Link>
                 <button
                   type="button"
                   className="btn btn-secondary"
-                  style={{ ...styles.actionBtn, color: 'var(--color-danger)' }}
+                  style={{ ...styles.actionBtn, color: 'var(--color-error)', borderColor: '#fecaca' }}
                   onClick={() => promptDeleteFarm(farm)}
                   title="Delete farm"
                 >
                   <Trash2 size={15} />
-                  <span>Delete</span>
+                  <span>{t('delete')}</span>
                 </button>
               </div>
             </div>
@@ -184,13 +196,13 @@ export default function MyFarmsPage() {
         </div>
       )}
 
-      {/* Delete Confirmation Modal (STEP 13) */}
+      {/* Delete Confirmation Modal */}
       <Modal
         isOpen={isDeleteModalOpen}
-        title="Delete Registered Farm?"
+        title="Delete Farm Record?"
         message={
           selectedFarmToDelete
-            ? `Are you sure you want to delete "${selectedFarmToDelete.farmName}"? This action will remove its GeoJSON boundary polygon and cannot be undone.`
+            ? `Are you sure you want to delete "${selectedFarmToDelete.farmName}"? This action will remove its geographical boundary and cannot be undone.`
             : 'Are you sure you want to delete this farm?'
         }
         confirmText="Delete Farm"
@@ -218,14 +230,14 @@ const styles = {
   },
   title: {
     fontSize: '1.4rem',
-    fontWeight: '700',
+    fontWeight: '800',
     color: 'var(--color-primary)',
     margin: 0
   },
   subtitle: {
     fontSize: '0.875rem',
     color: 'var(--color-text-secondary)',
-    margin: 0
+    margin: '2px 0 0 0'
   },
   filterRow: {
     display: 'flex',
@@ -259,11 +271,21 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    gap: '0.75rem'
+    gap: '0.5rem'
+  },
+  emptyIconBadge: {
+    width: '64px',
+    height: '64px',
+    borderRadius: '50%',
+    backgroundColor: 'var(--color-light-green)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: '0.5rem'
   },
   grid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(330px, 1fr))',
     gap: '1.25rem'
   },
   farmCard: {
@@ -280,7 +302,8 @@ const styles = {
   farmName: {
     fontSize: '1.15rem',
     fontWeight: '700',
-    margin: 0
+    margin: 0,
+    color: 'var(--color-text-main)'
   },
   cropBadge: {
     display: 'inline-block',
@@ -289,7 +312,7 @@ const styles = {
     color: 'var(--color-teal)',
     backgroundColor: 'var(--color-teal-light)',
     padding: '0.125rem 0.5rem',
-    borderRadius: '4px',
+    borderRadius: 'var(--radius-sm)',
     marginTop: '4px'
   },
   cardDetails: {
@@ -297,8 +320,8 @@ const styles = {
     flexDirection: 'column',
     gap: '0.625rem',
     padding: '0.75rem 0',
-    borderTop: '1px solid #f3f4f6',
-    borderBottom: '1px solid #f3f4f6'
+    borderTop: '1px solid var(--color-border)',
+    borderBottom: '1px solid var(--color-border)'
   },
   detailRow: {
     display: 'flex',
