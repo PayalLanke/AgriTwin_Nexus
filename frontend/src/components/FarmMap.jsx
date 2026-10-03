@@ -191,10 +191,10 @@ export default function FarmMap({
 
     const geoJsonLayer = L.geoJSON(geojson, {
       style: {
-        color: '#0F766E',
-        fillColor: '#22C55E',
+        color: '#00d9ff',
+        fillColor: '#22e58a',
         fillOpacity: 0.35,
-        weight: 3
+        weight: 2.5
       }
     }).addTo(map);
 
@@ -423,37 +423,39 @@ const styles = {
   },
   mapCanvasWrapper: {
     position: 'relative',
-    borderRadius: 'var(--radius-lg)',
+    borderRadius: 'var(--radius-xl)',
     overflow: 'hidden',
     border: '1px solid var(--color-border)',
-    boxShadow: 'var(--shadow-sm)'
+    boxShadow: 'var(--shadow-glow)'
   },
   instructionOverlay: {
     position: 'absolute',
-    bottom: '12px',
+    bottom: '16px',
     left: '50%',
     transform: 'translateX(-50%)',
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    backdropFilter: 'blur(4px)',
-    padding: '0.5rem 1rem',
+    backgroundColor: 'rgba(11, 21, 17, 0.9)',
+    backdropFilter: 'blur(16px)',
+    padding: '0.5rem 1.25rem',
     borderRadius: '9999px',
-    border: '1px solid var(--color-teal)',
-    boxShadow: 'var(--shadow-md)',
+    border: '1px solid var(--color-primary)',
+    boxShadow: '0 0 16px rgba(34, 229, 138, 0.3)',
     display: 'flex',
     alignItems: 'center',
     gap: '0.5rem',
-    fontSize: '0.775rem',
-    fontWeight: '600',
-    color: 'var(--color-teal)',
-    zIndex: 10
+    fontSize: '0.8rem',
+    fontWeight: '700',
+    color: 'var(--color-primary)',
+    zIndex: 10,
+    fontFamily: 'Space Grotesk, sans-serif'
   },
   metadataPanel: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '1rem 1.25rem',
-    backgroundColor: '#ffffff',
-    borderRadius: 'var(--radius-lg)',
+    backgroundColor: 'rgba(15, 28, 22, 0.85)',
+    backdropFilter: 'blur(20px)',
+    borderRadius: 'var(--radius-xl)',
     border: '1px solid var(--color-border)',
     flexWrap: 'wrap',
     gap: '1rem'
@@ -470,17 +472,19 @@ const styles = {
   },
   metaLabel: {
     display: 'block',
-    fontSize: '0.7rem',
+    fontSize: '0.68rem',
     textTransform: 'uppercase',
     letterSpacing: '0.05em',
     color: 'var(--color-text-secondary)',
-    fontWeight: '600'
+    fontWeight: '700',
+    fontFamily: 'Space Grotesk, sans-serif'
   },
   metaVal: {
     display: 'block',
-    fontSize: '0.9rem',
+    fontSize: '0.92rem',
     fontWeight: '700',
-    color: 'var(--color-text-main)'
+    color: '#ffffff',
+    fontFamily: 'JetBrains Mono, monospace'
   },
   boundaryStatusGroup: {
     marginLeft: 'auto'
@@ -490,8 +494,8 @@ const styles = {
     alignItems: 'center',
     gap: '0.75rem',
     padding: '0.5rem 1rem',
-    backgroundColor: 'var(--color-primary-light)',
-    border: '1px solid #bbf7d0',
+    backgroundColor: 'rgba(34, 229, 138, 0.12)',
+    border: '1px solid var(--color-primary)',
     borderRadius: 'var(--radius-md)'
   },
   statusWarningBadge: {
@@ -499,13 +503,14 @@ const styles = {
     alignItems: 'center',
     gap: '0.5rem',
     padding: '0.5rem 1rem',
-    backgroundColor: '#fffbeb',
-    border: '1px solid #fde68a',
+    backgroundColor: 'rgba(245, 158, 11, 0.12)',
+    border: '1px solid rgba(245, 158, 11, 0.4)',
     borderRadius: 'var(--radius-md)'
   },
   areaRow: {
-    fontSize: '0.775rem',
-    color: '#374151',
-    marginTop: '1px'
+    fontSize: '0.75rem',
+    color: 'var(--color-text-main)',
+    marginTop: '2px',
+    fontFamily: 'JetBrains Mono, monospace'
   }
 };

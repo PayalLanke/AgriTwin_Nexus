@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authService } from '../services/authService';
-import { Sprout, User, Mail, Lock, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Sprout, User, Mail, Lock, CheckCircle2, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -9,7 +9,7 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  
+
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -39,7 +39,7 @@ export default function RegisterPage() {
     setIsLoading(true);
     try {
       await authService.register({ fullName, email, password });
-      setSuccess('Account created successfully! Redirecting to login...');
+      setSuccess('Account created successfully! Redirecting to login console...');
       setTimeout(() => {
         navigate('/login');
       }, 1500);
@@ -52,14 +52,17 @@ export default function RegisterPage() {
 
   return (
     <div style={styles.pageContainer}>
+      <div style={styles.ambientAuraTop}></div>
+      <div style={styles.ambientAuraBottom}></div>
+
       <div style={styles.card} className="animate-fade-in">
         {/* Branding Header */}
         <div style={styles.brandHeader}>
-          <div style={styles.logoBadge}>
-            <Sprout size={30} color="#ffffff" />
+          <div style={styles.logoBadge} className="hud-glow">
+            <Sprout size={30} color="#070e0b" />
           </div>
-          <h1 style={styles.appTitle}>Farmer Registration</h1>
-          <p style={styles.tagline}>Create your account to access AgriTwin Nexus Platform</p>
+          <h1 style={styles.appTitle}>Operator Onboarding</h1>
+          <p style={styles.tagline}>Register agronomist credentials to provision AgriTwin spatial nodes</p>
         </div>
 
         {error && (
@@ -70,86 +73,90 @@ export default function RegisterPage() {
 
         {success && (
           <div style={styles.successAlert}>
-            <CheckCircle2 size={18} />
+            <CheckCircle2 size={18} color="#22e58a" />
             <span>{success}</span>
           </div>
         )}
 
         {/* Form Controls */}
         <form onSubmit={handleRegister} style={styles.form}>
-          <div>
-            <label htmlFor="fullName">Full Name</label>
+          <div style={styles.formGroup}>
+            <label style={styles.label} htmlFor="fullName">FULL LEGAL / OPERATOR NAME</label>
             <div style={styles.inputWrapper}>
-              <User size={18} color="#9ca3af" style={styles.inputIcon} />
+              <User size={16} color="#64748b" style={styles.inputIcon} />
               <input
                 id="fullName"
                 type="text"
-                placeholder="Rajesh Kumar"
+                placeholder="Elena Rostova"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                style={styles.inputWithIcon}
+                style={styles.input}
                 required
               />
             </div>
           </div>
 
-          <div>
-            <label htmlFor="email">Email Address</label>
+          <div style={styles.formGroup}>
+            <label style={styles.label} htmlFor="email">OFFICIAL EMAIL ADDRESS</label>
             <div style={styles.inputWrapper}>
-              <Mail size={18} color="#9ca3af" style={styles.inputIcon} />
+              <Mail size={16} color="#64748b" style={styles.inputIcon} />
               <input
                 id="email"
                 type="email"
-                placeholder="farmer@example.com"
+                placeholder="elena.rostova@agritwin.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                style={styles.inputWithIcon}
+                style={styles.input}
                 required
               />
             </div>
           </div>
 
-          <div>
-            <label htmlFor="password">Password</label>
-            <div style={styles.inputWrapper}>
-              <Lock size={18} color="#9ca3af" style={styles.inputIcon} />
-              <input
-                id="password"
-                type="password"
-                placeholder="At least 6 characters"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                style={styles.inputWithIcon}
-                required
-              />
+          <div style={styles.formGrid}>
+            <div style={styles.formGroup}>
+              <label style={styles.label} htmlFor="password">PASSPHRASE</label>
+              <div style={styles.inputWrapper}>
+                <Lock size={16} color="#64748b" style={styles.inputIcon} />
+                <input
+                  id="password"
+                  type="password"
+                  placeholder="Min. 6 chars"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  style={styles.input}
+                  required
+                />
+              </div>
             </div>
-          </div>
 
-          <div>
-            <label htmlFor="confirmPassword">Confirm Password</label>
-            <div style={styles.inputWrapper}>
-              <Lock size={18} color="#9ca3af" style={styles.inputIcon} />
-              <input
-                id="confirmPassword"
-                type="password"
-                placeholder="Re-enter password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                style={styles.inputWithIcon}
-                required
-              />
+            <div style={styles.formGroup}>
+              <label style={styles.label} htmlFor="confirmPassword">CONFIRM PASSPHRASE</label>
+              <div style={styles.inputWrapper}>
+                <Lock size={16} color="#64748b" style={styles.inputIcon} />
+                <input
+                  id="confirmPassword"
+                  type="password"
+                  placeholder="Re-enter"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  style={styles.input}
+                  required
+                />
+              </div>
             </div>
           </div>
 
           <button
             type="submit"
-            className="btn btn-primary"
+            className="cyber-gradient-btn"
             disabled={isLoading}
-            style={{ width: '100%', marginTop: '0.5rem', padding: '0.75rem' }}
+            style={{ width: '100%', marginTop: '0.75rem', padding: '0.875rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.625rem' }}
           >
-            {isLoading ? 'Creating Farmer Account...' : (
+            {isLoading ? (
+              <span>Provisioning Digital Twin Account...</span>
+            ) : (
               <>
-                <span>Register Account</span>
+                <span>Register & Provision Workspace</span>
                 <ArrowRight size={18} />
               </>
             )}
@@ -157,11 +164,11 @@ export default function RegisterPage() {
         </form>
 
         <div style={styles.footerLinkGroup}>
-          <span style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>
+          <span style={{ color: '#94a3b8', fontSize: '0.8125rem' }}>
             Already registered?
           </span>
           <Link to="/login" style={styles.loginLink}>
-            Back to Login
+            Return to Login &rarr;
           </Link>
         </div>
       </div>
@@ -175,74 +182,122 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'var(--color-bg)',
+    backgroundColor: '#070e0b',
     padding: '1.5rem',
-    backgroundImage: 'radial-gradient(#e2e8f0 1px, transparent 1px)',
-    backgroundSize: '24px 24px'
+    position: 'relative',
+    overflow: 'hidden',
+    backgroundImage: 'radial-gradient(rgba(34, 229, 138, 0.08) 1px, transparent 1px)',
+    backgroundSize: '28px 28px'
+  },
+  ambientAuraTop: {
+    position: 'absolute',
+    top: '-15%',
+    right: '20%',
+    width: '450px',
+    height: '450px',
+    background: 'radial-gradient(circle, rgba(34, 229, 138, 0.15) 0%, transparent 70%)',
+    pointerEvents: 'none'
+  },
+  ambientAuraBottom: {
+    position: 'absolute',
+    bottom: '-20%',
+    left: '15%',
+    width: '500px',
+    height: '500px',
+    background: 'radial-gradient(circle, rgba(0, 217, 255, 0.12) 0%, transparent 70%)',
+    pointerEvents: 'none'
   },
   card: {
-    backgroundColor: '#ffffff',
-    borderRadius: 'var(--radius-xl)',
-    border: '1px solid var(--color-border)',
-    boxShadow: 'var(--shadow-lg)',
+    backgroundColor: 'rgba(11, 22, 17, 0.85)',
+    backdropFilter: 'blur(28px)',
+    borderRadius: '24px',
+    border: '1px solid rgba(34, 229, 138, 0.25)',
+    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(34, 229, 138, 0.1)',
     width: '100%',
-    maxWidth: '460px',
-    padding: '2.5rem 2rem',
+    maxWidth: '480px',
+    padding: '2.5rem 2.25rem',
     display: 'flex',
     flexDirection: 'column',
-    gap: '1.25rem'
+    gap: '1.25rem',
+    zIndex: 10
   },
   brandHeader: {
     textAlign: 'center',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    gap: '0.5rem'
+    gap: '0.4rem'
   },
   logoBadge: {
-    width: '50px',
-    height: '50px',
-    borderRadius: 'var(--radius-lg)',
-    backgroundColor: 'var(--color-primary)',
+    width: '52px',
+    height: '52px',
+    borderRadius: '16px',
+    backgroundColor: '#22e58a',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    boxShadow: '0 4px 8px rgba(22, 101, 52, 0.3)'
+    boxShadow: '0 0 25px rgba(34, 229, 138, 0.5)',
+    marginBottom: '0.25rem'
   },
   appTitle: {
-    fontSize: '1.5rem',
-    fontWeight: '700',
-    color: 'var(--color-primary)'
+    fontSize: '1.6rem',
+    fontWeight: '800',
+    color: '#ffffff',
+    fontFamily: 'Space Grotesk, sans-serif',
+    lineHeight: '1.1',
+    margin: 0
   },
   tagline: {
-    fontSize: '0.8125rem',
-    color: 'var(--color-text-secondary)'
+    fontSize: '0.775rem',
+    color: '#94a3b8',
+    maxWidth: '320px',
+    lineHeight: '1.4',
+    margin: '2px 0 0 0'
   },
   errorAlert: {
-    backgroundColor: 'var(--color-danger-light)',
-    border: '1px solid #fecaca',
-    color: 'var(--color-danger)',
+    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+    border: '1px solid rgba(239, 68, 68, 0.35)',
+    color: '#fca5a5',
     padding: '0.75rem 1rem',
-    borderRadius: 'var(--radius-md)',
-    fontSize: '0.825rem',
-    textAlign: 'center'
+    borderRadius: '12px',
+    fontSize: '0.8rem',
+    textAlign: 'center',
+    fontWeight: '500'
   },
   successAlert: {
-    backgroundColor: 'var(--color-primary-light)',
-    border: '1px solid #bbf7d0',
-    color: 'var(--color-primary)',
+    backgroundColor: 'rgba(34, 229, 138, 0.12)',
+    border: '1px solid rgba(34, 229, 138, 0.35)',
+    color: '#22e58a',
     padding: '0.75rem 1rem',
-    borderRadius: 'var(--radius-md)',
+    borderRadius: '12px',
     fontSize: '0.825rem',
     display: 'flex',
     alignItems: 'center',
     gap: '0.5rem',
-    fontWeight: '600'
+    fontWeight: '600',
+    fontFamily: 'Space Grotesk, sans-serif'
   },
   form: {
     display: 'flex',
     flexDirection: 'column',
     gap: '1rem'
+  },
+  formGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.35rem'
+  },
+  formGrid: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '0.75rem'
+  },
+  label: {
+    fontSize: '0.675rem',
+    fontWeight: '700',
+    color: '#94a3b8',
+    letterSpacing: '0.05em',
+    fontFamily: 'Space Grotesk, sans-serif'
   },
   inputWrapper: {
     position: 'relative'
@@ -254,22 +309,31 @@ const styles = {
     transform: 'translateY(-50%)',
     pointerEvents: 'none'
   },
-  inputWithIcon: {
-    paddingLeft: '2.5rem'
+  input: {
+    width: '100%',
+    padding: '0.75rem 1rem 0.75rem 2.4rem',
+    background: 'rgba(8, 17, 13, 0.85)',
+    border: '1px solid rgba(34, 229, 138, 0.25)',
+    borderRadius: '12px',
+    color: '#f8fafc',
+    fontSize: '0.85rem',
+    outline: 'none',
+    boxSizing: 'border-box'
   },
   footerLinkGroup: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     gap: '0.5rem',
-    marginTop: '0.5rem',
-    paddingTop: '1.25rem',
-    borderTop: '1px solid var(--color-border)'
+    marginTop: '0.25rem',
+    paddingTop: '1.125rem',
+    borderTop: '1px solid rgba(255, 255, 255, 0.08)'
   },
   loginLink: {
-    fontSize: '0.875rem',
-    fontWeight: '600',
-    color: 'var(--color-primary)',
-    textDecoration: 'none'
+    fontSize: '0.8125rem',
+    fontWeight: '700',
+    color: '#22e58a',
+    textDecoration: 'none',
+    fontFamily: 'Space Grotesk, sans-serif'
   }
 };

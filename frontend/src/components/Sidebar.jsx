@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -12,44 +12,57 @@ import {
   Sparkles,
   FileBarChart,
   Settings,
-  ShieldCheck
+  ShieldCheck,
+  ChevronLeft,
+  ChevronRight,
+  Radio,
+  Boxes
 } from 'lucide-react';
 
 export default function Sidebar() {
+  const [collapsed, setCollapsed] = useState(false);
+
   const farmNavItems = [
-    { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    { label: 'My Farms', path: '/farms', icon: Sprout },
-    { label: 'Add Farm', path: '/farms/add', icon: PlusCircle },
+    { label: '3D Command', path: '/dashboard', icon: LayoutDashboard },
+    { label: 'Spatial Twin', path: '/digital-twin', icon: Cpu, badge: '3D' },
+    { label: 'Farm Parcels', path: '/farms', icon: Sprout },
+    { label: 'Register Parcel', path: '/farms/add', icon: PlusCircle },
   ];
 
   const analyticsNavItems = [
-    { label: 'Digital Twin Canvas', path: '/digital-twin', icon: Cpu, badge: 'Live Grid' },
-    { label: 'Satellite Data (S2)', path: '/satellite', icon: Satellite, badge: 'GEE' },
-    { label: 'Weather & Climate', path: '/weather', icon: CloudSun },
-    { label: 'Pest & Disease Risk', path: '/pest-risk', icon: ShieldAlert, badge: 'Risk Model' },
-    { label: 'Yield Estimator', path: '/yield', icon: TrendingUp },
-    { label: 'AI Advisories', path: '/recommendations', icon: Sparkles },
-    { label: 'Audit Reports', path: '/reports', icon: FileBarChart, badge: 'PDF' },
-    { label: 'Settings', path: '/settings', icon: Settings },
+    { label: 'Satellite (S2)', path: '/satellite', icon: Satellite, badge: 'GEE' },
+    { label: 'Weather & Spray ΔT', path: '/weather', icon: CloudSun },
+    { label: 'Pest & Pathogen', path: '/pest-risk', icon: ShieldAlert, badge: 'Low 18%' },
+    { label: 'Yield Integrator', path: '/yield', icon: TrendingUp },
+    { label: 'AI Prescriptions', path: '/recommendations', icon: Sparkles },
+    { label: 'Mission Reports', path: '/reports', icon: FileBarChart, badge: 'PDF' },
+    { label: 'Platform Config', path: '/settings', icon: Settings },
   ];
 
   return (
-    <aside style={styles.sidebar}>
+    <aside style={{
+      ...styles.sidebar,
+      width: collapsed ? '72px' : '250px'
+    }}>
       {/* Brand Header */}
       <div style={styles.brandContainer}>
         <div style={styles.logoIconContainer}>
-          <Sprout size={24} color="#ffffff" />
+          <Boxes size={22} color="var(--color-primary)" />
         </div>
-        <div>
-          <h1 style={styles.brandTitle}>AgriTwin <span style={{ color: 'var(--color-secondary)' }}>Nexus</span></h1>
-          <p style={styles.brandSubtitle}>Precision Farming SaaS</p>
-        </div>
+        {!collapsed && (
+          <div>
+            <h1 style={styles.brandTitle}>
+              AgriTwin <span style={{ color: 'var(--color-primary)' }}>3D</span>
+            </h1>
+            <p style={styles.brandSubtitle}>Spatial Digital Twin</p>
+          </div>
+        )}
       </div>
 
       {/* Navigation Groups */}
       <div style={styles.navScrollArea}>
         <div style={styles.navGroup}>
-          <div style={styles.sectionHeader}>FARM MANAGEMENT</div>
+          {!collapsed && <div style={styles.sectionHeader}>COMMAND & TWIN</div>}
           {farmNavItems.map((item) => {
             const Icon = item.icon;
             return (
@@ -58,18 +71,23 @@ export default function Sidebar() {
                 to={item.path}
                 style={({ isActive }) => ({
                   ...styles.navLink,
-                  ...(isActive ? styles.navLinkActive : {})
+                  ...(isActive ? styles.navLinkActive : {}),
+                  justifyContent: collapsed ? 'center' : 'flex-start'
                 })}
+                title={collapsed ? item.label : undefined}
               >
                 <Icon size={18} />
-                <span>{item.label}</span>
+                {!collapsed && <span>{item.label}</span>}
+                {!collapsed && item.badge && (
+                  <span style={styles.activeNavBadge}>{item.badge}</span>
+                )}
               </NavLink>
             );
           })}
         </div>
 
         <div style={styles.navGroup}>
-          <div style={styles.sectionHeader}>ANALYTICS & DIGITAL TWIN</div>
+          {!collapsed && <div style={styles.sectionHeader}>TELEMETRY & AI</div>}
           {analyticsNavItems.map((item) => {
             const Icon = item.icon;
             return (
@@ -78,26 +96,49 @@ export default function Sidebar() {
                 to={item.path}
                 style={({ isActive }) => ({
                   ...styles.navLink,
-                  ...(isActive ? styles.navLinkActive : {})
+                  ...(isActive ? styles.navLinkActive : {}),
+                  justifyContent: collapsed ? 'center' : 'space-between'
                 })}
+                title={collapsed ? item.label : undefined}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
                   <Icon size={18} />
-                  <span>{item.label}</span>
+                  {!collapsed && <span>{item.label}</span>}
                 </div>
-                {item.badge && <span style={styles.activeNavBadge}>{item.badge}</span>}
+                {!collapsed && item.badge && (
+                  <span style={styles.activeNavBadge}>{item.badge}</span>
+                )}
               </NavLink>
             );
           })}
         </div>
       </div>
 
-      {/* Sidebar Footer Badge */}
+      {/* Collapse Toggle & Footer */}
       <div style={styles.sidebarFooter}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-primary)', fontSize: '0.75rem', fontWeight: '700' }}>
-          <ShieldCheck size={16} />
-          <span>Modules 1–10+ Certified</span>
-        </div>
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          style={styles.collapseBtn}
+          title={collapsed ? 'Expand Sidebar' : 'Collapse Sidebar for Full 3D View'}
+        >
+          {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+          {!collapsed && <span>Collapse Dock</span>}
+        </button>
+
+        {!collapsed && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            color: 'var(--color-primary)',
+            fontSize: '0.72rem',
+            fontWeight: '700',
+            fontFamily: 'Space Grotesk, sans-serif'
+          }}>
+            <ShieldCheck size={16} />
+            <span>Digital Twin v4.2 Live</span>
+          </div>
+        )}
       </div>
     </aside>
   );
@@ -105,98 +146,113 @@ export default function Sidebar() {
 
 const styles = {
   sidebar: {
-    width: '260px',
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(11, 21, 17, 0.95)',
+    backdropFilter: 'blur(24px)',
     borderRight: '1px solid var(--color-border)',
     display: 'flex',
     flexDirection: 'column',
-    height: '100vh',
-    position: 'sticky',
-    top: 0,
-    zIndex: 20
+    transition: 'width 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+    zIndex: 50,
+    flexShrink: 0
   },
   brandContainer: {
-    padding: '1.25rem 1.5rem',
+    height: '68px',
     display: 'flex',
     alignItems: 'center',
-    gap: '0.875rem',
-    borderBottom: '1px solid var(--color-border)'
+    gap: '0.75rem',
+    padding: '0 1.25rem',
+    borderBottom: '1px solid var(--color-border-subtle)'
   },
   logoIconContainer: {
-    width: '40px',
-    height: '40px',
-    borderRadius: 'var(--radius-md)',
-    backgroundColor: 'var(--color-primary)',
+    width: '36px',
+    height: '36px',
+    borderRadius: '10px',
+    backgroundColor: 'rgba(34, 229, 138, 0.12)',
+    border: '1px solid var(--color-primary)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    boxShadow: '0 2px 6px rgba(22, 101, 52, 0.3)'
+    boxShadow: '0 0 12px rgba(34, 229, 138, 0.2)'
   },
   brandTitle: {
-    fontSize: '1.2rem',
-    fontWeight: '800',
-    color: 'var(--color-primary)',
+    fontSize: '1.05rem',
+    fontWeight: '700',
+    color: '#ffffff',
     margin: 0,
-    lineHeight: '1.1'
+    fontFamily: 'Space Grotesk, sans-serif'
   },
   brandSubtitle: {
-    fontSize: '0.725rem',
+    fontSize: '0.68rem',
     color: 'var(--color-text-secondary)',
-    fontWeight: '600',
-    marginTop: '2px'
+    margin: 0,
+    fontFamily: 'Space Grotesk, sans-serif'
   },
   navScrollArea: {
     flex: 1,
     overflowY: 'auto',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.5rem',
-    paddingBottom: '1rem'
+    padding: '1rem 0.65rem'
   },
   navGroup: {
-    padding: '1rem 0.875rem 0.25rem 0.875rem',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.25rem'
+    marginBottom: '1.25rem'
   },
   sectionHeader: {
-    fontSize: '0.65rem',
-    fontWeight: '800',
+    fontSize: '0.68rem',
+    fontWeight: '700',
+    color: 'var(--color-text-muted)',
     letterSpacing: '0.06em',
-    color: '#94a3b8',
-    marginBottom: '0.375rem',
-    paddingLeft: '0.5rem'
+    padding: '0.35rem 0.65rem',
+    marginBottom: '0.3rem',
+    fontFamily: 'Space Grotesk, sans-serif'
   },
   navLink: {
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '0.55rem 0.75rem',
-    borderRadius: 'var(--radius-md)',
-    color: '#475569',
-    textDecoration: 'none',
-    fontSize: '0.825rem',
+    gap: '0.65rem',
+    padding: '0.6rem 0.75rem',
+    fontSize: '0.82rem',
     fontWeight: '600',
-    transition: 'all 0.15s ease'
+    color: 'var(--color-text-secondary)',
+    borderRadius: 'var(--radius-md)',
+    textDecoration: 'none',
+    transition: 'all 0.15s ease',
+    marginBottom: '0.2rem',
+    fontFamily: 'Space Grotesk, sans-serif'
   },
   navLinkActive: {
-    backgroundColor: 'var(--color-primary-light)',
+    backgroundColor: 'rgba(34, 229, 138, 0.12)',
     color: 'var(--color-primary)',
-    fontWeight: '700'
+    border: '1px solid rgba(34, 229, 138, 0.35)',
+    boxShadow: '0 0 16px rgba(34, 229, 138, 0.15)'
   },
   activeNavBadge: {
-    fontSize: '0.625rem',
-    fontWeight: '800',
-    padding: '0.125rem 0.375rem',
-    borderRadius: '4px',
-    backgroundColor: 'var(--color-teal-light)',
-    color: 'var(--color-teal)',
-    border: '1px solid #ccfbf1'
+    fontSize: '0.65rem',
+    fontWeight: '700',
+    backgroundColor: 'rgba(0, 217, 255, 0.14)',
+    color: 'var(--color-secondary)',
+    border: '1px solid rgba(0, 217, 255, 0.3)',
+    padding: '1px 6px',
+    borderRadius: '9999px',
+    fontFamily: 'JetBrains Mono, monospace'
   },
   sidebarFooter: {
-    marginTop: 'auto',
-    padding: '0.875rem 1.25rem',
-    borderTop: '1px solid var(--color-border)',
-    backgroundColor: '#f8fafc'
+    padding: '1rem',
+    borderTop: '1px solid var(--color-border-subtle)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem'
+  },
+  collapseBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    width: '100%',
+    padding: '0.45rem',
+    background: 'rgba(23, 34, 29, 0.6)',
+    border: '1px solid var(--color-border-subtle)',
+    borderRadius: 'var(--radius-sm)',
+    color: 'var(--color-text-secondary)',
+    fontSize: '0.75rem',
+    cursor: 'pointer',
+    fontFamily: 'Space Grotesk, sans-serif'
   }
 };

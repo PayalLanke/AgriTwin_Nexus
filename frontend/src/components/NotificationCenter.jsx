@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bell, AlertTriangle, CheckCircle, Info, X, ShieldAlert, Sparkles } from 'lucide-react';
+import { Bell, AlertTriangle, CheckCircle, Info, X, ShieldAlert, Sparkles, Send } from 'lucide-react';
 
 export default function NotificationCenter() {
   const [isOpen, setIsOpen] = useState(false);
@@ -8,34 +8,34 @@ export default function NotificationCenter() {
   const [notifications, setNotifications] = useState([
     {
       id: 'notif_1',
-      title: 'Pest Risk Alert: Powdery Mildew',
-      message: 'High humidity (68%) and canopy density triggered Powder Mildew warning on Green Valley Plot A.',
+      title: 'Sub-Plot B2: -14 kg N/ha Deficit Anomaly',
+      message: 'Multi-spectral Red-Edge band & Probe #08 detected nitrogen uptake drop. Immediate foliar spray recommended.',
       type: 'critical',
-      timestamp: '10 mins ago',
+      timestamp: '2 mins ago',
       read: false
     },
     {
       id: 'notif_2',
-      title: 'Sentinel-2 Satellite Scene Updated',
-      message: 'New 10m multispectral satellite imagery tile processed. NDVI calculated at 0.76.',
+      title: 'Sentinel-2 L2A BOA Reflectance Synced',
+      message: 'ESA Copernicus 10m tile ingested. Mean parcel NDVI updated to 0.74 with 0% cloud occlusion.',
       type: 'info',
-      timestamp: '1 hour ago',
+      timestamp: '18 mins ago',
       read: false
     },
     {
       id: 'notif_3',
-      title: 'Weather Spraying Suitability',
-      message: 'Optimal spraying window open today (Wind < 12 km/h, No rain expected).',
+      title: 'Microclimate Delta-T Window: 3.8 Optimal',
+      message: 'Safe spraying window open for the next 4.5 hours (Wind 11 km/h ESE, safe chemical drift envelope).',
       type: 'success',
-      timestamp: '3 hours ago',
+      timestamp: '1 hour ago',
       read: true
     },
     {
       id: 'notif_4',
-      title: 'Digital Twin Model Synced',
-      message: 'Sub-plot canopy vigor grid updated. Zone B requires variable-rate nitrogen advisory.',
+      title: 'Autonomous UAV Alpha-1 Ready for Mission',
+      message: 'Drone telemetry link verified with 42ms ping. Battery at 98%, ready for precision variable-rate spray.',
       type: 'info',
-      timestamp: 'Yesterday',
+      timestamp: '3 hours ago',
       read: true
     }
   ]);
@@ -69,9 +69,9 @@ export default function NotificationCenter() {
         type="button"
         style={styles.bellButton}
         onClick={() => setIsOpen(!isOpen)}
-        title="Notifications & Agronomic Alerts"
+        title="Telemetry Notifications & Agronomic Alerts"
       >
-        <Bell size={18} color="#4b5563" />
+        <Bell size={18} color="var(--color-primary)" />
         {unreadCount > 0 && <span style={styles.unreadBadge}>{unreadCount}</span>}
       </button>
 
@@ -82,10 +82,12 @@ export default function NotificationCenter() {
           <div style={styles.drawerHeader}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Sparkles size={18} color="var(--color-primary)" />
-              <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '700' }}>Platform Notifications</h4>
+              <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '700', color: '#ffffff', fontFamily: 'Space Grotesk, sans-serif' }}>
+                Tactical Alerts & Telemetry
+              </h4>
             </div>
             <button style={styles.iconCloseBtn} onClick={() => setIsOpen(false)}>
-              <X size={16} color="#6b7280" />
+              <X size={16} color="var(--color-text-secondary)" />
             </button>
           </div>
 
@@ -111,58 +113,56 @@ export default function NotificationCenter() {
             </button>
 
             {unreadCount > 0 && (
-              <button style={styles.markAllBtn} onClick={handleMarkAllAsRead}>
-                Mark all read
+              <button style={styles.markReadTextBtn} onClick={handleMarkAllAsRead}>
+                Mark All Read
               </button>
             )}
           </div>
 
-          {/* Notifications List */}
+          {/* Notifications Scroll Area */}
           <div style={styles.notifList}>
             {filteredNotifs.length === 0 ? (
-              <div style={styles.emptyNotifBox}>
-                <p style={{ margin: 0, fontSize: '0.8125rem', color: '#94a3b8' }}>
-                  No notifications match selected filter.
+              <div style={styles.emptyState}>
+                <CheckCircle size={28} color="var(--color-primary)" />
+                <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
+                  All agricultural telemetry is nominal.
                 </p>
               </div>
             ) : (
-              filteredNotifs.map((notif) => (
+              filteredNotifs.map((n) => (
                 <div
-                  key={notif.id}
+                  key={n.id}
                   style={{
                     ...styles.notifItem,
-                    backgroundColor: notif.read ? '#ffffff' : 'var(--color-primary-light)'
+                    ...(n.read ? styles.notifItemRead : styles.notifItemUnread)
                   }}
+                  onClick={() => handleMarkAsRead(n.id)}
                 >
-                  <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
-                    {notif.type === 'critical' && <ShieldAlert size={18} color="var(--color-danger)" style={{ marginTop: '2px' }} />}
-                    {notif.type === 'info' && <Info size={18} color="var(--color-teal)" style={{ marginTop: '2px' }} />}
-                    {notif.type === 'success' && <CheckCircle size={18} color="var(--color-primary)" style={{ marginTop: '2px' }} />}
-
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <span style={styles.notifTitle}>{notif.title}</span>
-                        <span style={styles.notifTime}>{notif.timestamp}</span>
-                      </div>
-                      <p style={styles.notifMessage}>{notif.message}</p>
-
-                      <div style={styles.notifFooter}>
-                        {!notif.read && (
-                          <button
-                            style={styles.actionTextBtn}
-                            onClick={() => handleMarkAsRead(notif.id)}
-                          >
-                            Mark as read
-                          </button>
-                        )}
-                        <button
-                          style={{ ...styles.actionTextBtn, color: '#94a3b8' }}
-                          onClick={() => handleClearNotif(notif.id)}
-                        >
-                          Dismiss
-                        </button>
-                      </div>
+                  <div style={styles.itemIconCol}>
+                    {n.type === 'critical' ? (
+                      <AlertTriangle size={18} color="#ef4444" />
+                    ) : n.type === 'success' ? (
+                      <CheckCircle size={18} color="var(--color-primary)" />
+                    ) : (
+                      <Info size={18} color="var(--color-secondary)" />
+                    )}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <h5 style={styles.itemTitle}>{n.title}</h5>
+                      <button
+                        style={styles.deleteBtn}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleClearNotif(n.id);
+                        }}
+                        title="Dismiss"
+                      >
+                        <X size={14} />
+                      </button>
                     </div>
+                    <p style={styles.itemMessage}>{n.message}</p>
+                    <span style={styles.itemTimestamp}>{n.timestamp}</span>
                   </div>
                 </div>
               ))
@@ -176,83 +176,92 @@ export default function NotificationCenter() {
 
 const styles = {
   bellButton: {
+    position: 'relative',
     width: '38px',
     height: '38px',
-    borderRadius: '50%',
-    backgroundColor: '#f1f5f9',
+    borderRadius: '12px',
+    backgroundColor: 'rgba(23, 34, 29, 0.75)',
     border: '1px solid var(--color-border)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     cursor: 'pointer',
-    position: 'relative',
-    transition: 'all 0.15s ease'
+    transition: 'all 0.15s ease',
+    boxShadow: 'var(--shadow-sm)'
   },
   unreadBadge: {
     position: 'absolute',
-    top: '-2px',
-    right: '-2px',
-    backgroundColor: 'var(--color-danger)',
-    color: '#ffffff',
-    fontSize: '0.65rem',
+    top: '-4px',
+    right: '-4px',
+    backgroundColor: 'var(--color-primary)',
+    color: '#05140d',
+    fontSize: '0.68rem',
     fontWeight: '800',
-    padding: '0.125rem 0.35rem',
-    borderRadius: '9999px',
-    border: '2px solid #ffffff'
+    width: '18px',
+    height: '18px',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0 0 8px #22e58a'
   },
   dropdownDrawer: {
     position: 'absolute',
-    right: 0,
     top: '48px',
-    width: '360px',
-    backgroundColor: '#ffffff',
-    borderRadius: 'var(--radius-lg)',
+    right: 0,
+    width: '380px',
+    maxWidth: '90vw',
+    backgroundColor: 'rgba(11, 21, 17, 0.95)',
+    backdropFilter: 'blur(24px)',
     border: '1px solid var(--color-border)',
-    boxShadow: 'var(--shadow-lg)',
-    zIndex: 50,
+    borderRadius: 'var(--radius-xl)',
+    boxShadow: 'var(--shadow-glow)',
+    zIndex: 100,
     overflow: 'hidden'
   },
   drawerHeader: {
-    padding: '0.875rem 1.25rem',
-    borderBottom: '1px solid var(--color-border)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#f8fafc'
+    padding: '1rem 1.25rem',
+    borderBottom: '1px solid var(--color-border-subtle)',
+    backgroundColor: 'rgba(23, 34, 29, 0.6)'
   },
   iconCloseBtn: {
     background: 'none',
     border: 'none',
     cursor: 'pointer',
-    padding: '0.25rem'
+    padding: '4px',
+    borderRadius: '6px'
   },
   filterBar: {
-    padding: '0.5rem 1rem',
     display: 'flex',
     alignItems: 'center',
-    gap: '0.375rem',
-    borderBottom: '1px solid #f1f5f9',
-    backgroundColor: '#ffffff'
+    gap: '0.4rem',
+    padding: '0.65rem 1.25rem',
+    borderBottom: '1px solid var(--color-border-subtle)',
+    backgroundColor: 'rgba(15, 28, 22, 0.4)'
   },
   filterChip: {
-    padding: '0.25rem 0.5rem',
-    fontSize: '0.725rem',
+    padding: '0.25rem 0.65rem',
+    fontSize: '0.75rem',
     fontWeight: '600',
-    borderRadius: 'var(--radius-sm)',
-    border: 'none',
-    backgroundColor: '#f1f5f9',
-    color: '#64748b',
-    cursor: 'pointer'
+    borderRadius: '9999px',
+    border: '1px solid var(--color-border-subtle)',
+    backgroundColor: 'transparent',
+    color: 'var(--color-text-secondary)',
+    cursor: 'pointer',
+    fontFamily: 'Space Grotesk, sans-serif'
   },
   filterChipActive: {
     backgroundColor: 'var(--color-primary-light)',
     color: 'var(--color-primary)',
-    fontWeight: '700'
+    borderColor: 'var(--color-primary)'
   },
-  markAllBtn: {
+  markReadTextBtn: {
     marginLeft: 'auto',
-    fontSize: '0.7rem',
-    color: 'var(--color-primary)',
+    fontSize: '0.72rem',
+    color: 'var(--color-secondary)',
     background: 'none',
     border: 'none',
     cursor: 'pointer',
@@ -262,41 +271,53 @@ const styles = {
     maxHeight: '340px',
     overflowY: 'auto'
   },
-  emptyNotifBox: {
-    padding: '2rem',
-    textAlign: 'center'
+  emptyState: {
+    padding: '2.5rem 1.5rem',
+    textAlign: 'center',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center'
   },
   notifItem: {
-    padding: '0.875rem 1rem',
-    borderBottom: '1px solid #f1f5f9',
-    transition: 'background 0.15s ease'
-  },
-  notifTitle: {
-    fontSize: '0.8125rem',
-    fontWeight: '700',
-    color: 'var(--color-text-main)'
-  },
-  notifTime: {
-    fontSize: '0.675rem',
-    color: '#94a3b8'
-  },
-  notifMessage: {
-    fontSize: '0.775rem',
-    color: '#475569',
-    margin: '4px 0 6px 0',
-    lineHeight: '1.4'
-  },
-  notifFooter: {
     display: 'flex',
-    gap: '0.75rem'
+    gap: '0.75rem',
+    padding: '0.85rem 1.25rem',
+    borderBottom: '1px solid var(--color-border-subtle)',
+    cursor: 'pointer',
+    transition: 'background-color 0.15s ease'
   },
-  actionTextBtn: {
+  notifItemUnread: {
+    backgroundColor: 'rgba(34, 229, 138, 0.06)'
+  },
+  notifItemRead: {
+    opacity: 0.8
+  },
+  itemIconCol: {
+    marginTop: '2px'
+  },
+  itemTitle: {
+    margin: 0,
+    fontSize: '0.85rem',
+    fontWeight: '700',
+    color: '#ffffff',
+    fontFamily: 'Space Grotesk, sans-serif'
+  },
+  deleteBtn: {
     background: 'none',
     border: 'none',
-    fontSize: '0.7rem',
-    fontWeight: '600',
-    color: 'var(--color-primary)',
+    color: 'var(--color-text-secondary)',
     cursor: 'pointer',
-    padding: 0
+    padding: '2px'
+  },
+  itemMessage: {
+    margin: '0.25rem 0',
+    fontSize: '0.78rem',
+    color: 'var(--color-text-main)',
+    lineHeight: '1.4'
+  },
+  itemTimestamp: {
+    fontSize: '0.7rem',
+    color: 'var(--color-text-secondary)',
+    fontFamily: 'JetBrains Mono, monospace'
   }
 };

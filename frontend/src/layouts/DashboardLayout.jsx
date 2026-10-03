@@ -8,11 +8,19 @@ export default function DashboardLayout() {
 
   // Derive dynamic page title from path
   const getPageTitle = (path) => {
-    if (path.startsWith('/farms/add')) return 'Register New Farm';
-    if (path.startsWith('/farms/edit')) return 'Edit Farm Boundary';
-    if (path.startsWith('/farms/view')) return 'Farm Digital Twin Details';
-    if (path.startsWith('/farms')) return 'My Registered Farms';
-    return 'Dashboard Overview';
+    if (path.startsWith('/farms/add')) return 'Register Farm Boundary';
+    if (path.startsWith('/farms/edit')) return 'Edit Boundary ROI';
+    if (path.startsWith('/farms/view')) return 'Farm Spatial Specifications';
+    if (path.startsWith('/farms')) return 'Registered Agricultural Plots';
+    if (path.startsWith('/digital-twin')) return '3D Spatial Twin Studio';
+    if (path.startsWith('/satellite')) return 'Sentinel-2 Multispectral Hub';
+    if (path.startsWith('/weather')) return 'Micro-Climate Telemetry Station';
+    if (path.startsWith('/pest-risk')) return 'Pathogen Risk Radar';
+    if (path.startsWith('/yield')) return 'Yield Projection Engine';
+    if (path.startsWith('/recommendations')) return 'Autonomous Action Protocols';
+    if (path.startsWith('/reports')) return 'Digital Twin Audit Dossiers';
+    if (path.startsWith('/settings')) return 'System Telemetry Configurations';
+    return 'Digital Twin Command HUD';
   };
 
   return (
@@ -32,17 +40,19 @@ const styles = {
   container: {
     display: 'flex',
     minHeight: '100vh',
-    backgroundColor: 'var(--color-bg)'
+    backgroundColor: '#070e0b',
+    color: '#f8fafc'
   },
   mainWrapper: {
     flex: 1,
     display: 'flex',
     flexDirection: 'column',
-    minWidth: 0
+    minWidth: 0,
+    overflow: 'hidden'
   },
   contentArea: {
     flex: 1,
-    padding: '2rem',
+    padding: '1.75rem 2rem 3rem 2rem',
     overflowY: 'auto'
   }
 };

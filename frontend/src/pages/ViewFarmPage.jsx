@@ -2,7 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { farmService } from '../services/farmService';
 import FarmMap from '../components/FarmMap';
-import { ArrowLeft, Edit2, Sprout, Calendar, Layers, MapPin, Code2, Cpu, ShieldCheck } from 'lucide-react';
+import {
+  ArrowLeft,
+  Edit2,
+  Sprout,
+  Calendar,
+  Layers,
+  MapPin,
+  Code2,
+  Cpu,
+  ShieldCheck,
+  Crosshair,
+  Satellite,
+  Compass,
+  Activity
+} from 'lucide-react';
 
 export default function ViewFarmPage() {
   const { id } = useParams();
@@ -30,19 +44,22 @@ export default function ViewFarmPage() {
   if (isLoading) {
     return (
       <div style={styles.loadingContainer}>
-        <p>Loading Farm Digital Twin details...</p>
+        <div style={styles.spinner}></div>
+        <p style={{ color: '#22e58a', fontFamily: 'Space Grotesk, sans-serif', marginTop: '1rem', letterSpacing: '0.05em' }}>
+          LOADING DIGITAL TWIN TELEMETRY...
+        </p>
       </div>
     );
   }
 
   if (error || !farm) {
     return (
-      <div className="card" style={styles.errorCard}>
-        <h3 style={{ color: 'var(--color-danger)' }}>Farm Record Not Found</h3>
-        <p>{error || 'The requested farm record does not exist.'}</p>
-        <Link to="/farms" className="btn btn-secondary">
+      <div style={styles.errorCard}>
+        <h3 style={{ color: '#f87171', fontFamily: 'Space Grotesk, sans-serif', margin: 0 }}>Farm Record Not Found</h3>
+        <p style={{ color: '#94a3b8', margin: 0 }}>{error || 'The requested digital twin record does not exist.'}</p>
+        <Link to="/farms" style={styles.backBtnAction}>
           <ArrowLeft size={16} />
-          <span>Back to My Farms</span>
+          <span>Return to Farms Dock</span>
         </Link>
       </div>
     );
@@ -54,86 +71,104 @@ export default function ViewFarmPage() {
       <div style={styles.header}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <Link to="/farms" style={styles.backBtn} title="Back to farms list">
-            <ArrowLeft size={20} color="#4b5563" />
+            <ArrowLeft size={18} color="#22e58a" />
           </Link>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
               <h1 style={styles.title}>{farm.farmName}</h1>
-              <span className="badge badge-primary">{farm.status}</span>
+              <span style={styles.activeBadge}>
+                <span style={styles.livePulse}></span>
+                {farm.status.toUpperCase()}
+              </span>
+              <span style={styles.roiTag}>
+                <Satellite size={12} color="#00d9ff" />
+                SENTINEL-2 ROI ACTIVE
+              </span>
             </div>
-            <p style={styles.subtitle}>Digital Twin Boundary & Metadata Overview</p>
+            <p style={styles.subtitle}>Digital Twin Spatial Polygon & Spectral ROI Specification</p>
           </div>
         </div>
 
-        <Link to={`/farms/edit/${farm.id}`} className="btn btn-secondary">
-          <Edit2 size={16} />
-          <span>Edit Farm & Boundary</span>
-        </Link>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <Link to={`/digital-twin`} style={styles.twinActionBtn}>
+            <Activity size={16} />
+            <span>Launch 3D Twin View</span>
+          </Link>
+          <Link to={`/farms/edit/${farm.id}`} className="cyber-gradient-btn" style={{ padding: '0.625rem 1.25rem', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Edit2 size={16} />
+            <span>Edit Polygon ROI</span>
+          </Link>
+        </div>
       </div>
 
       {/* Grid Layout */}
       <div style={styles.contentGrid}>
         {/* Left Column: Farm Specs & GeoJSON Raw Viewer */}
         <div style={styles.leftCol}>
-          <div className="card" style={styles.specCard}>
+          <div style={styles.specCard}>
             <div style={styles.cardHeader}>
-              <Sprout size={20} color="var(--color-primary)" />
-              <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Farm Specifications</h3>
+              <div style={styles.iconCircle}>
+                <Sprout size={18} color="#22e58a" />
+              </div>
+              <div>
+                <h3 style={styles.sectionHeading}>Spatial Vector Telemetry</h3>
+                <span style={{ fontSize: '0.725rem', color: '#64748b' }}>Plot ID: {farm.id}</span>
+              </div>
             </div>
 
             <div style={styles.specList}>
               <div style={styles.specItem}>
                 <div style={styles.specLabelGroup}>
-                  <Sprout size={16} color="var(--color-teal)" />
-                  <span style={styles.specLabel}>Crop Type</span>
+                  <Sprout size={15} color="#22e58a" />
+                  <span style={styles.specLabel}>Crop Variety</span>
                 </div>
                 <span style={styles.specVal}>{farm.cropType}</span>
               </div>
 
               <div style={styles.specItem}>
                 <div style={styles.specLabelGroup}>
-                  <Calendar size={16} color="var(--color-teal)" />
-                  <span style={styles.specLabel}>Sowing Date</span>
+                  <Calendar size={15} color="#00d9ff" />
+                  <span style={styles.specLabel}>Sowing / Emergence Date</span>
                 </div>
                 <span style={styles.specVal}>{farm.sowingDate}</span>
               </div>
 
               <div style={styles.specItem}>
                 <div style={styles.specLabelGroup}>
-                  <Layers size={16} color="var(--color-accent)" />
-                  <span style={styles.specLabel}>Calculated Area</span>
+                  <Layers size={15} color="#fbbf24" />
+                  <span style={styles.specLabel}>Computed Surface Area</span>
                 </div>
                 <span style={styles.specVal}>
-                  <b>{farm.areaHectares} Ha</b> ({farm.areaAcres} Acres)
+                  <b style={{ color: '#22e58a' }}>{farm.areaHectares} Ha</b>{' '}
+                  <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>({farm.areaAcres} Acres)</span>
                 </span>
               </div>
 
               <div style={styles.specItem}>
                 <div style={styles.specLabelGroup}>
-                  <MapPin size={16} color="var(--color-primary)" />
-                  <span style={styles.specLabel}>Center Coordinates</span>
+                  <Compass size={15} color="#38bdf8" />
+                  <span style={styles.specLabel}>ROI Center Datum</span>
                 </div>
-                <span style={styles.specVal}>
-                  {farm.latitude.toFixed(6)}° N, {farm.longitude.toFixed(6)}° E
+                <span style={{ ...styles.specVal, fontFamily: 'Space Grotesk, sans-serif' }}>
+                  {farm.latitude.toFixed(6)}°N, {farm.longitude.toFixed(6)}°E
                 </span>
               </div>
             </div>
           </div>
 
           {/* GeoJSON Polygon Raw Payload Inspection */}
-          <div className="card" style={styles.geoJsonCard}>
+          <div style={styles.geoJsonCard}>
             <div style={styles.geoJsonHeader}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Code2 size={18} color="var(--color-teal)" />
-                <h4 style={{ margin: 0, fontSize: '0.95rem' }}>GeoJSON Boundary Data</h4>
+                <Code2 size={16} color="#00d9ff" />
+                <h4 style={styles.subHeading}>GeoJSON Polygon Boundary Payload</h4>
               </div>
               <button
                 type="button"
-                className="btn btn-secondary"
-                style={{ padding: '0.25rem 0.625rem', fontSize: '0.75rem' }}
+                style={styles.inspectBtn}
                 onClick={() => setShowGeoJson(!showGeoJson)}
               >
-                {showGeoJson ? 'Hide JSON' : 'Inspect GeoJSON'}
+                {showGeoJson ? 'Hide Payload' : 'Inspect GeoJSON'}
               </button>
             </div>
 
@@ -146,24 +181,29 @@ export default function ViewFarmPage() {
 
           {/* Future Integration Readiness Badge */}
           <div style={styles.integrationCard}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '0.5rem' }}>
-              <ShieldCheck size={18} color="var(--color-primary)" />
-              <span style={{ fontWeight: '700', fontSize: '0.875rem', color: 'var(--color-primary)' }}>
-                Module 7 Satellite Pipeline Ready
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '0.4rem' }}>
+              <ShieldCheck size={18} color="#22e58a" />
+              <span style={{ fontWeight: '700', fontSize: '0.85rem', color: '#22e58a', fontFamily: 'Space Grotesk, sans-serif' }}>
+                GEE Sentinel-2 Pipeline Active
               </span>
             </div>
-            <p style={{ fontSize: '0.775rem', color: 'var(--color-text-secondary)', margin: 0, lineHeight: '1.4' }}>
-              This farm's GeoJSON polygon is registered and ready to receive Sentinel-2 multispectral imagery and compute NDVI/NDRE/SAVI indices in Module 7.
+            <p style={{ fontSize: '0.775rem', color: '#94a3b8', margin: 0, lineHeight: '1.45' }}>
+              This farm boundary polygon is registered with the Google Earth Engine ingestion orchestrator. 10m L2A multispectral tiles are synchronized on every Sentinel-2 overpass.
             </p>
           </div>
         </div>
 
         {/* Right Column: Leaflet Read-Only Map displaying Polygon */}
         <div style={styles.rightCol}>
-          <div className="card" style={styles.mapCard}>
+          <div style={styles.mapCard}>
             <div style={styles.cardHeader}>
-              <Cpu size={20} color="var(--color-teal)" />
-              <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Spatial Boundary Map</h3>
+              <div style={{ ...styles.iconCircle, background: 'rgba(0, 217, 255, 0.1)', borderColor: 'rgba(0, 217, 255, 0.3)' }}>
+                <Cpu size={18} color="#00d9ff" />
+              </div>
+              <div>
+                <h3 style={styles.sectionHeading}>Spatial Vector Boundary Map</h3>
+                <span style={{ fontSize: '0.725rem', color: '#64748b' }}>Satellite L2A Overlay Mode</span>
+              </div>
             </div>
 
             {/* Read-Only Leaflet Map with GeoJSON Boundary */}
@@ -187,9 +227,20 @@ const styles = {
     gap: '1.5rem'
   },
   loadingContainer: {
-    padding: '4rem',
+    padding: '6rem 2rem',
     textAlign: 'center',
-    color: 'var(--color-text-secondary)'
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  spinner: {
+    width: '40px',
+    height: '40px',
+    border: '3px solid rgba(34, 229, 138, 0.15)',
+    borderTop: '3px solid #22e58a',
+    borderRadius: '50%',
+    animation: 'spin 1s linear infinite'
   },
   errorCard: {
     padding: '3rem',
@@ -197,7 +248,21 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    gap: '1rem'
+    gap: '1rem',
+    background: 'rgba(15, 27, 21, 0.72)',
+    borderRadius: '18px',
+    border: '1px solid rgba(239, 68, 68, 0.3)'
+  },
+  backBtnAction: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    padding: '0.625rem 1.25rem',
+    borderRadius: '12px',
+    background: 'rgba(255, 255, 255, 0.05)',
+    border: '1px solid rgba(255, 255, 255, 0.15)',
+    color: '#e2e8f0',
+    textDecoration: 'none'
   },
   header: {
     display: 'flex',
@@ -207,26 +272,75 @@ const styles = {
     gap: '1rem'
   },
   backBtn: {
-    width: '38px',
-    height: '38px',
-    borderRadius: 'var(--radius-md)',
-    backgroundColor: '#ffffff',
-    border: '1px solid var(--color-border)',
+    width: '40px',
+    height: '40px',
+    borderRadius: '12px',
+    backgroundColor: 'rgba(15, 27, 21, 0.8)',
+    border: '1px solid rgba(34, 229, 138, 0.25)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     textDecoration: 'none'
   },
   title: {
-    fontSize: '1.4rem',
-    fontWeight: '700',
-    color: 'var(--color-text-main)',
-    margin: 0
+    fontSize: '1.45rem',
+    fontWeight: '800',
+    color: '#ffffff',
+    margin: 0,
+    fontFamily: 'Space Grotesk, sans-serif'
   },
   subtitle: {
-    fontSize: '0.8125rem',
-    color: 'var(--color-text-secondary)',
-    margin: 0
+    fontSize: '0.825rem',
+    color: '#94a3b8',
+    margin: '4px 0 0 0'
+  },
+  activeBadge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.4rem',
+    padding: '0.2rem 0.65rem',
+    borderRadius: '9999px',
+    background: 'rgba(34, 229, 138, 0.12)',
+    border: '1px solid rgba(34, 229, 138, 0.35)',
+    color: '#22e58a',
+    fontSize: '0.7rem',
+    fontWeight: '700',
+    letterSpacing: '0.05em',
+    fontFamily: 'Space Grotesk, sans-serif'
+  },
+  livePulse: {
+    width: '6px',
+    height: '6px',
+    borderRadius: '50%',
+    backgroundColor: '#22e58a',
+    boxShadow: '0 0 8px #22e58a'
+  },
+  roiTag: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.35rem',
+    padding: '0.2rem 0.65rem',
+    borderRadius: '9999px',
+    background: 'rgba(0, 217, 255, 0.1)',
+    border: '1px solid rgba(0, 217, 255, 0.25)',
+    color: '#00d9ff',
+    fontSize: '0.7rem',
+    fontWeight: '700',
+    fontFamily: 'Space Grotesk, sans-serif'
+  },
+  twinActionBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    padding: '0.625rem 1.25rem',
+    borderRadius: '12px',
+    background: 'rgba(0, 217, 255, 0.12)',
+    border: '1px solid rgba(0, 217, 255, 0.35)',
+    color: '#00d9ff',
+    textDecoration: 'none',
+    fontWeight: '700',
+    fontSize: '0.825rem',
+    fontFamily: 'Space Grotesk, sans-serif'
   },
   contentGrid: {
     display: 'grid',
@@ -247,14 +361,44 @@ const styles = {
   specCard: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '1rem'
+    gap: '1.25rem',
+    background: 'rgba(15, 27, 21, 0.72)',
+    backdropFilter: 'blur(20px)',
+    border: '1px solid rgba(34, 229, 138, 0.18)',
+    borderRadius: '18px',
+    padding: '1.5rem',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
   },
   cardHeader: {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.625rem',
-    paddingBottom: '0.75rem',
-    borderBottom: '1px solid var(--color-border)'
+    gap: '0.75rem',
+    paddingBottom: '0.875rem',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
+  },
+  iconCircle: {
+    width: '36px',
+    height: '36px',
+    borderRadius: '10px',
+    background: 'rgba(34, 229, 138, 0.1)',
+    border: '1px solid rgba(34, 229, 138, 0.25)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  sectionHeading: {
+    margin: 0,
+    fontSize: '1.05rem',
+    fontWeight: '700',
+    color: '#ffffff',
+    fontFamily: 'Space Grotesk, sans-serif'
+  },
+  subHeading: {
+    margin: 0,
+    fontSize: '0.875rem',
+    fontWeight: '700',
+    color: '#e2e8f0',
+    fontFamily: 'Space Grotesk, sans-serif'
   },
   specList: {
     display: 'flex',
@@ -265,7 +409,11 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    fontSize: '0.875rem'
+    padding: '0.75rem 0.875rem',
+    background: 'rgba(8, 17, 13, 0.6)',
+    borderRadius: '12px',
+    border: '1px solid rgba(255, 255, 255, 0.05)',
+    fontSize: '0.85rem'
   },
   specLabelGroup: {
     display: 'flex',
@@ -273,42 +421,65 @@ const styles = {
     gap: '0.5rem'
   },
   specLabel: {
-    color: 'var(--color-text-secondary)',
+    color: '#94a3b8',
     fontWeight: '500'
   },
   specVal: {
     fontWeight: '600',
-    color: 'var(--color-text-main)'
+    color: '#f8fafc'
   },
   geoJsonCard: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.75rem'
+    gap: '0.75rem',
+    background: 'rgba(15, 27, 21, 0.72)',
+    backdropFilter: 'blur(20px)',
+    border: '1px solid rgba(34, 229, 138, 0.18)',
+    borderRadius: '18px',
+    padding: '1.25rem'
   },
   geoJsonHeader: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between'
   },
+  inspectBtn: {
+    padding: '0.35rem 0.75rem',
+    background: 'rgba(0, 217, 255, 0.1)',
+    border: '1px solid rgba(0, 217, 255, 0.3)',
+    borderRadius: '8px',
+    color: '#00d9ff',
+    fontSize: '0.75rem',
+    fontWeight: '700',
+    cursor: 'pointer',
+    fontFamily: 'Space Grotesk, sans-serif'
+  },
   jsonCodeBlock: {
-    backgroundColor: '#0f172a',
-    color: '#38bdf8',
+    backgroundColor: 'rgba(5, 11, 9, 0.95)',
+    color: '#00d9ff',
     padding: '0.875rem',
-    borderRadius: 'var(--radius-md)',
+    borderRadius: '12px',
+    border: '1px solid rgba(0, 217, 255, 0.2)',
     fontSize: '0.725rem',
     maxHeight: '220px',
     overflowY: 'auto',
     fontFamily: 'monospace'
   },
   integrationCard: {
-    padding: '1rem 1.25rem',
-    backgroundColor: 'var(--color-primary-light)',
-    border: '1px solid #bbf7d0',
-    borderRadius: 'var(--radius-lg)'
+    padding: '1.25rem',
+    backgroundColor: 'rgba(34, 229, 138, 0.06)',
+    border: '1px solid rgba(34, 229, 138, 0.25)',
+    borderRadius: '16px'
   },
   mapCard: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '1rem'
+    gap: '1rem',
+    background: 'rgba(15, 27, 21, 0.72)',
+    backdropFilter: 'blur(20px)',
+    border: '1px solid rgba(34, 229, 138, 0.18)',
+    borderRadius: '18px',
+    padding: '1.5rem',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
   }
 };

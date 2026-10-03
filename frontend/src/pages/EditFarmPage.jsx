@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import FarmMap from '../components/FarmMap';
 import { farmService, CROP_OPTIONS } from '../services/farmService';
-import { ArrowLeft, Save, AlertCircle, Sprout, Layers, Calendar, FileText } from 'lucide-react';
+import { ArrowLeft, Save, AlertCircle, Sprout, Layers, Calendar, FileText, Crosshair, Sparkles } from 'lucide-react';
 
 export default function EditFarmPage() {
   const { id } = useParams();
@@ -93,7 +93,10 @@ export default function EditFarmPage() {
   if (isLoading) {
     return (
       <div style={styles.loadingContainer}>
-        <p>Loading farm record into editor...</p>
+        <div style={styles.spinner}></div>
+        <p style={{ color: '#22e58a', fontFamily: 'Space Grotesk, sans-serif', marginTop: '1rem', letterSpacing: '0.05em' }}>
+          INITIALIZING SPATIAL FARM EDITOR...
+        </p>
       </div>
     );
   }
@@ -104,18 +107,26 @@ export default function EditFarmPage() {
       <div style={styles.header}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <Link to={`/farms/view/${id}`} style={styles.backBtn} title="Cancel and go back">
-            <ArrowLeft size={20} color="#4b5563" />
+            <ArrowLeft size={18} color="#22e58a" />
           </Link>
           <div>
-            <h1 style={styles.title}>Edit Farm Boundary & Details</h1>
-            <p style={styles.subtitle}>Modify farm metadata or adjust boundary polygon vertices on Leaflet map</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <h1 style={styles.title}>Edit Farm Boundary & Coordinates</h1>
+              <span style={styles.statusBadge}>
+                <Crosshair size={12} color="#00d9ff" />
+                GEOJSON CALIBRATION
+              </span>
+            </div>
+            <p style={styles.subtitle}>
+              Adjust polygon vertices on the spatial map to calibrate Sentinel-2 ROI & 3D Twin Prism mesh.
+            </p>
           </div>
         </div>
       </div>
 
       {error && (
         <div style={styles.errorBanner}>
-          <AlertCircle size={20} color="var(--color-danger)" />
+          <AlertCircle size={20} color="#f87171" />
           <span>{error}</span>
         </div>
       )}
@@ -123,40 +134,42 @@ export default function EditFarmPage() {
       <form onSubmit={handleUpdateFarm} style={styles.formLayout}>
         {/* Left Column: Form Details */}
         <div style={styles.leftCol}>
-          <div className="card" style={styles.cardSection}>
+          <div style={styles.cardSection}>
             <div style={styles.cardSectionHeader}>
-              <Sprout size={20} color="var(--color-primary)" />
-              <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Farm Metadata</h3>
+              <div style={styles.iconCircle}>
+                <Sprout size={18} color="#22e58a" />
+              </div>
+              <h3 style={styles.sectionHeading}>Farm Metadata Specs</h3>
             </div>
 
             <div style={styles.formGroup}>
-              <label htmlFor="farmName">Farm Name</label>
+              <label style={styles.label} htmlFor="farmName">FARM / PLOT IDENTIFIER</label>
               <div style={styles.inputIconWrapper}>
-                <FileText size={16} color="#9ca3af" style={styles.inputIcon} />
+                <FileText size={16} color="#64748b" style={styles.inputIcon} />
                 <input
                   id="farmName"
                   type="text"
                   value={farmName}
                   onChange={(e) => setFarmName(e.target.value)}
-                  style={{ paddingLeft: '2.375rem' }}
+                  style={styles.input}
                   required
                 />
               </div>
             </div>
 
             <div style={styles.formGroup}>
-              <label htmlFor="cropType">Crop Type</label>
+              <label style={styles.label} htmlFor="cropType">PRIMARY CROP VARIETY</label>
               <div style={styles.inputIconWrapper}>
-                <Sprout size={16} color="#9ca3af" style={styles.inputIcon} />
+                <Sprout size={16} color="#64748b" style={styles.inputIcon} />
                 <select
                   id="cropType"
                   value={cropType}
                   onChange={(e) => setCropType(e.target.value)}
-                  style={{ paddingLeft: '2.375rem' }}
+                  style={styles.select}
                   required
                 >
                   {CROP_OPTIONS.map((c) => (
-                    <option key={c} value={c}>
+                    <option key={c} value={c} style={{ background: '#0b1612', color: '#f1f5f9' }}>
                       {c}
                     </option>
                   ))}
@@ -165,48 +178,59 @@ export default function EditFarmPage() {
             </div>
 
             <div style={styles.formGroup}>
-              <label htmlFor="sowingDate">Sowing Date</label>
+              <label style={styles.label} htmlFor="sowingDate">SOWING / PLANTING DATE</label>
               <div style={styles.inputIconWrapper}>
-                <Calendar size={16} color="#9ca3af" style={styles.inputIcon} />
+                <Calendar size={16} color="#64748b" style={styles.inputIcon} />
                 <input
                   id="sowingDate"
                   type="date"
                   value={sowingDate}
                   onChange={(e) => setSowingDate(e.target.value)}
-                  style={{ paddingLeft: '2.375rem' }}
+                  style={styles.input}
                   required
                 />
               </div>
             </div>
+
+            {latitude && longitude && (
+              <div style={styles.coordsCapsule}>
+                <Crosshair size={14} color="#00d9ff" />
+                <span>ROI Centroid: <b>{latitude.toFixed(5)}°N, {longitude.toFixed(5)}°E</b></span>
+              </div>
+            )}
           </div>
 
-          <div className="card" style={styles.actionCard}>
+          <div style={styles.actionCard}>
             <button
               type="submit"
-              className="btn btn-primary"
+              className="cyber-gradient-btn"
               disabled={isSaving}
-              style={{ width: '100%', padding: '0.875rem' }}
+              style={{ width: '100%', padding: '0.875rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.625rem' }}
             >
               <Save size={18} />
-              <span>{isSaving ? 'Updating Farm Record...' : 'Save Changes'}</span>
+              <span>{isSaving ? 'Recalibrating Digital Twin...' : 'Update & Save Boundary'}</span>
             </button>
+            <p style={{ margin: 0, fontSize: '0.725rem', color: '#64748b', textAlign: 'center' }}>
+              Saving automatically synchronizes the 3D twin prism voxel elevation model.
+            </p>
           </div>
         </div>
 
         {/* Right Column: Editable Leaflet Map with Existing Polygon Loaded */}
         <div style={styles.rightCol}>
-          <div className="card" style={styles.mapCard}>
+          <div style={styles.mapCard}>
             <div style={styles.cardSectionHeader}>
-              <Layers size={20} color="var(--color-teal)" />
+              <div style={{ ...styles.iconCircle, background: 'rgba(0, 217, 255, 0.1)', borderColor: 'rgba(0, 217, 255, 0.3)' }}>
+                <Layers size={18} color="#00d9ff" />
+              </div>
               <div>
-                <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Edit Spatial Polygon Boundary</h3>
-                <p style={{ margin: 0, fontSize: '0.775rem', color: 'var(--color-text-secondary)' }}>
-                  Drag polygon vertices to adjust boundary, or clear to re-draw.
+                <h3 style={styles.sectionHeading}>Spatial Vector Boundary Editor</h3>
+                <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>
+                  Drag polygon vertices to adjust perimeter, or delete to draw anew.
                 </p>
               </div>
             </div>
 
-            {/* Map Editor with restored initial boundary */}
             {latitude && longitude && (
               <FarmMap
                 initialLat={latitude}
@@ -227,12 +251,23 @@ const styles = {
   container: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '1.25rem'
+    gap: '1.5rem'
   },
   loadingContainer: {
-    padding: '4rem',
+    padding: '6rem 2rem',
     textAlign: 'center',
-    color: 'var(--color-text-secondary)'
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  spinner: {
+    width: '40px',
+    height: '40px',
+    border: '3px solid rgba(34, 229, 138, 0.15)',
+    borderTop: '3px solid #22e58a',
+    borderRadius: '50%',
+    animation: 'spin 1s linear infinite'
   },
   header: {
     display: 'flex',
@@ -240,36 +275,53 @@ const styles = {
     justifyContent: 'space-between'
   },
   backBtn: {
-    width: '38px',
-    height: '38px',
-    borderRadius: 'var(--radius-md)',
-    backgroundColor: '#ffffff',
-    border: '1px solid var(--color-border)',
+    width: '40px',
+    height: '40px',
+    borderRadius: '12px',
+    backgroundColor: 'rgba(15, 27, 21, 0.8)',
+    border: '1px solid rgba(34, 229, 138, 0.25)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    textDecoration: 'none'
+    textDecoration: 'none',
+    transition: 'all 0.2s ease'
   },
   title: {
-    fontSize: '1.35rem',
+    fontSize: '1.45rem',
+    fontWeight: '800',
+    color: '#ffffff',
+    margin: 0,
+    fontFamily: 'Space Grotesk, sans-serif',
+    letterSpacing: '-0.02em'
+  },
+  statusBadge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.35rem',
+    padding: '0.2rem 0.6rem',
+    borderRadius: '9999px',
+    background: 'rgba(0, 217, 255, 0.12)',
+    border: '1px solid rgba(0, 217, 255, 0.3)',
+    color: '#00d9ff',
+    fontSize: '0.7rem',
     fontWeight: '700',
-    color: 'var(--color-text-main)',
-    margin: 0
+    fontFamily: 'Space Grotesk, sans-serif',
+    letterSpacing: '0.04em'
   },
   subtitle: {
-    fontSize: '0.8125rem',
-    color: 'var(--color-text-secondary)',
-    margin: 0
+    fontSize: '0.825rem',
+    color: '#94a3b8',
+    margin: '4px 0 0 0'
   },
   errorBanner: {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.625rem',
-    backgroundColor: 'var(--color-danger-light)',
-    border: '1px solid #fecaca',
-    color: 'var(--color-danger)',
+    gap: '0.75rem',
+    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+    border: '1px solid rgba(239, 68, 68, 0.35)',
+    color: '#fca5a5',
     padding: '0.875rem 1.25rem',
-    borderRadius: 'var(--radius-lg)',
+    borderRadius: '14px',
     fontSize: '0.875rem',
     fontWeight: '500'
   },
@@ -292,38 +344,113 @@ const styles = {
   cardSection: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '1.25rem'
+    gap: '1.25rem',
+    background: 'rgba(15, 27, 21, 0.72)',
+    backdropFilter: 'blur(20px)',
+    border: '1px solid rgba(34, 229, 138, 0.18)',
+    borderRadius: '18px',
+    padding: '1.5rem',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
   },
   cardSectionHeader: {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.625rem',
-    paddingBottom: '0.75rem',
-    borderBottom: '1px solid var(--color-border)'
+    gap: '0.75rem',
+    paddingBottom: '0.875rem',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
+  },
+  iconCircle: {
+    width: '36px',
+    height: '36px',
+    borderRadius: '10px',
+    background: 'rgba(34, 229, 138, 0.1)',
+    border: '1px solid rgba(34, 229, 138, 0.25)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  sectionHeading: {
+    margin: 0,
+    fontSize: '1.05rem',
+    fontWeight: '700',
+    color: '#ffffff',
+    fontFamily: 'Space Grotesk, sans-serif'
   },
   formGroup: {
     display: 'flex',
-    flexDirection: 'column'
+    flexDirection: 'column',
+    gap: '0.4rem'
+  },
+  label: {
+    fontSize: '0.7rem',
+    fontWeight: '700',
+    color: '#94a3b8',
+    fontFamily: 'Space Grotesk, sans-serif',
+    letterSpacing: '0.05em'
   },
   inputIconWrapper: {
     position: 'relative'
   },
   inputIcon: {
     position: 'absolute',
-    left: '12px',
+    left: '14px',
     top: '50%',
     transform: 'translateY(-50%)',
     pointerEvents: 'none'
+  },
+  input: {
+    width: '100%',
+    padding: '0.75rem 1rem 0.75rem 2.6rem',
+    background: 'rgba(8, 17, 13, 0.85)',
+    border: '1px solid rgba(34, 229, 138, 0.25)',
+    borderRadius: '12px',
+    color: '#f8fafc',
+    fontSize: '0.875rem',
+    outline: 'none',
+    boxSizing: 'border-box'
+  },
+  select: {
+    width: '100%',
+    padding: '0.75rem 1rem 0.75rem 2.6rem',
+    background: 'rgba(8, 17, 13, 0.85)',
+    border: '1px solid rgba(34, 229, 138, 0.25)',
+    borderRadius: '12px',
+    color: '#f8fafc',
+    fontSize: '0.875rem',
+    outline: 'none',
+    boxSizing: 'border-box',
+    cursor: 'pointer'
+  },
+  coordsCapsule: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    padding: '0.625rem 0.875rem',
+    background: 'rgba(0, 217, 255, 0.08)',
+    border: '1px solid rgba(0, 217, 255, 0.2)',
+    borderRadius: '10px',
+    fontSize: '0.775rem',
+    color: '#94a3b8'
   },
   actionCard: {
     display: 'flex',
     flexDirection: 'column',
     gap: '0.75rem',
-    backgroundColor: '#f9fafb'
+    background: 'rgba(15, 27, 21, 0.72)',
+    backdropFilter: 'blur(20px)',
+    border: '1px solid rgba(34, 229, 138, 0.18)',
+    borderRadius: '18px',
+    padding: '1.25rem'
   },
   mapCard: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '1rem'
+    gap: '1rem',
+    background: 'rgba(15, 27, 21, 0.72)',
+    backdropFilter: 'blur(20px)',
+    border: '1px solid rgba(34, 229, 138, 0.18)',
+    borderRadius: '18px',
+    padding: '1.5rem',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
   }
 };
