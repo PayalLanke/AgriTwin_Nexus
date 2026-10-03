@@ -1,11 +1,11 @@
 // Farm Service for AgriTwin Nexus
-// Decoupled service layer for local persistence & FastAPI REST endpoint integration
+// Decoupled service layer connecting FastAPI REST API (http://localhost:8000) with LocalStorage fallback
 
+import { apiClient, isBackendAvailable } from './api';
 import { calculatePolygonArea } from '../utils/geoUtils';
 
 const FARMS_STORAGE_KEY = 'agritwin_farms';
 
-// Standard crop options available in AgriTwin Nexus
 export const CROP_OPTIONS = [
   'Wheat',
   'Rice / Paddy',
@@ -24,7 +24,30 @@ export const farmService = {
    * Fetch all registered farms for active farmer
    */
   async getFarms() {
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    try {
+      if (await isBackendAvailable()) {
+        const response = await apiClient.get('/farms/');
+        if (Array.isArray(response.data) && response.data.length > 0) {
+          return response.data.map(f => ({
+            id: f.id || f.farm_id,
+            farmName: f.farmName || f.farm_name || f.name,
+            cropType: f.cropType || f.crop_type || 'Soybean',
+            sowingDate: f.sowingDate || f.sowing_date || new Date().toISOString().split('T')[0],
+            latitude: parseFloat(f.latitude || f.center_lat || 19.8347),
+            longitude: parseFloat(f.longitude || f.center_lon || 75.8816),
+            boundary: f.boundary || f.geojson_boundary,
+            areaHectares: parseFloat(f.areaHectares || f.area_ha || 0.76),
+            areaAcres: parseFloat(f.areaAcres || f.area_acres || 1.88),
+            status: f.status || 'Active Twin Ready'
+          }));
+        }
+      }
+    } catch (e) {
+      console.warn('Backend API unavailable, fetching from local storage:', e);
+    }
+
+    // Fallback to localStorage
+    await new Promise((resolve) => setTimeout(resolve, 150));
     const farmsStr = localStorage.getItem(FARMS_STORAGE_KEY);
     if (!farmsStr) return [];
     try {
@@ -39,7 +62,29 @@ export const farmService = {
    * Fetch a single farm by ID
    */
   async getFarmById(id) {
-    await new Promise((resolve) => setTimeout(resolve, 150));
+    try {
+      if (await isBackendAvailable()) {
+        const response = await apiClient.get(`/farms/${id}`);
+        if (response.data) {
+          const f = response.data;
+          return {
+            id: f.id || f.farm_id,
+            farmName: f.farmName || f.farm_name || f.name,
+            cropType: f.cropType || f.crop_type || 'Soybean',
+            sowingDate: f.sowingDate || f.sowing_date || new Date().toISOString().split('T')[0],
+            latitude: parseFloat(f.latitude || f.center_lat || 19.8347),
+            longitude: parseFloat(f.longitude || f.center_lon || 75.8816),
+            boundary: f.boundary || f.geojson_boundary,
+            areaHectares: parseFloat(f.areaHectares || f.area_ha || 0.76),
+            areaAcres: parseFloat(f.areaAcres || f.area_acres || 1.88),
+            status: f.status || 'Active Twin Ready'
+          };
+        }
+      }
+    } catch (e) {
+      console.warn('Backend endpoint unavailable, checking local storage...');
+    }
+
     const farms = await this.getFarms();
     const farm = farms.find((f) => String(f.id) === String(id));
     if (!farm) {
@@ -50,12 +95,8 @@ export const farmService = {
 
   /**
    * Save a newly registered farm
-   * @param {Object} farmPayload { farmName, cropType, sowingDate, latitude, longitude, boundary }
    */
   async createFarm(farmPayload) {
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    
-    // Validate required fields
     if (!farmPayload.farmName || !farmPayload.farmName.trim()) {
       throw new Error('Farm name is required.');
     }
@@ -82,7 +123,7 @@ export const farmService = {
       sowingDate: farmPayload.sowingDate,
       latitude: parseFloat(farmPayload.latitude),
       longitude: parseFloat(farmPayload.longitude),
-      boundary: farmPayload.boundary, // GeoJSON Polygon
+      boundary: farmPayload.boundary,
       areaHectares: areaStats.hectares,
       areaAcres: areaStats.acres,
       areaSqMeters: areaStats.sqMeters,
@@ -91,6 +132,27 @@ export const farmService = {
       updatedAt: new Date().toISOString()
     };
 
+    // Try posting to FastAPI backend API
+    try {
+      if (await isBackendAvailable()) {
+        const response = await apiClient.post('/farms/', {
+          farm_name: newFarm.farmName,
+          crop_type: newFarm.cropType,
+          sowing_date: newFarm.sowingDate,
+          center_lat: newFarm.latitude,
+          center_lon: newFarm.longitude,
+          geojson_boundary: newFarm.boundary,
+          area_ha: newFarm.areaHectares
+        });
+        if (response.data && response.data.id) {
+          newFarm.id = response.data.id;
+        }
+      }
+    } catch (e) {
+      console.warn('Saved farm locally (FastAPI backend unavailable):', e);
+    }
+
+    // Always persist locally for offline reliability
     const existingFarms = await this.getFarms();
     existingFarms.unshift(newFarm);
     localStorage.setItem(FARMS_STORAGE_KEY, JSON.stringify(existingFarms));
@@ -99,50 +161,68 @@ export const farmService = {
   },
 
   /**
-   * Update existing farm details & GeoJSON boundary
+   * Update an existing farm
    */
   async updateFarm(id, updatePayload) {
-    await new Promise((resolve) => setTimeout(resolve, 300));
-
-    const farms = await this.getFarms();
-    const farmIndex = farms.findIndex((f) => String(f.id) === String(id));
-    
-    if (farmIndex === -1) {
-      throw new Error(`Farm with ID ${id} not found.`);
+    const existingFarms = await this.getFarms();
+    const index = existingFarms.findIndex((f) => String(f.id) === String(id));
+    if (index === -1) {
+      throw new Error('Farm not found to update.');
     }
 
-    const areaStats = updatePayload.boundary 
-      ? calculatePolygonArea(updatePayload.boundary) 
-      : { hectares: farms[farmIndex].areaHectares, acres: farms[farmIndex].areaAcres, sqMeters: farms[farmIndex].areaSqMeters };
+    let areaStats = {
+      hectares: existingFarms[index].areaHectares,
+      acres: existingFarms[index].areaAcres,
+      sqMeters: existingFarms[index].areaSqMeters
+    };
+
+    if (updatePayload.boundary) {
+      areaStats = calculatePolygonArea(updatePayload.boundary);
+    }
 
     const updatedFarm = {
-      ...farms[farmIndex],
-      farmName: updatePayload.farmName ? updatePayload.farmName.trim() : farms[farmIndex].farmName,
-      cropType: updatePayload.cropType || farms[farmIndex].cropType,
-      sowingDate: updatePayload.sowingDate || farms[farmIndex].sowingDate,
-      latitude: updatePayload.latitude ? parseFloat(updatePayload.latitude) : farms[farmIndex].latitude,
-      longitude: updatePayload.longitude ? parseFloat(updatePayload.longitude) : farms[farmIndex].longitude,
-      boundary: updatePayload.boundary || farms[farmIndex].boundary,
+      ...existingFarms[index],
+      ...updatePayload,
       areaHectares: areaStats.hectares,
       areaAcres: areaStats.acres,
       areaSqMeters: areaStats.sqMeters,
       updatedAt: new Date().toISOString()
     };
 
-    farms[farmIndex] = updatedFarm;
-    localStorage.setItem(FARMS_STORAGE_KEY, JSON.stringify(farms));
+    try {
+      if (await isBackendAvailable()) {
+        await apiClient.put(`/farms/${id}`, {
+          farm_name: updatedFarm.farmName,
+          crop_type: updatedFarm.cropType,
+          sowing_date: updatedFarm.sowingDate
+        });
+      }
+    } catch (e) {
+      console.warn('Updated farm locally:', e);
+    }
+
+    existingFarms[index] = updatedFarm;
+    localStorage.setItem(FARMS_STORAGE_KEY, JSON.stringify(existingFarms));
 
     return updatedFarm;
   },
 
   /**
-   * Delete farm record
+   * Delete farm by ID
    */
   async deleteFarm(id) {
-    await new Promise((resolve) => setTimeout(resolve, 250));
-    const farms = await this.getFarms();
-    const filteredFarms = farms.filter((f) => String(f.id) !== String(id));
-    localStorage.setItem(FARMS_STORAGE_KEY, JSON.stringify(filteredFarms));
-    return { success: true };
+    try {
+      if (await isBackendAvailable()) {
+        await apiClient.delete(`/farms/${id}`);
+      }
+    } catch (e) {
+      console.warn('Deleted farm locally:', e);
+    }
+
+    const existingFarms = await this.getFarms();
+    const filtered = existingFarms.filter((f) => String(f.id) !== String(id));
+    localStorage.setItem(FARMS_STORAGE_KEY, JSON.stringify(filtered));
+
+    return { success: true, message: 'Farm record deleted successfully.' };
   }
 };
