@@ -2,33 +2,28 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { farmService } from '../services/farmService';
 import FarmMap from '../components/FarmMap';
+import { useLanguage } from '../context/LanguageContext';
 import {
   ArrowLeft,
   Edit2,
   Sprout,
   Calendar,
   Layers,
-  MapPin,
   Code2,
   Cpu,
-<<<<<<< HEAD
   ShieldCheck,
-  Crosshair,
   Satellite,
   Compass,
-  Activity
-=======
-  Satellite,
   Activity,
   ShieldAlert,
   TrendingUp,
   Sparkles,
   CloudSun
->>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
 } from 'lucide-react';
 
 export default function ViewFarmPage() {
   const { id } = useParams();
+  const { t } = useLanguage();
   const [farm, setFarm] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -63,17 +58,10 @@ export default function ViewFarmPage() {
 
   if (error || !farm) {
     return (
-<<<<<<< HEAD
       <div style={styles.errorCard}>
         <h3 style={{ color: '#f87171', fontFamily: 'Space Grotesk, sans-serif', margin: 0 }}>Farm Record Not Found</h3>
         <p style={{ color: '#94a3b8', margin: 0 }}>{error || 'The requested digital twin record does not exist.'}</p>
         <Link to="/farms" style={styles.backBtnAction}>
-=======
-      <div className="card" style={styles.errorCard}>
-        <h3 style={{ color: 'var(--color-error)' }}>Farm Record Not Found</h3>
-        <p>{error || 'The requested farm record does not exist.'}</p>
-        <Link to="/farms" className="btn btn-secondary">
->>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
           <ArrowLeft size={16} />
           <span>Return to Farms Dock</span>
         </Link>
@@ -92,18 +80,14 @@ export default function ViewFarmPage() {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
               <h1 style={styles.title}>{farm.farmName}</h1>
-<<<<<<< HEAD
               <span style={styles.activeBadge}>
                 <span style={styles.livePulse}></span>
-                {farm.status.toUpperCase()}
+                {(farm.status || 'Active').toUpperCase()}
               </span>
               <span style={styles.roiTag}>
                 <Satellite size={12} color="#00d9ff" />
                 SENTINEL-2 ROI ACTIVE
               </span>
-=======
-              <span className="badge badge-primary">{farm.status || 'Active'}</span>
->>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
             </div>
             <p style={styles.subtitle}>Digital Twin Spatial Polygon & Spectral ROI Specification</p>
           </div>
@@ -140,7 +124,7 @@ export default function ViewFarmPage() {
               <div style={styles.specItem}>
                 <div style={styles.specLabelGroup}>
                   <Sprout size={15} color="#22e58a" />
-                  <span style={styles.specLabel}>Crop Variety</span>
+                  <span style={styles.specLabel}>{t('crop_type')}</span>
                 </div>
                 <span style={styles.specVal}>{farm.cropType}</span>
               </div>
@@ -148,31 +132,26 @@ export default function ViewFarmPage() {
               <div style={styles.specItem}>
                 <div style={styles.specLabelGroup}>
                   <Calendar size={15} color="#00d9ff" />
-                  <span style={styles.specLabel}>Sowing / Emergence Date</span>
+                  <span style={styles.specLabel}>{t('sowing_date')}</span>
                 </div>
                 <span style={styles.specVal}>{farm.sowingDate}</span>
               </div>
 
               <div style={styles.specItem}>
                 <div style={styles.specLabelGroup}>
-<<<<<<< HEAD
                   <Layers size={15} color="#fbbf24" />
-                  <span style={styles.specLabel}>Computed Surface Area</span>
-=======
-                  <Layers size={16} color="var(--color-warning)" />
-                  <span style={styles.specLabel}>Calculated Area</span>
->>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
+                  <span style={styles.specLabel}>{t('field_area')}</span>
                 </div>
                 <span style={styles.specVal}>
-                  <b style={{ color: '#22e58a' }}>{farm.areaHectares} Ha</b>{' '}
-                  <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>({farm.areaAcres} Acres)</span>
+                  <b style={{ color: '#22e58a' }}>{farm.areaHectares} {t('hectares')}</b>{' '}
+                  <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>({farm.areaAcres} {t('acres')})</span>
                 </span>
               </div>
 
               <div style={styles.specItem}>
                 <div style={styles.specLabelGroup}>
                   <Compass size={15} color="#38bdf8" />
-                  <span style={styles.specLabel}>ROI Center Datum</span>
+                  <span style={styles.specLabel}>{t('location')}</span>
                 </div>
                 <span style={{ ...styles.specVal, fontFamily: 'Space Grotesk, sans-serif' }}>
                   {farm.latitude.toFixed(6)}°N, {farm.longitude.toFixed(6)}°E
@@ -203,7 +182,6 @@ export default function ViewFarmPage() {
               </pre>
             )}
           </div>
-<<<<<<< HEAD
 
           {/* Future Integration Readiness Badge */}
           <div style={styles.integrationCard}>
@@ -217,8 +195,6 @@ export default function ViewFarmPage() {
               This farm boundary polygon is registered with the Google Earth Engine ingestion orchestrator. 10m L2A multispectral tiles are synchronized on every Sentinel-2 overpass.
             </p>
           </div>
-=======
->>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
         </div>
 
         {/* Right Column: Read-Only Leaflet Map displaying Polygon */}
@@ -423,18 +399,11 @@ const styles = {
     textDecoration: 'none'
   },
   title: {
-<<<<<<< HEAD
     fontSize: '1.45rem',
     fontWeight: '800',
     color: '#ffffff',
     margin: 0,
     fontFamily: 'Space Grotesk, sans-serif'
-=======
-    fontSize: '1.4rem',
-    fontWeight: '800',
-    color: 'var(--color-text-main)',
-    margin: 0
->>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
   },
   subtitle: {
     fontSize: '0.825rem',
@@ -612,7 +581,6 @@ const styles = {
     overflowY: 'auto',
     fontFamily: 'monospace'
   },
-<<<<<<< HEAD
   integrationCard: {
     padding: '1.25rem',
     backgroundColor: 'rgba(34, 229, 138, 0.06)',
@@ -629,11 +597,6 @@ const styles = {
     borderRadius: '18px',
     padding: '1.5rem',
     boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
-=======
-  mapCard: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem'
   },
   digitalTwinSection: {
     display: 'flex',
@@ -665,15 +628,14 @@ const styles = {
   },
   emptyStateContainer: {
     padding: '0.875rem',
-    backgroundColor: '#f8fafc',
+    backgroundColor: 'rgba(8, 17, 13, 0.6)',
     borderRadius: 'var(--radius-md)',
-    border: '1px dashed #cbd5e1'
+    border: '1px dashed rgba(255, 255, 255, 0.15)'
   },
   emptyStateText: {
     fontSize: '0.8125rem',
     color: 'var(--color-text-secondary)',
     fontStyle: 'italic',
     margin: 0
->>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
   }
 };

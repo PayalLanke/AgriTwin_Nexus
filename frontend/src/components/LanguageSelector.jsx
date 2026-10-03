@@ -1,9 +1,8 @@
 import React from 'react';
 import { useLanguage } from '../context/LanguageContext';
-import { Globe } from 'lucide-react';
 
 export default function LanguageSelector({ style, variant = 'dropdown' }) {
-  const { language, setLanguage, t } = useLanguage();
+  const { language, setLanguage } = useLanguage();
 
   if (variant === 'buttons') {
     return (
@@ -19,14 +18,15 @@ export default function LanguageSelector({ style, variant = 'dropdown' }) {
             onClick={() => setLanguage(item.code)}
             style={{
               padding: '0.4rem 0.875rem',
-              borderRadius: 'var(--radius-md)',
-              border: language === item.code ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
-              backgroundColor: language === item.code ? 'var(--color-light-green)' : '#ffffff',
-              color: language === item.code ? 'var(--color-primary)' : 'var(--color-text-main)',
+              borderRadius: '10px',
+              border: language === item.code ? '1px solid #22e58a' : '1px solid rgba(34, 229, 138, 0.2)',
+              backgroundColor: language === item.code ? 'rgba(34, 229, 138, 0.18)' : 'rgba(15, 27, 21, 0.8)',
+              color: language === item.code ? '#22e58a' : '#94a3b8',
               fontWeight: '700',
               fontSize: '0.825rem',
               cursor: 'pointer',
-              transition: 'all 0.15s ease'
+              transition: 'all 0.15s ease',
+              fontFamily: 'Space Grotesk, sans-serif'
             }}
           >
             {item.label}
@@ -37,29 +37,28 @@ export default function LanguageSelector({ style, variant = 'dropdown' }) {
   }
 
   return (
-    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', ...style }}>
-      <Globe size={16} color="var(--color-primary)" />
-      <select
-        aria-label="Select Dashboard Language"
-        value={language}
-        onChange={(e) => setLanguage(e.target.value)}
-        style={{
-          padding: '0.375rem 0.75rem',
-          borderRadius: 'var(--radius-md)',
-          border: '1px solid var(--color-border)',
-          backgroundColor: '#ffffff',
-          color: 'var(--color-text-main)',
-          fontWeight: '700',
-          fontSize: '0.825rem',
-          cursor: 'pointer',
-          outline: 'none',
-          boxShadow: 'var(--shadow-sm)'
-        }}
-      >
-        <option value="en">🇬🇧 English</option>
-        <option value="hi">🇮🇳 हिंदी (Hindi)</option>
-        <option value="mr">🇮🇳 मराठी (Marathi)</option>
-      </select>
-    </div>
+    <select
+      aria-label="Select Dashboard Language"
+      value={language}
+      onChange={(e) => setLanguage(e.target.value)}
+      style={{
+        padding: '0.4rem 0.85rem',
+        borderRadius: '10px',
+        border: '1px solid rgba(34, 229, 138, 0.35)',
+        backgroundColor: 'rgba(15, 27, 21, 0.95)',
+        color: '#ffffff',
+        fontWeight: '700',
+        fontSize: '0.8rem',
+        cursor: 'pointer',
+        outline: 'none',
+        fontFamily: 'Space Grotesk, sans-serif',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4)',
+        ...style
+      }}
+    >
+      <option value="en" style={{ backgroundColor: '#0f1b15', color: '#ffffff' }}>🇬🇧 English</option>
+      <option value="hi" style={{ backgroundColor: '#0f1b15', color: '#ffffff' }}>🇮🇳 हिंदी (Hindi)</option>
+      <option value="mr" style={{ backgroundColor: '#0f1b15', color: '#ffffff' }}>🇮🇳 मराठी (Marathi)</option>
+    </select>
   );
 }

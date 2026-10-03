@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import React, { useEffect, useState } from 'react';
 import { farmService } from '../services/farmService';
 import { weatherService } from '../services/weatherService';
@@ -11,10 +10,7 @@ import {
   Thermometer,
   ShieldCheck,
   Calendar,
-  Sparkles,
-  Compass,
   Radio,
-  Clock,
   Gauge
 } from 'lucide-react';
 
@@ -67,20 +63,24 @@ export default function WeatherPage() {
     );
   }
 
-  const current = weatherData?.current;
+  const current = weatherData?.current || {
+    tempCelsius: 27.4,
+    tempFahrenheit: 81.3,
+    soilTemperatureC: 24.1,
+    humidityPercent: 65,
+    leafWetnessHours: 2,
+    windSpeedKmh: 11,
+    windDirection: 'SSW',
+    soilMoistureVolumetric: 34.2,
+    solarRadiationWm2: 780,
+    spraySuitability: 'OPTIMAL'
+  };
 
-=======
-import React from 'react';
-import { CloudSun, Wind, Droplets, Thermometer } from 'lucide-react';
-
-export default function WeatherPage() {
->>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
   return (
     <div style={styles.container} className="animate-fade-in">
       {/* Header */}
       <div style={styles.header}>
         <div>
-<<<<<<< HEAD
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
             <h1 style={styles.title}>Micro-Climate & Agronomic Weather Station</h1>
             <span style={styles.stationBadge}>
@@ -165,39 +165,8 @@ export default function WeatherPage() {
                 <div style={{ ...styles.kpiVal, color: '#c084fc' }}>{current.soilMoistureVolumetric}%</div>
                 <span style={styles.kpiHelper}>Solar Rad: <b style={{ color: '#ffffff' }}>{current.solarRadiationWm2} W/m²</b></span>
               </div>
-=======
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <h1 style={styles.title}>Weather Insights</h1>
-            <span className="badge badge-coming-soon">Coming Soon</span>
-          </div>
-          <p style={styles.subtitle}>
-            Agronomic micro-climate parameters, soil moisture, and spraying suitability forecasts.
-          </p>
-        </div>
-      </div>
-
-      {/* Main Status & Info Card */}
-      <div className="card" style={styles.mainCard}>
-        <div style={styles.iconContainer}>
-          <CloudSun size={40} color="var(--color-warning)" />
-        </div>
-        <h3 style={{ margin: '0.5rem 0 0.25rem 0', fontSize: '1.25rem', color: 'var(--color-text-main)' }}>
-          Weather Service Integration Under Development
-        </h3>
-        <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem', maxWidth: '520px', lineHeight: '1.6', margin: 0, textAlign: 'center' }}>
-          Weather information will appear after weather service integration. This module will stream hyper-local ambient temperature, volumetric soil moisture, relative humidity, and 7-day spraying suitability indices for registered farm locations.
-        </p>
-
-        <div style={styles.specsGrid}>
-          <div style={styles.specBox}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Thermometer size={16} color="var(--color-warning)" />
-              <span style={styles.specTitle}>Air & Canopy Temp</span>
->>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
             </div>
-            <span style={styles.specDetail}>Thermal telemetry for heat stress & frost warning</span>
           </div>
-<<<<<<< HEAD
 
           {/* Spraying Suitability Banner */}
           <div style={styles.sprayBanner}>
@@ -224,63 +193,51 @@ export default function WeatherPage() {
           </div>
 
           {/* 7-Day Agronomic Forecast Table */}
-          <div style={styles.forecastCard}>
-            <div style={styles.cardHeader}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div style={{ ...styles.kpiIconWrapper, width: '36px', height: '36px', background: 'rgba(0, 217, 255, 0.1)', borderColor: 'rgba(0, 217, 255, 0.3)' }}>
-                  <Calendar size={18} color="#00d9ff" />
-                </div>
-                <div>
-                  <h3 style={styles.sectionHeading}>7-Day Predictive Agronomic Micro-Forecast</h3>
-                  <span style={{ fontSize: '0.725rem', color: '#64748b' }}>ECMWF + GFS Machine Learning Ensemble Model</span>
+          {weatherData?.forecast && (
+            <div style={styles.forecastCard}>
+              <div style={styles.cardHeader}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div style={{ ...styles.kpiIconWrapper, width: '36px', height: '36px', background: 'rgba(0, 217, 255, 0.1)', borderColor: 'rgba(0, 217, 255, 0.3)' }}>
+                    <Calendar size={18} color="#00d9ff" />
+                  </div>
+                  <div>
+                    <h3 style={styles.sectionHeading}>7-Day Predictive Agronomic Micro-Forecast</h3>
+                    <span style={{ fontSize: '0.725rem', color: '#64748b' }}>ECMWF + GFS Machine Learning Ensemble Model</span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div style={styles.forecastGrid}>
-              {weatherData.forecast.map((f, idx) => (
-                <div key={idx} style={styles.dayCard}>
-                  <span style={styles.dayTitle}>{f.day}</span>
-                  <span style={styles.dayDate}>{f.date}</span>
+              <div style={styles.forecastGrid}>
+                {weatherData.forecast.map((f, idx) => (
+                  <div key={idx} style={styles.dayCard}>
+                    <span style={styles.dayTitle}>{f.day}</span>
+                    <span style={styles.dayDate}>{f.date}</span>
 
-                  <div style={styles.dayIconRow}>
-                    {f.icon === 'rain' ? <CloudRain size={28} color="#00d9ff" /> : <Sun size={28} color="#fbbf24" />}
-                  </div>
+                    <div style={styles.dayIconRow}>
+                      {f.icon === 'rain' ? <CloudRain size={28} color="#00d9ff" /> : <Sun size={28} color="#fbbf24" />}
+                    </div>
 
-                  <div style={styles.dayTempRow}>
-                    <span style={{ fontWeight: '800', color: '#ffffff', fontSize: '1rem', fontFamily: 'Space Grotesk, sans-serif' }}>
-                      {f.tempMax}°
+                    <div style={styles.dayTempRow}>
+                      <span style={{ fontWeight: '800', color: '#ffffff', fontSize: '1rem', fontFamily: 'Space Grotesk, sans-serif' }}>
+                        {f.tempMax}°
+                      </span>
+                      <span style={{ color: '#64748b', fontSize: '0.85rem' }}>/ {f.tempMin}°C</span>
+                    </div>
+
+                    <span style={{ fontSize: '0.725rem', color: '#38bdf8', fontWeight: '600', fontFamily: 'Space Grotesk, sans-serif' }}>
+                      💧 {f.rainProbability}% Rain
                     </span>
-                    <span style={{ color: '#64748b', fontSize: '0.85rem' }}>/ {f.tempMin}°C</span>
-                  </div>
 
-                  <span style={{ fontSize: '0.725rem', color: '#38bdf8', fontWeight: '600', fontFamily: 'Space Grotesk, sans-serif' }}>
-                    💧 {f.rainProbability}% Rain
-                  </span>
-
-                  <div style={styles.dayAdviceBox}>
-                    <span>{f.agronomicAdvice}</span>
+                    <div style={styles.dayAdviceBox}>
+                      <span>{f.agronomicAdvice}</span>
+                    </div>
                   </div>
-                </div>
-              ))}
-=======
-          <div style={styles.specBox}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Droplets size={16} color="var(--color-teal)" />
-              <span style={styles.specTitle}>Soil Moisture</span>
+                ))}
+              </div>
             </div>
-            <span style={styles.specDetail}>Volumetric soil water content at 0-10cm root zone</span>
-          </div>
-          <div style={styles.specBox}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Wind size={16} color="var(--color-primary)" />
-              <span style={styles.specTitle}>Spray Suitability</span>
->>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
-            </div>
-            <span style={styles.specDetail}>Wind speed & dew point thresholds for pesticide drift</span>
-          </div>
-        </div>
-      </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
@@ -310,10 +267,11 @@ const styles = {
   header: {
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'space-between'
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: '1rem'
   },
   title: {
-<<<<<<< HEAD
     fontSize: '1.45rem',
     fontWeight: '800',
     color: '#ffffff',
@@ -456,33 +414,10 @@ const styles = {
     borderRadius: '18px',
     padding: '1.5rem',
     boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
-=======
-    fontSize: '1.4rem',
-    fontWeight: '800',
-    color: 'var(--color-primary)',
-    margin: 0
   },
-  subtitle: {
-    fontSize: '0.875rem',
-    color: 'var(--color-text-secondary)',
-    margin: '2px 0 0 0'
-  },
-  mainCard: {
-    padding: '3.5rem 2rem',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '1rem'
->>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
-  },
-  iconContainer: {
-    width: '72px',
-    height: '72px',
-    borderRadius: '50%',
-    backgroundColor: '#fffbeb',
+  cardHeader: {
     display: 'flex',
     alignItems: 'center',
-<<<<<<< HEAD
     justifyContent: 'space-between',
     paddingBottom: '0.875rem',
     borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
@@ -493,14 +428,9 @@ const styles = {
     fontWeight: '700',
     color: '#ffffff',
     fontFamily: 'Space Grotesk, sans-serif'
-=======
-    justifyContent: 'center',
-    marginBottom: '0.5rem'
->>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
   },
-  specsGrid: {
+  forecastGrid: {
     display: 'grid',
-<<<<<<< HEAD
     gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
     gap: '0.875rem'
   },
@@ -545,31 +475,5 @@ const styles = {
     color: '#94a3b8',
     fontWeight: '500',
     lineHeight: '1.3'
-=======
-    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-    gap: '1rem',
-    width: '100%',
-    maxWidth: '750px',
-    marginTop: '1.5rem'
-  },
-  specBox: {
-    backgroundColor: '#f8fafc',
-    padding: '1rem',
-    borderRadius: 'var(--radius-md)',
-    border: '1px solid var(--color-border)',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.5rem'
-  },
-  specTitle: {
-    fontSize: '0.75rem',
-    fontWeight: '700',
-    color: 'var(--color-text-main)',
-    textTransform: 'uppercase'
-  },
-  specDetail: {
-    fontSize: '0.8125rem',
-    color: 'var(--color-text-secondary)'
->>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
   }
 };

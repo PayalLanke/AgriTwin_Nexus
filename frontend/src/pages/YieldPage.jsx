@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import React, { useEffect, useState } from 'react';
 import { farmService } from '../services/farmService';
 import { getFarmIndicesAnalysis } from '../utils/indicesEngine';
@@ -6,14 +5,10 @@ import { yieldEngine } from '../services/yieldEngine';
 import {
   TrendingUp,
   Layers,
-  CheckCircle2,
   Award,
   Scale,
-  HelpCircle,
   Sparkles,
-  BarChart3,
-  Calendar,
-  Zap
+  BarChart3
 } from 'lucide-react';
 
 export default function YieldPage() {
@@ -67,18 +62,11 @@ export default function YieldPage() {
     );
   }
 
-=======
-import React from 'react';
-import { TrendingUp, BarChart3, Scale, Award } from 'lucide-react';
-
-export default function YieldPage() {
->>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
   return (
     <div style={styles.container} className="animate-fade-in">
       {/* Header */}
       <div style={styles.header}>
         <div>
-<<<<<<< HEAD
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
             <h1 style={styles.title}>Predictive Yield Engine & Biomass Integral</h1>
             <span style={styles.modelBadge}>
@@ -115,7 +103,7 @@ export default function YieldPage() {
           <h3 style={{ color: '#ffffff', fontFamily: 'Space Grotesk, sans-serif', margin: 0 }}>No Farm Registered</h3>
           <p style={{ color: '#94a3b8', margin: 0 }}>Register a farm boundary to calculate harvest yield projections.</p>
         </div>
-      ) : (
+      ) : yieldData && (
         <>
           {/* Main Yield Projection KPI Banner */}
           <div style={styles.kpiGrid}>
@@ -156,152 +144,110 @@ export default function YieldPage() {
                 </div>
                 <span style={styles.kpiHelper}>{selectedFarm.cropType} Standard Plot</span>
               </div>
-=======
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <h1 style={styles.title}>Yield Estimation</h1>
-            <span className="badge badge-coming-soon">Coming Soon</span>
-          </div>
-          <p style={styles.subtitle}>
-            Biomass integral modeling projecting expected crop harvest output.
-          </p>
-        </div>
-      </div>
-
-      {/* Main Status & Info Card */}
-      <div className="card" style={styles.mainCard}>
-        <div style={styles.iconContainer}>
-          <TrendingUp size={40} color="var(--color-primary)" />
-        </div>
-        <h3 style={{ margin: '0.5rem 0 0.25rem 0', fontSize: '1.25rem', color: 'var(--color-text-main)' }}>
-          Yield Prediction Model Under Development
-        </h3>
-        <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem', maxWidth: '520px', lineHeight: '1.6', margin: 0, textAlign: 'center' }}>
-          Yield estimation will appear after the prediction model is integrated. This module will integrate satellite biomass accumulation integrals, sowing dates, and crop variety coefficients to estimate harvest tonnage per hectare.
-        </p>
-
-        <div style={styles.specsGrid}>
-          <div style={styles.specBox}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Scale size={16} color="var(--color-primary)" />
-              <span style={styles.specTitle}>Tons & Quintals Output</span>
->>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
             </div>
-            <span style={styles.specDetail}>Yield projection in Tons/Ha and total field quintals</span>
           </div>
-<<<<<<< HEAD
 
           {/* Confidence Interval Range Card */}
-          <div style={styles.rangeCard}>
-            <div style={styles.cardHeader}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div style={{ ...styles.iconCircle, width: '36px', height: '36px', background: 'rgba(34, 229, 138, 0.1)', borderColor: 'rgba(34, 229, 138, 0.25)' }}>
-                  <Award size={18} color="#22e58a" />
+          {yieldData.harvestRange && (
+            <div style={styles.rangeCard}>
+              <div style={styles.cardHeader}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div style={{ ...styles.iconCircle, width: '36px', height: '36px', background: 'rgba(34, 229, 138, 0.1)', borderColor: 'rgba(34, 229, 138, 0.25)' }}>
+                    <Award size={18} color="#22e58a" />
+                  </div>
+                  <div>
+                    <h3 style={styles.sectionHeading}>Monte Carlo Harvest Confidence Bounds</h3>
+                    <span style={{ fontSize: '0.725rem', color: '#00d9ff', fontWeight: '700', fontFamily: 'Space Grotesk, sans-serif' }}>
+                      CONFIDENCE INTERVAL: {yieldData.confidenceLevel?.toUpperCase()}
+                    </span>
+                  </div>
                 </div>
-                <div>
-                  <h3 style={styles.sectionHeading}>Monte Carlo Harvest Confidence Bounds</h3>
-                  <span style={{ fontSize: '0.725rem', color: '#00d9ff', fontWeight: '700', fontFamily: 'Space Grotesk, sans-serif' }}>
-                    CONFIDENCE INTERVAL: {yieldData.confidenceLevel.toUpperCase()}
+              </div>
+
+              <div style={styles.rangeGrid}>
+                <div style={styles.rangeBox}>
+                  <span style={styles.rangeTitle}>CONSERVATIVE BOUND (-1σ)</span>
+                  <span style={{ fontSize: '1.4rem', fontWeight: '800', color: '#94a3b8', fontFamily: 'Space Grotesk, sans-serif' }}>
+                    {yieldData.harvestRange.minTons} Tons
+                  </span>
+                  <span style={styles.rangeSub}>Water deficit & thermal stress penalty</span>
+                </div>
+
+                <div style={{ ...styles.rangeBox, background: 'linear-gradient(135deg, rgba(34, 229, 138, 0.15) 0%, rgba(15, 27, 21, 0.9) 100%)', borderColor: 'rgba(34, 229, 138, 0.45)', boxShadow: '0 0 25px rgba(34, 229, 138, 0.15)' }}>
+                  <span style={{ ...styles.rangeTitle, color: '#22e58a' }}>EXPECTED DIGITAL TWIN HARVEST</span>
+                  <span style={{ fontSize: '1.75rem', fontWeight: '800', color: '#22e58a', fontFamily: 'Space Grotesk, sans-serif' }}>
+                    {yieldData.harvestRange.expectedTons} Tons
+                  </span>
+                  <span style={{ fontSize: '0.75rem', color: '#00d9ff', fontWeight: '700', fontFamily: 'Space Grotesk, sans-serif' }}>
+                    {yieldData.totalYieldQuintals} Quintals Market Projection
                   </span>
                 </div>
+
+                <div style={styles.rangeBox}>
+                  <span style={{ ...styles.rangeTitle, color: '#38bdf8' }}>OPTIMIZED MAXIMUM (+1σ)</span>
+                  <span style={{ fontSize: '1.4rem', fontWeight: '800', color: '#38bdf8', fontFamily: 'Space Grotesk, sans-serif' }}>
+                    {yieldData.harvestRange.maxTons} Tons
+                  </span>
+                  <span style={styles.rangeSub}>Full fertigation & zero pathogen damage</span>
+                </div>
               </div>
             </div>
-
-            <div style={styles.rangeGrid}>
-              <div style={styles.rangeBox}>
-                <span style={styles.rangeTitle}>CONSERVATIVE BOUND (-1σ)</span>
-                <span style={{ fontSize: '1.4rem', fontWeight: '800', color: '#94a3b8', fontFamily: 'Space Grotesk, sans-serif' }}>
-                  {yieldData.harvestRange.minTons} Tons
-                </span>
-                <span style={styles.rangeSub}>Water deficit & thermal stress penalty</span>
-              </div>
-
-              <div style={{ ...styles.rangeBox, background: 'linear-gradient(135deg, rgba(34, 229, 138, 0.15) 0%, rgba(15, 27, 21, 0.9) 100%)', borderColor: 'rgba(34, 229, 138, 0.45)', boxShadow: '0 0 25px rgba(34, 229, 138, 0.15)' }}>
-                <span style={{ ...styles.rangeTitle, color: '#22e58a' }}>EXPECTED DIGITAL TWIN HARVEST</span>
-                <span style={{ fontSize: '1.75rem', fontWeight: '800', color: '#22e58a', fontFamily: 'Space Grotesk, sans-serif' }}>
-                  {yieldData.harvestRange.expectedTons} Tons
-                </span>
-                <span style={{ fontSize: '0.75rem', color: '#00d9ff', fontWeight: '700', fontFamily: 'Space Grotesk, sans-serif' }}>
-                  {yieldData.totalYieldQuintals} Quintals Market Projection
-                </span>
-              </div>
-
-              <div style={styles.rangeBox}>
-                <span style={{ ...styles.rangeTitle, color: '#38bdf8' }}>OPTIMIZED MAXIMUM (+1σ)</span>
-                <span style={{ fontSize: '1.4rem', fontWeight: '800', color: '#38bdf8', fontFamily: 'Space Grotesk, sans-serif' }}>
-                  {yieldData.harvestRange.maxTons} Tons
-                </span>
-                <span style={styles.rangeSub}>Full fertigation & zero pathogen damage</span>
-              </div>
-=======
-          <div style={styles.specBox}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <BarChart3 size={16} color="var(--color-teal)" />
-              <span style={styles.specTitle}>Biomass Accumulation</span>
->>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
-            </div>
-            <span style={styles.specDetail}>Integrals of multi-temporal NDVI growth curves</span>
-          </div>
-<<<<<<< HEAD
+          )}
 
           {/* Biomass Contribution Factor Table */}
-          <div style={styles.factorsCard}>
-            <div style={styles.cardHeader}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div style={{ ...styles.iconCircle, width: '36px', height: '36px', background: 'rgba(0, 217, 255, 0.1)', borderColor: 'rgba(0, 217, 255, 0.25)' }}>
-                  <BarChart3 size={18} color="#00d9ff" />
-                </div>
-                <div>
-                  <h3 style={styles.sectionHeading}>Physiological Biomass Weighting Matrix</h3>
-                  <span style={{ fontSize: '0.725rem', color: '#64748b' }}>Relative factor sensitivities on cumulative yield</span>
+          {yieldData.yieldFactors && (
+            <div style={styles.factorsCard}>
+              <div style={styles.cardHeader}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div style={{ ...styles.iconCircle, width: '36px', height: '36px', background: 'rgba(0, 217, 255, 0.1)', borderColor: 'rgba(0, 217, 255, 0.25)' }}>
+                    <BarChart3 size={18} color="#00d9ff" />
+                  </div>
+                  <div>
+                    <h3 style={styles.sectionHeading}>Physiological Biomass Weighting Matrix</h3>
+                    <span style={{ fontSize: '0.725rem', color: '#64748b' }}>Relative factor sensitivities on cumulative yield</span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div style={styles.factorsList}>
-              {yieldData.yieldFactors.map((f, idx) => {
-                const isPos = f.impact === 'Positive';
-                return (
-                  <div key={idx} style={styles.factorRow}>
-                    <span style={{ fontWeight: '600', fontSize: '0.875rem', color: '#f8fafc' }}>{f.factor}</span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <span style={{
-                        fontWeight: '800',
-                        fontSize: '0.9rem',
-                        fontFamily: 'Space Grotesk, sans-serif',
-                        color: isPos ? '#22e58a' : '#f87171'
-                      }}>
-                        {f.contribution}
-                      </span>
-                      <span style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '0.3rem',
-                        padding: '0.2rem 0.65rem',
-                        borderRadius: '9999px',
-                        fontSize: '0.7rem',
-                        fontWeight: '700',
-                        fontFamily: 'Space Grotesk, sans-serif',
-                        background: isPos ? 'rgba(34, 229, 138, 0.12)' : 'rgba(239, 68, 68, 0.12)',
-                        color: isPos ? '#22e58a' : '#f87171',
-                        border: `1px solid ${isPos ? 'rgba(34, 229, 138, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`
-                      }}>
-                        {f.impact.toUpperCase()}
-                      </span>
+              <div style={styles.factorsList}>
+                {yieldData.yieldFactors.map((f, idx) => {
+                  const isPos = f.impact === 'Positive';
+                  return (
+                    <div key={idx} style={styles.factorRow}>
+                      <span style={{ fontWeight: '600', fontSize: '0.875rem', color: '#f8fafc' }}>{f.factor}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <span style={{
+                          fontWeight: '800',
+                          fontSize: '0.9rem',
+                          fontFamily: 'Space Grotesk, sans-serif',
+                          color: isPos ? '#22e58a' : '#f87171'
+                        }}>
+                          {f.contribution}
+                        </span>
+                        <span style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.3rem',
+                          padding: '0.2rem 0.65rem',
+                          borderRadius: '9999px',
+                          fontSize: '0.7rem',
+                          fontWeight: '700',
+                          fontFamily: 'Space Grotesk, sans-serif',
+                          background: isPos ? 'rgba(34, 229, 138, 0.12)' : 'rgba(239, 68, 68, 0.12)',
+                          color: isPos ? '#22e58a' : '#f87171',
+                          border: `1px solid ${isPos ? 'rgba(34, 229, 138, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`
+                        }}>
+                          {f.impact.toUpperCase()}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-=======
-          <div style={styles.specBox}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Award size={16} color="var(--color-warning)" />
-              <span style={styles.specTitle}>Confidence Interval</span>
->>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
+                  );
+                })}
+              </div>
             </div>
-            <span style={styles.specDetail}>Statistical bounds (± Tons) based on regional historical datasets</span>
-          </div>
-        </div>
-      </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
@@ -331,10 +277,11 @@ const styles = {
   header: {
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'space-between'
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: '1rem'
   },
   title: {
-<<<<<<< HEAD
     fontSize: '1.45rem',
     fontWeight: '800',
     color: '#ffffff',
@@ -500,60 +447,5 @@ const styles = {
     backgroundColor: 'rgba(8, 17, 13, 0.75)',
     borderRadius: '12px',
     border: '1px solid rgba(255, 255, 255, 0.06)'
-=======
-    fontSize: '1.4rem',
-    fontWeight: '800',
-    color: 'var(--color-primary)',
-    margin: 0
-  },
-  subtitle: {
-    fontSize: '0.875rem',
-    color: 'var(--color-text-secondary)',
-    margin: '2px 0 0 0'
-  },
-  mainCard: {
-    padding: '3.5rem 2rem',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '1rem'
-  },
-  iconContainer: {
-    width: '72px',
-    height: '72px',
-    borderRadius: '50%',
-    backgroundColor: 'var(--color-light-green)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: '0.5rem'
-  },
-  specsGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-    gap: '1rem',
-    width: '100%',
-    maxWidth: '750px',
-    marginTop: '1.5rem'
-  },
-  specBox: {
-    backgroundColor: '#f8fafc',
-    padding: '1rem',
-    borderRadius: 'var(--radius-md)',
-    border: '1px solid var(--color-border)',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.5rem'
-  },
-  specTitle: {
-    fontSize: '0.75rem',
-    fontWeight: '700',
-    color: 'var(--color-text-main)',
-    textTransform: 'uppercase'
-  },
-  specDetail: {
-    fontSize: '0.8125rem',
-    color: 'var(--color-text-secondary)'
->>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
   }
 };

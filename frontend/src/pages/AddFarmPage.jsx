@@ -43,7 +43,6 @@ export default function AddFarmPage() {
     if (error) setError('');
   };
 
-  // Helper to get calculated area if boundary exists
   const calculatedAreaHa = boundaryGeoJSON?.properties?.areaHectares || 0;
   const calculatedAreaAcres = boundaryGeoJSON?.properties?.areaAcres || 0;
 
@@ -94,16 +93,16 @@ export default function AddFarmPage() {
 
   return (
     <div style={styles.container} className="animate-fade-in">
-      {/* Header */}
+      {/* Page Header */}
       <div style={styles.pageHeader}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <Link to="/farms" style={styles.backBtn} title="Back to farms">
-            <ArrowLeft size={20} color="#4b5563" />
+            <ArrowLeft size={18} color="#22e58a" />
           </Link>
           <div>
             <h1 style={styles.title}>{t('add_farm_title')}</h1>
             <p style={styles.subtitle}>
-              {t('add_farm_subtitle')}
+              Search location (e.g. Jalna, Kopargaon) & delineate field boundary polygon on interactive satellite map.
             </p>
           </div>
         </div>
@@ -111,54 +110,56 @@ export default function AddFarmPage() {
 
       {error && (
         <div style={styles.errorBanner}>
-          <AlertCircle size={20} color="var(--color-error)" />
+          <AlertCircle size={20} color="#f87171" />
           <span>{error}</span>
         </div>
       )}
 
       <form onSubmit={handleSaveFarm} style={styles.formLayout}>
-        {/* LEFT COLUMN: Farm Information Form */}
+        {/* LEFT COLUMN: Farm Specifications Form */}
         <div style={styles.leftCol}>
-          <div className="card" style={styles.cardSection}>
+          <div style={styles.cardSection}>
             <div style={styles.cardSectionHeader}>
-              <Sprout size={20} color="var(--color-primary)" />
-              <h3 style={{ margin: 0, fontSize: '1.1rem' }}>{t('add_farm_title')}</h3>
+              <div style={styles.iconCircle}>
+                <Sprout size={18} color="#22e58a" />
+              </div>
+              <h3 style={styles.sectionHeading}>{t('add_farm_title')}</h3>
             </div>
 
             <div style={styles.formGroup}>
-              <label htmlFor="farmName">
-                {t('farm_name')} <span style={{ color: 'var(--color-error)' }}>*</span>
+              <label style={styles.label} htmlFor="farmName">
+                {t('farm_name')} <span style={{ color: '#f87171' }}>*</span>
               </label>
               <div style={styles.inputIconWrapper}>
-                <FileText size={16} color="#9ca3af" style={styles.inputIcon} />
+                <FileText size={16} color="#64748b" style={styles.inputIcon} />
                 <input
                   id="farmName"
                   type="text"
                   placeholder="e.g. Green Valley Plot A"
                   value={farmName}
                   onChange={(e) => setFarmName(e.target.value)}
-                  style={{ paddingLeft: '2.375rem' }}
+                  style={styles.input}
                   required
                 />
               </div>
             </div>
 
             <div style={styles.formGroup}>
-              <label htmlFor="cropType">
-                {t('crop_type')} <span style={{ color: 'var(--color-error)' }}>*</span>
+              <label style={styles.label} htmlFor="cropType">
+                {t('crop_type')} <span style={{ color: '#f87171' }}>*</span>
               </label>
               <div style={styles.inputIconWrapper}>
-                <Sprout size={16} color="#9ca3af" style={styles.inputIcon} />
+                <Sprout size={16} color="#64748b" style={styles.inputIcon} />
                 <select
                   id="cropType"
                   value={cropType}
                   onChange={(e) => setCropType(e.target.value)}
-                  style={{ paddingLeft: '2.375rem' }}
+                  style={styles.select}
                   required
                 >
-                  <option value="">-- {t('crop_type')} --</option>
+                  <option value="" style={{ background: '#0b1612', color: '#94a3b8' }}>-- Select Crop Variety --</option>
                   {CROP_OPTIONS.map((c) => (
-                    <option key={c} value={c}>
+                    <option key={c} value={c} style={{ background: '#0b1612', color: '#f1f5f9' }}>
                       {c}
                     </option>
                   ))}
@@ -167,106 +168,105 @@ export default function AddFarmPage() {
             </div>
 
             <div style={styles.formGroup}>
-              <label htmlFor="sowingDate">
-                {t('sowing_date')} <span style={{ color: 'var(--color-error)' }}>*</span>
+              <label style={styles.label} htmlFor="sowingDate">
+                {t('sowing_date')} <span style={{ color: '#f87171' }}>*</span>
               </label>
               <div style={styles.inputIconWrapper}>
-                <Calendar size={16} color="#9ca3af" style={styles.inputIcon} />
+                <Calendar size={16} color="#64748b" style={styles.inputIcon} />
                 <input
                   id="sowingDate"
                   type="date"
                   value={sowingDate}
                   onChange={(e) => setSowingDate(e.target.value)}
-                  style={{ paddingLeft: '2.375rem' }}
+                  style={styles.input}
                   required
                 />
               </div>
             </div>
 
-            {/* Calculated Area Display */}
+            {/* Area Display Box */}
             <div style={styles.areaInfoBox}>
-              <span style={styles.areaInfoLabel}>{t('field_area')}:</span>
+              <span style={styles.areaInfoLabel}>COMPUTED FIELD AREA:</span>
               <div style={styles.areaValRow}>
                 <span style={styles.areaValPrimary}>
-                  {calculatedAreaHa > 0 ? `${calculatedAreaHa} ${t('hectares')}` : '—'}
+                  {calculatedAreaHa > 0 ? `${calculatedAreaHa} Ha` : '—'}
                 </span>
                 <span style={styles.areaValSecondary}>
-                  {calculatedAreaAcres > 0 ? `(${calculatedAreaAcres} ${t('acres')})` : t('boundary_none')}
+                  {calculatedAreaAcres > 0 ? `(${calculatedAreaAcres} Acres)` : '(Draw polygon to compute)'}
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Action Button Card */}
-          <div className="card" style={styles.actionCard}>
+          {/* Save Action Card */}
+          <div style={styles.actionCard}>
             <button
               type="submit"
-              className="btn btn-primary"
+              className="cyber-gradient-btn"
               disabled={isLoading}
-              style={{ width: '100%', padding: '0.875rem' }}
+              style={{ width: '100%', padding: '0.875rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.625rem' }}
             >
               <Save size={18} />
-              <span>{isLoading ? 'Saving...' : t('save_farm_btn')}</span>
+              <span>{isLoading ? 'Saving Farm Record...' : t('save_farm_btn')}</span>
             </button>
             <p style={styles.actionNote}>
-              {t('boundary_active')}
+              Saving boundary automatically instantiates the 3D Digital Twin mesh & Sentinel-2 monitoring pipeline.
             </p>
           </div>
         </div>
 
         {/* RIGHT COLUMN: Interactive Farm Map & Boundary Delineation */}
         <div style={styles.rightCol}>
-          <div className="card" style={styles.mapCard}>
+          <div style={styles.mapCard}>
             <div style={styles.cardSectionHeader}>
-              <Layers size={20} color="var(--color-teal)" />
+              <div style={{ ...styles.iconCircle, background: 'rgba(0, 217, 255, 0.1)', borderColor: 'rgba(0, 217, 255, 0.3)' }}>
+                <Layers size={18} color="#00d9ff" />
+              </div>
               <div>
-                <h3 style={{ margin: 0, fontSize: '1.1rem' }}>{t('add_farm_title')}</h3>
-                <p style={{ margin: 0, fontSize: '0.775rem', color: 'var(--color-text-secondary)' }}>
-                  {t('search_location_placeholder')}
+                <h3 style={styles.sectionHeading}>Spatial Location & Boundary Map</h3>
+                <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>
+                  Search city/town (e.g., Jalna, Kopargaon) or click quick location chips to center map.
                 </p>
               </div>
             </div>
 
-            {/* Leaflet Map */}
-            <div style={{ height: '380px', width: '100%', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
-              <FarmMap
-                initialLat={latitude}
-                initialLng={longitude}
-                onLocationChange={handleLocationChange}
-                onBoundaryChange={handleBoundaryChange}
-              />
-            </div>
+            {/* Leaflet Farm Map */}
+            <FarmMap
+              initialLat={latitude}
+              initialLng={longitude}
+              onLocationChange={handleLocationChange}
+              onBoundaryChange={handleBoundaryChange}
+            />
 
-            {/* BOUNDARY INFORMATION SECTION BELOW MAP */}
+            {/* GeoJSON status bar */}
             <div style={styles.boundaryInfoSection}>
               {!boundaryGeoJSON ? (
                 <div style={styles.boundaryPendingBox}>
-                  <MapPin size={18} color="var(--color-warning)" />
+                  <MapPin size={18} color="#fbbf24" />
                   <div>
-                    <span style={styles.boundaryStatusText}>
-                      {t('add_farm_subtitle')}
+                    <span style={styles.boundaryPendingText}>
+                      Pending Boundary Selection: Click top-left polygon icon on map to draw farm perimeter.
                     </span>
                   </div>
                 </div>
               ) : (
                 <div style={styles.boundarySuccessBox}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-                    <CheckCircle2 size={20} color="var(--color-primary)" />
+                    <CheckCircle2 size={20} color="#22e58a" />
                     <div>
-                      <span style={{ fontWeight: '700', fontSize: '0.875rem', color: 'var(--color-primary)' }}>
-                        {t('boundary_active')}
+                      <span style={{ fontWeight: '700', fontSize: '0.875rem', color: '#22e58a' }}>
+                        Polygon Delineated ({calculatedAreaHa} Ha)
                       </span>
                     </div>
                   </div>
 
                   <button
                     type="button"
-                    className="btn btn-secondary"
                     onClick={() => setShowGeoJsonModal(true)}
-                    style={{ padding: '0.375rem 0.75rem', fontSize: '0.75rem' }}
+                    style={styles.geoJsonBtn}
                   >
-                    <Code size={14} />
-                    <span>GeoJSON</span>
+                    <Code size={14} color="#00d9ff" />
+                    <span>View GeoJSON</span>
                   </button>
                 </div>
               )}
@@ -281,8 +281,10 @@ export default function AddFarmPage() {
           <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div style={styles.modalHeader}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Code size={18} color="var(--color-primary)" />
-                <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Spatial GeoJSON Schema</h3>
+                <Code size={18} color="#22e58a" />
+                <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#ffffff', fontFamily: 'Space Grotesk, sans-serif' }}>
+                  Spatial GeoJSON Schema
+                </h3>
               </div>
               <button style={styles.closeBtn} onClick={() => setShowGeoJsonModal(false)}>✕</button>
             </div>
@@ -292,7 +294,7 @@ export default function AddFarmPage() {
               </pre>
             </div>
             <div style={styles.modalFooter}>
-              <button className="btn btn-primary" onClick={() => setShowGeoJsonModal(false)}>
+              <button className="cyber-gradient-btn" onClick={() => setShowGeoJsonModal(false)} style={{ padding: '0.5rem 1.25rem' }}>
                 Close
               </button>
             </div>
@@ -307,7 +309,7 @@ const styles = {
   container: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '1.25rem'
+    gap: '1.5rem'
   },
   pageHeader: {
     display: 'flex',
@@ -315,36 +317,37 @@ const styles = {
     justifyContent: 'space-between'
   },
   backBtn: {
-    width: '38px',
-    height: '38px',
-    borderRadius: 'var(--radius-md)',
-    backgroundColor: '#ffffff',
-    border: '1px solid var(--color-border)',
+    width: '40px',
+    height: '40px',
+    borderRadius: '12px',
+    backgroundColor: 'rgba(15, 27, 21, 0.8)',
+    border: '1px solid rgba(34, 229, 138, 0.25)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     textDecoration: 'none'
   },
   title: {
-    fontSize: '1.4rem',
+    fontSize: '1.45rem',
     fontWeight: '800',
-    color: 'var(--color-text-main)',
-    margin: 0
+    color: '#ffffff',
+    margin: 0,
+    fontFamily: 'Space Grotesk, sans-serif'
   },
   subtitle: {
-    fontSize: '0.875rem',
-    color: 'var(--color-text-secondary)',
-    margin: 0
+    fontSize: '0.825rem',
+    color: '#94a3b8',
+    margin: '4px 0 0 0'
   },
   errorBanner: {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.625rem',
-    backgroundColor: 'var(--color-error-light)',
-    border: '1px solid #fecaca',
-    color: 'var(--color-error)',
+    gap: '0.75rem',
+    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+    border: '1px solid rgba(239, 68, 68, 0.35)',
+    color: '#f87171',
     padding: '0.875rem 1.25rem',
-    borderRadius: 'var(--radius-md)',
+    borderRadius: '14px',
     fontSize: '0.875rem',
     fontWeight: '600'
   },
@@ -367,43 +370,98 @@ const styles = {
   cardSection: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '1.25rem'
+    gap: '1.25rem',
+    background: 'rgba(15, 27, 21, 0.72)',
+    backdropFilter: 'blur(20px)',
+    border: '1px solid rgba(34, 229, 138, 0.18)',
+    borderRadius: '18px',
+    padding: '1.5rem',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
   },
   cardSectionHeader: {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.625rem',
-    paddingBottom: '0.75rem',
-    borderBottom: '1px solid var(--color-border)'
+    gap: '0.75rem',
+    paddingBottom: '0.875rem',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
+  },
+  iconCircle: {
+    width: '36px',
+    height: '36px',
+    borderRadius: '10px',
+    background: 'rgba(34, 229, 138, 0.1)',
+    border: '1px solid rgba(34, 229, 138, 0.25)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  sectionHeading: {
+    margin: 0,
+    fontSize: '1.05rem',
+    fontWeight: '700',
+    color: '#ffffff',
+    fontFamily: 'Space Grotesk, sans-serif'
   },
   formGroup: {
     display: 'flex',
-    flexDirection: 'column'
+    flexDirection: 'column',
+    gap: '0.4rem'
+  },
+  label: {
+    fontSize: '0.7rem',
+    fontWeight: '700',
+    color: '#94a3b8',
+    fontFamily: 'Space Grotesk, sans-serif',
+    letterSpacing: '0.05em'
   },
   inputIconWrapper: {
     position: 'relative'
   },
   inputIcon: {
     position: 'absolute',
-    left: '12px',
+    left: '14px',
     top: '50%',
     transform: 'translateY(-50%)',
     pointerEvents: 'none'
   },
+  input: {
+    width: '100%',
+    padding: '0.75rem 1rem 0.75rem 2.6rem',
+    background: 'rgba(8, 17, 13, 0.85)',
+    border: '1px solid rgba(34, 229, 138, 0.25)',
+    borderRadius: '12px',
+    color: '#f8fafc',
+    fontSize: '0.875rem',
+    outline: 'none',
+    boxSizing: 'border-box'
+  },
+  select: {
+    width: '100%',
+    padding: '0.75rem 1rem 0.75rem 2.6rem',
+    background: 'rgba(8, 17, 13, 0.85)',
+    border: '1px solid rgba(34, 229, 138, 0.25)',
+    borderRadius: '12px',
+    color: '#f8fafc',
+    fontSize: '0.875rem',
+    outline: 'none',
+    boxSizing: 'border-box',
+    cursor: 'pointer'
+  },
   areaInfoBox: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: 'rgba(0, 217, 255, 0.08)',
     padding: '0.875rem',
-    borderRadius: 'var(--radius-md)',
-    border: '1px solid var(--color-border)',
+    borderRadius: '12px',
+    border: '1px solid rgba(0, 217, 255, 0.2)',
     display: 'flex',
     flexDirection: 'column',
     gap: '0.25rem'
   },
   areaInfoLabel: {
-    fontSize: '0.75rem',
+    fontSize: '0.675rem',
     fontWeight: '700',
-    color: 'var(--color-text-secondary)',
-    textTransform: 'uppercase'
+    color: '#94a3b8',
+    letterSpacing: '0.05em',
+    fontFamily: 'Space Grotesk, sans-serif'
   },
   areaValRow: {
     display: 'flex',
@@ -411,64 +469,82 @@ const styles = {
     gap: '0.5rem'
   },
   areaValPrimary: {
-    fontSize: '1.2rem',
+    fontSize: '1.25rem',
     fontWeight: '800',
-    color: 'var(--color-primary)'
+    color: '#22e58a',
+    fontFamily: 'Space Grotesk, sans-serif'
   },
   areaValSecondary: {
     fontSize: '0.775rem',
-    color: '#64748b'
+    color: '#94a3b8'
   },
   actionCard: {
     display: 'flex',
     flexDirection: 'column',
     gap: '0.75rem',
-    backgroundColor: '#fafdfa'
+    background: 'rgba(15, 27, 21, 0.72)',
+    backdropFilter: 'blur(20px)',
+    border: '1px solid rgba(34, 229, 138, 0.18)',
+    borderRadius: '18px',
+    padding: '1.25rem'
   },
   actionNote: {
-    fontSize: '0.75rem',
-    color: 'var(--color-text-secondary)',
+    fontSize: '0.725rem',
+    color: '#64748b',
     textAlign: 'center',
     margin: 0
   },
   mapCard: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '1rem'
+    gap: '1rem',
+    background: 'rgba(15, 27, 21, 0.72)',
+    backdropFilter: 'blur(20px)',
+    border: '1px solid rgba(34, 229, 138, 0.18)',
+    borderRadius: '18px',
+    padding: '1.5rem',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
   },
   boundaryInfoSection: {
-    paddingTop: '0.5rem'
+    paddingTop: '0.25rem'
   },
   boundaryPendingBox: {
     display: 'flex',
     alignItems: 'center',
     gap: '0.75rem',
     padding: '0.875rem 1rem',
-    backgroundColor: 'var(--color-warning-light)',
-    border: '1px solid #fde68a',
-    borderRadius: 'var(--radius-md)'
+    backgroundColor: 'rgba(245, 158, 11, 0.12)',
+    border: '1px solid rgba(245, 158, 11, 0.4)',
+    borderRadius: '12px'
   },
-  boundaryStatusText: {
-    fontSize: '0.875rem',
+  boundaryPendingText: {
+    fontSize: '0.825rem',
     fontWeight: '600',
-    color: '#b45309'
+    color: '#fbbf24'
   },
   boundarySuccessBox: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '0.875rem 1rem',
-    backgroundColor: 'var(--color-light-green)',
-    border: '1px solid #bbf7d0',
-    borderRadius: 'var(--radius-md)',
+    backgroundColor: 'rgba(34, 229, 138, 0.12)',
+    border: '1px solid rgba(34, 229, 138, 0.35)',
+    borderRadius: '12px',
     flexWrap: 'wrap',
     gap: '0.75rem'
   },
-  boundaryTagsRow: {
-    display: 'flex',
+  geoJsonBtn: {
+    display: 'inline-flex',
     alignItems: 'center',
-    gap: '0.5rem',
-    marginTop: '4px'
+    gap: '0.4rem',
+    padding: '0.35rem 0.75rem',
+    borderRadius: '8px',
+    background: 'rgba(0, 217, 255, 0.12)',
+    border: '1px solid rgba(0, 217, 255, 0.3)',
+    color: '#00d9ff',
+    fontSize: '0.75rem',
+    fontWeight: '700',
+    cursor: 'pointer'
   },
   modalOverlay: {
     position: 'fixed',
@@ -476,8 +552,8 @@ const styles = {
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(15, 23, 42, 0.5)',
-    backdropFilter: 'blur(3px)',
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    backdropFilter: 'blur(8px)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -485,10 +561,10 @@ const styles = {
     padding: '1rem'
   },
   modalContent: {
-    backgroundColor: '#ffffff',
-    borderRadius: 'var(--radius-lg)',
-    boxShadow: 'var(--shadow-lg)',
-    border: '1px solid var(--color-border)',
+    backgroundColor: '#0b1612',
+    borderRadius: '20px',
+    boxShadow: '0 20px 60px rgba(0,0,0,0.8)',
+    border: '1px solid rgba(34, 229, 138, 0.3)',
     width: '100%',
     maxWidth: '640px',
     display: 'flex',
@@ -499,37 +575,38 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: '1rem 1.25rem',
-    borderBottom: '1px solid var(--color-border)'
+    padding: '1.25rem 1.5rem',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
   },
   closeBtn: {
     background: 'none',
     border: 'none',
     cursor: 'pointer',
     fontSize: '1.2rem',
-    color: '#6b7280'
+    color: '#94a3b8'
   },
   modalBody: {
-    padding: '1.25rem',
+    padding: '1.25rem 1.5rem',
     maxHeight: '60vh',
     overflowY: 'auto'
   },
   jsonPre: {
-    backgroundColor: '#0f172a',
-    color: '#38bdf8',
+    backgroundColor: '#040d09',
+    color: '#00d9ff',
     padding: '1rem',
-    borderRadius: 'var(--radius-md)',
-    fontSize: '0.75rem',
-    fontFamily: 'monospace',
+    borderRadius: '12px',
+    fontSize: '0.775rem',
+    fontFamily: 'JetBrains Mono, monospace',
     whiteSpace: 'pre-wrap',
     wordBreak: 'break-all',
-    margin: 0
+    margin: 0,
+    border: '1px solid rgba(0, 217, 255, 0.2)'
   },
   modalFooter: {
-    padding: '0.875rem 1.25rem',
-    borderTop: '1px solid var(--color-border)',
+    padding: '1rem 1.5rem',
+    borderTop: '1px solid rgba(255, 255, 255, 0.08)',
     display: 'flex',
     justifyContent: 'flex-end',
-    backgroundColor: '#f8fafc'
+    backgroundColor: 'rgba(8, 17, 13, 0.9)'
   }
 };

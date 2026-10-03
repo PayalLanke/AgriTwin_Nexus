@@ -1,11 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authService } from '../services/authService';
-<<<<<<< HEAD
-import { Sprout, User, Mail, Lock, CheckCircle2, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
-=======
 import { Sprout, User, Mail, Phone, Lock, CheckCircle2, ArrowRight } from 'lucide-react';
->>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -47,13 +43,8 @@ export default function RegisterPage() {
 
     setIsLoading(true);
     try {
-<<<<<<< HEAD
-      await authService.register({ fullName, email, password });
-      setSuccess('Account created successfully! Redirecting to login console...');
-=======
       await authService.register({ fullName, email, mobileNumber, password });
       setSuccess('Account created successfully! Redirecting to login...');
->>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
       setTimeout(() => {
         navigate('/farmer/login');
       }, 1500);
@@ -75,8 +66,8 @@ export default function RegisterPage() {
           <div style={styles.logoBadge} className="hud-glow">
             <Sprout size={30} color="#070e0b" />
           </div>
-          <h1 style={styles.appTitle}>Operator Onboarding</h1>
-          <p style={styles.tagline}>Register agronomist credentials to provision AgriTwin spatial nodes</p>
+          <h1 style={styles.appTitle}>Farmer Registration</h1>
+          <p style={styles.tagline}>Create your digital farm operator profile</p>
         </div>
 
         {error && (
@@ -95,13 +86,13 @@ export default function RegisterPage() {
         {/* Form Controls */}
         <form onSubmit={handleRegister} style={styles.form}>
           <div style={styles.formGroup}>
-            <label style={styles.label} htmlFor="fullName">FULL LEGAL / OPERATOR NAME</label>
+            <label style={styles.label} htmlFor="fullName">FULL NAME</label>
             <div style={styles.inputWrapper}>
               <User size={16} color="#64748b" style={styles.inputIcon} />
               <input
                 id="fullName"
                 type="text"
-                placeholder="Elena Rostova"
+                placeholder="Ramesh Kumar"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 style={styles.input}
@@ -111,13 +102,13 @@ export default function RegisterPage() {
           </div>
 
           <div style={styles.formGroup}>
-            <label style={styles.label} htmlFor="email">OFFICIAL EMAIL ADDRESS</label>
+            <label style={styles.label} htmlFor="email">EMAIL ADDRESS</label>
             <div style={styles.inputWrapper}>
               <Mail size={16} color="#64748b" style={styles.inputIcon} />
               <input
                 id="email"
                 type="email"
-                placeholder="elena.rostova@agritwin.com"
+                placeholder="ramesh@agritwin.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 style={styles.input}
@@ -126,10 +117,25 @@ export default function RegisterPage() {
             </div>
           </div>
 
-<<<<<<< HEAD
+          <div style={styles.formGroup}>
+            <label style={styles.label} htmlFor="mobileNumber">MOBILE NUMBER</label>
+            <div style={styles.inputWrapper}>
+              <Phone size={16} color="#64748b" style={styles.inputIcon} />
+              <input
+                id="mobileNumber"
+                type="tel"
+                placeholder="+91 98765 43210"
+                value={mobileNumber}
+                onChange={(e) => setMobileNumber(e.target.value)}
+                style={styles.input}
+                required
+              />
+            </div>
+          </div>
+
           <div style={styles.formGrid}>
             <div style={styles.formGroup}>
-              <label style={styles.label} htmlFor="password">PASSPHRASE</label>
+              <label style={styles.label} htmlFor="password">PASSWORD</label>
               <div style={styles.inputWrapper}>
                 <Lock size={16} color="#64748b" style={styles.inputIcon} />
                 <input
@@ -142,41 +148,10 @@ export default function RegisterPage() {
                   required
                 />
               </div>
-=======
-          <div>
-            <label htmlFor="mobileNumber">Mobile Number</label>
-            <div style={styles.inputWrapper}>
-              <Phone size={18} color="#9ca3af" style={styles.inputIcon} />
-              <input
-                id="mobileNumber"
-                type="tel"
-                placeholder="+91 98765 43210"
-                value={mobileNumber}
-                onChange={(e) => setMobileNumber(e.target.value)}
-                style={styles.inputWithIcon}
-                required
-              />
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor="password">Password</label>
-            <div style={styles.inputWrapper}>
-              <Lock size={18} color="#9ca3af" style={styles.inputIcon} />
-              <input
-                id="password"
-                type="password"
-                placeholder="At least 6 characters"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                style={styles.inputWithIcon}
-                required
-              />
->>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
             </div>
 
             <div style={styles.formGroup}>
-              <label style={styles.label} htmlFor="confirmPassword">CONFIRM PASSPHRASE</label>
+              <label style={styles.label} htmlFor="confirmPassword">CONFIRM PASSWORD</label>
               <div style={styles.inputWrapper}>
                 <Lock size={16} color="#64748b" style={styles.inputIcon} />
                 <input
@@ -199,10 +174,10 @@ export default function RegisterPage() {
             style={{ width: '100%', marginTop: '0.75rem', padding: '0.875rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.625rem' }}
           >
             {isLoading ? (
-              <span>Provisioning Digital Twin Account...</span>
+              <span>Registering Account...</span>
             ) : (
               <>
-                <span>Register & Provision Workspace</span>
+                <span>Register & Access Dashboard</span>
                 <ArrowRight size={18} />
               </>
             )}
@@ -213,13 +188,8 @@ export default function RegisterPage() {
           <span style={{ color: '#94a3b8', fontSize: '0.8125rem' }}>
             Already registered?
           </span>
-<<<<<<< HEAD
-          <Link to="/login" style={styles.loginLink}>
-            Return to Login &rarr;
-=======
           <Link to="/farmer/login" style={styles.loginLink}>
-            Back to Farmer Login
->>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
+            Back to Farmer Login &rarr;
           </Link>
         </div>
       </div>
@@ -306,15 +276,9 @@ const styles = {
     margin: '2px 0 0 0'
   },
   errorAlert: {
-<<<<<<< HEAD
     backgroundColor: 'rgba(239, 68, 68, 0.12)',
     border: '1px solid rgba(239, 68, 68, 0.35)',
     color: '#fca5a5',
-=======
-    backgroundColor: 'var(--color-error-light)',
-    border: '1px solid #fecaca',
-    color: 'var(--color-error)',
->>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
     padding: '0.75rem 1rem',
     borderRadius: '12px',
     fontSize: '0.8rem',
@@ -322,15 +286,9 @@ const styles = {
     fontWeight: '500'
   },
   successAlert: {
-<<<<<<< HEAD
     backgroundColor: 'rgba(34, 229, 138, 0.12)',
     border: '1px solid rgba(34, 229, 138, 0.35)',
     color: '#22e58a',
-=======
-    backgroundColor: 'var(--color-light-green)',
-    border: '1px solid #bbf7d0',
-    color: 'var(--color-primary)',
->>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
     padding: '0.75rem 1rem',
     borderRadius: '12px',
     fontSize: '0.825rem',

@@ -2,15 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import FarmMap from '../components/FarmMap';
 import { farmService, CROP_OPTIONS } from '../services/farmService';
-<<<<<<< HEAD
-import { ArrowLeft, Save, AlertCircle, Sprout, Layers, Calendar, FileText, Crosshair, Sparkles } from 'lucide-react';
-=======
-import { ArrowLeft, Save, AlertCircle, Sprout, Layers, Calendar, FileText, CheckCircle2 } from 'lucide-react';
->>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
+import { useLanguage } from '../context/LanguageContext';
+import { ArrowLeft, Save, AlertCircle, Sprout, Layers, Calendar, FileText, Crosshair } from 'lucide-react';
 
 export default function EditFarmPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const [farmName, setFarmName] = useState('');
   const [cropType, setCropType] = useState('');
@@ -118,7 +116,7 @@ export default function EditFarmPage() {
           </Link>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <h1 style={styles.title}>Edit Farm Boundary & Coordinates</h1>
+              <h1 style={styles.title}>{t('edit')} {farmName || t('farm_name')}</h1>
               <span style={styles.statusBadge}>
                 <Crosshair size={12} color="#00d9ff" />
                 GEOJSON CALIBRATION
@@ -133,11 +131,7 @@ export default function EditFarmPage() {
 
       {error && (
         <div style={styles.errorBanner}>
-<<<<<<< HEAD
-          <AlertCircle size={20} color="#f87171" />
-=======
           <AlertCircle size={20} color="var(--color-error)" />
->>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
           <span>{error}</span>
         </div>
       )}
@@ -147,19 +141,14 @@ export default function EditFarmPage() {
         <div style={styles.leftCol}>
           <div style={styles.cardSection}>
             <div style={styles.cardSectionHeader}>
-<<<<<<< HEAD
               <div style={styles.iconCircle}>
                 <Sprout size={18} color="#22e58a" />
               </div>
-              <h3 style={styles.sectionHeading}>Farm Metadata Specs</h3>
-=======
-              <Sprout size={20} color="var(--color-primary)" />
-              <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Farm Information</h3>
->>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
+              <h3 style={styles.sectionHeading}>{t('farm_name')} Specs</h3>
             </div>
 
             <div style={styles.formGroup}>
-              <label style={styles.label} htmlFor="farmName">FARM / PLOT IDENTIFIER</label>
+              <label style={styles.label} htmlFor="farmName">{t('farm_name')}</label>
               <div style={styles.inputIconWrapper}>
                 <FileText size={16} color="#64748b" style={styles.inputIcon} />
                 <input
@@ -174,7 +163,7 @@ export default function EditFarmPage() {
             </div>
 
             <div style={styles.formGroup}>
-              <label style={styles.label} htmlFor="cropType">PRIMARY CROP VARIETY</label>
+              <label style={styles.label} htmlFor="cropType">{t('crop_type')}</label>
               <div style={styles.inputIconWrapper}>
                 <Sprout size={16} color="#64748b" style={styles.inputIcon} />
                 <select
@@ -194,7 +183,7 @@ export default function EditFarmPage() {
             </div>
 
             <div style={styles.formGroup}>
-              <label style={styles.label} htmlFor="sowingDate">SOWING / PLANTING DATE</label>
+              <label style={styles.label} htmlFor="sowingDate">{t('sowing_date')}</label>
               <div style={styles.inputIconWrapper}>
                 <Calendar size={16} color="#64748b" style={styles.inputIcon} />
                 <input
@@ -208,27 +197,18 @@ export default function EditFarmPage() {
               </div>
             </div>
 
-<<<<<<< HEAD
-            {latitude && longitude && (
-              <div style={styles.coordsCapsule}>
-                <Crosshair size={14} color="#00d9ff" />
-                <span>ROI Centroid: <b>{latitude.toFixed(5)}°N, {longitude.toFixed(5)}°E</b></span>
-              </div>
-            )}
-=======
             {/* Calculated Area Display */}
             <div style={styles.areaInfoBox}>
-              <span style={styles.areaInfoLabel}>Calculated Field Area:</span>
+              <span style={styles.areaInfoLabel}>{t('field_area')}:</span>
               <div style={styles.areaValRow}>
                 <span style={styles.areaValPrimary}>
-                  {calculatedAreaHa > 0 ? `${calculatedAreaHa} Ha` : '—'}
+                  {calculatedAreaHa > 0 ? `${calculatedAreaHa} ${t('hectares')}` : '—'}
                 </span>
                 <span style={styles.areaValSecondary}>
-                  {calculatedAreaAcres > 0 ? `(${calculatedAreaAcres} Acres)` : ''}
+                  {calculatedAreaAcres > 0 ? `(${calculatedAreaAcres} ${t('acres')})` : ''}
                 </span>
               </div>
             </div>
->>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
           </div>
 
           <div style={styles.actionCard}>
@@ -239,7 +219,7 @@ export default function EditFarmPage() {
               style={{ width: '100%', padding: '0.875rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.625rem' }}
             >
               <Save size={18} />
-              <span>{isSaving ? 'Recalibrating Digital Twin...' : 'Update & Save Boundary'}</span>
+              <span>{isSaving ? 'Recalibrating Digital Twin...' : t('save_changes')}</span>
             </button>
             <p style={{ margin: 0, fontSize: '0.725rem', color: '#64748b', textAlign: 'center' }}>
               Saving automatically synchronizes the 3D twin prism voxel elevation model.
@@ -262,17 +242,6 @@ export default function EditFarmPage() {
               </div>
             </div>
 
-<<<<<<< HEAD
-            {latitude && longitude && (
-              <FarmMap
-                initialLat={latitude}
-                initialLng={longitude}
-                initialBoundary={boundaryGeoJSON}
-                onLocationChange={handleLocationChange}
-                onBoundaryChange={handleBoundaryChange}
-              />
-            )}
-=======
             <div style={{ height: '380px', width: '100%', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
               {latitude && longitude && (
                 <FarmMap
@@ -284,7 +253,6 @@ export default function EditFarmPage() {
                 />
               )}
             </div>
->>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
           </div>
         </div>
       </form>
@@ -332,7 +300,6 @@ const styles = {
     transition: 'all 0.2s ease'
   },
   title: {
-<<<<<<< HEAD
     fontSize: '1.45rem',
     fontWeight: '800',
     color: '#ffffff',
@@ -353,12 +320,6 @@ const styles = {
     fontWeight: '700',
     fontFamily: 'Space Grotesk, sans-serif',
     letterSpacing: '0.04em'
-=======
-    fontSize: '1.4rem',
-    fontWeight: '800',
-    color: 'var(--color-text-main)',
-    margin: 0
->>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
   },
   subtitle: {
     fontSize: '0.825rem',
@@ -368,21 +329,12 @@ const styles = {
   errorBanner: {
     display: 'flex',
     alignItems: 'center',
-<<<<<<< HEAD
     gap: '0.75rem',
     backgroundColor: 'rgba(239, 68, 68, 0.12)',
     border: '1px solid rgba(239, 68, 68, 0.35)',
     color: '#fca5a5',
     padding: '0.875rem 1.25rem',
     borderRadius: '14px',
-=======
-    gap: '0.625rem',
-    backgroundColor: 'var(--color-error-light)',
-    border: '1px solid #fecaca',
-    color: 'var(--color-error)',
-    padding: '0.875rem 1.25rem',
-    borderRadius: 'var(--radius-md)',
->>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
     fontSize: '0.875rem',
     fontWeight: '600'
   },
@@ -459,7 +411,6 @@ const styles = {
     transform: 'translateY(-50%)',
     pointerEvents: 'none'
   },
-<<<<<<< HEAD
   input: {
     width: '100%',
     padding: '0.75rem 1rem 0.75rem 2.6rem',
@@ -483,22 +434,11 @@ const styles = {
     boxSizing: 'border-box',
     cursor: 'pointer'
   },
-  coordsCapsule: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-    padding: '0.625rem 0.875rem',
-    background: 'rgba(0, 217, 255, 0.08)',
-    border: '1px solid rgba(0, 217, 255, 0.2)',
-    borderRadius: '10px',
-    fontSize: '0.775rem',
-    color: '#94a3b8'
-=======
   areaInfoBox: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: 'rgba(0, 217, 255, 0.08)',
     padding: '0.875rem',
-    borderRadius: 'var(--radius-md)',
-    border: '1px solid var(--color-border)',
+    borderRadius: '10px',
+    border: '1px solid rgba(0, 217, 255, 0.2)',
     display: 'flex',
     flexDirection: 'column',
     gap: '0.25rem'
@@ -506,7 +446,7 @@ const styles = {
   areaInfoLabel: {
     fontSize: '0.75rem',
     fontWeight: '700',
-    color: 'var(--color-text-secondary)',
+    color: '#94a3b8',
     textTransform: 'uppercase'
   },
   areaValRow: {
@@ -517,26 +457,21 @@ const styles = {
   areaValPrimary: {
     fontSize: '1.2rem',
     fontWeight: '800',
-    color: 'var(--color-primary)'
+    color: '#22e58a'
   },
   areaValSecondary: {
     fontSize: '0.775rem',
     color: '#64748b'
->>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
   },
   actionCard: {
     display: 'flex',
     flexDirection: 'column',
     gap: '0.75rem',
-<<<<<<< HEAD
     background: 'rgba(15, 27, 21, 0.72)',
     backdropFilter: 'blur(20px)',
     border: '1px solid rgba(34, 229, 138, 0.18)',
     borderRadius: '18px',
     padding: '1.25rem'
-=======
-    backgroundColor: '#fafdfa'
->>>>>>> b270717684b57393302c90a3bbe76940a6e8fee4
   },
   mapCard: {
     display: 'flex',
