@@ -1,21 +1,39 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { farmService } from '../services/farmService';
 import { satelliteService } from '../services/satelliteService';
+import FarmMap from '../components/FarmMap';
 import {
   Satellite,
   Cloud,
   Layers,
   Calendar,
+  RefreshCw,
+  Search,
   CheckCircle2,
-  Radio
+  MapPin,
+  Filter,
+  Eye,
+  ArrowRight,
+  AlertTriangle
 } from 'lucide-react';
 
 export default function SatellitePage() {
+  const navigate = useNavigate();
+
   const [farms, setFarms] = useState([]);
   const [selectedFarm, setSelectedFarm] = useState(null);
   const [scenes, setScenes] = useState([]);
   const [selectedScene, setSelectedScene] = useState(null);
+  const [activeLayer, setActiveLayer] = useState('trueColor'); // 'trueColor' | 'falseColor' | 'ndvi' | 'ndre' | 'savi'
   const [isLoading, setIsLoading] = useState(true);
+  const [isSearching, setIsSearching] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Search Filters
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+  const [maxCloud, setMaxCloud] = useState(20);
 
   useEffect(() => {
     loadData();
@@ -23,233 +41,542 @@ export default function SatellitePage() {
 
   const loadData = async () => {
     setIsLoading(true);
+    setError(null);
     try {
-      const data = await farmService.getFarms();
-      setFarms(data);
-      if (data.length > 0) {
-        setSelectedFarm(data[0]);
-        const s = await satelliteService.getSentinelScenes(data[0].id);
-        setScenes(s);
-        setSelectedScene(s[0]);
+      const farmList = await farmService.getFarms();
+      const list = farmList || [];
+      setFarms(list);
+
+      if (list.length > 0) {
+        const first = list[0];
+        setSelectedFarm(first);
+        const s = await satelliteService.getSentinelScenes(first.id, { maxCloud });
+        setScenes(s || []);
+        if (s && s.length > 0) {
+          setSelectedScene(s[0]);
+        }
+      } else {
+        setSelectedFarm(null);
       }
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      console.error('Error loading satellite data:', err);
+      setError('Satellite service is currently unavailable.');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleFarmChange = async (farmId) => {
-    const f = farms.find((farm) => String(farm.id) === String(farmId));
-    if (f) {
-      setSelectedFarm(f);
-      setIsLoading(true);
-      const s = await satelliteService.getSentinelScenes(f.id);
-      setScenes(s);
-      setSelectedScene(s[0]);
-      setIsLoading(false);
+    const found = farms.find((f) => String(f.id) === String(farmId));
+    if (found) {
+      setSelectedFarm(found);
+      setIsSearching(true);
+      try {
+        const s = await satelliteService.getSentinelScenes(found.id, { maxCloud });
+        setScenes(s || []);
+        if (s && s.length > 0) {
+          setSelectedScene(s[0]);
+        } else {
+          setSelectedScene(null);
+        }
+      } catch (err) {
+        console.error('Error searching scenes:', err);
+      } finally {
+        setIsSearching(false);
+      }
+    }
+  };
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (!selectedFarm) return;
+    setIsSearching(true);
+    try {
+      const s = await satelliteService.getSentinelScenes(selectedFarm.id, { fromDate, toDate, maxCloud });
+      setScenes(s || []);
+      if (s && s.length > 0) {
+        setSelectedScene(s[0]);
+      } else {
+        setSelectedScene(null);
+      }
+    } catch (err) {
+      console.error('Error executing satellite search:', err);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    if (!selectedFarm) return;
+    setIsSearching(true);
+    try {
+      const s = await satelliteService.getSentinelScenes(selectedFarm.id, { maxCloud });
+      setScenes(s || []);
+      if (s && s.length > 0) {
+        setSelectedScene(s[0]);
+      }
+    } catch (err) {
+      console.error('Error refreshing satellite observations:', err);
+    } finally {
+      setIsSearching(false);
     }
   };
 
   if (isLoading) {
     return (
-      <div style={styles.loadingContainer}>
-        <div style={styles.spinner}></div>
-        <p style={{ color: '#00d9ff', fontFamily: 'Space Grotesk, sans-serif', marginTop: '1rem', letterSpacing: '0.05em' }}>
-          INGESTING SENTINEL-2 L2A MULTISPECTRAL TILES...
-        </p>
+      <div style={styles.loadingState}>
+        <RefreshCw size={36} color="#00d9ff" className="animate-spin" />
+        <h3 style={{ color: '#ffffff', margin: 0, fontSize: '1.2rem' }}>Searching satellite observations...</h3>
+        <p style={{ color: '#94a3b8', fontSize: '0.875rem' }}>Querying Google Earth Engine Sentinel-2 L2A collection</p>
       </div>
     );
   }
 
+  if (farms.length === 0) {
+    return (
+      <div style={styles.emptyStateCard}>
+        <Satellite size={48} color="#00d9ff" style={{ marginBottom: '1rem' }} />
+        <h2 style={{ color: '#ffffff', fontSize: '1.4rem', margin: '0 0 0.5rem 0' }}>Select a farm to view satellite observations.</h2>
+        <p style={{ color: '#94a3b8', fontSize: '0.9rem', maxWidth: '500px', margin: '0 0 1.5rem 0' }}>
+          No farms are registered in your profile. Please register a farm boundary to ingest Sentinel-2 satellite observations.
+        </p>
+        <Link to="/farms/add" className="btn btn-primary" style={{ padding: '0.75rem 1.5rem' }}>
+          Register Your First Farm
+        </Link>
+      </div>
+    );
+  }
+
+  const latestDate = scenes.length > 0 ? scenes[0].date : 'Awaiting Data';
+  const latestCloud = scenes.length > 0 ? `${scenes[0].cloudCoverPercent}%` : 'N/A';
+  const latestSatellite = scenes.length > 0 ? scenes[0].satellite : 'Sentinel-2';
+  const latestStatus = scenes.length > 0 ? 'Ready' : 'No Data';
+
   return (
     <div style={styles.container} className="animate-fade-in">
-      {/* Header */}
-      <div style={styles.header}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <h1 style={styles.title}>Sentinel-2 Orbital Acquisition Hub</h1>
-            <span style={styles.geeBadge}>
-              <Radio size={12} color="#22e58a" />
-              GEE COPERNICUS L2A STREAM
-            </span>
+      {/* 1. Page Title & Header */}
+      <div style={styles.headerCard}>
+        <div style={styles.headerTitleGroup}>
+          <div style={styles.iconCircle}>
+            <Satellite size={22} color="#00d9ff" />
           </div>
-          <p style={styles.subtitle}>
-            10-metre multispectral surface reflectance clipped to farm ROI (B2 Blue, B4 Red, B5 RedEdge, B8 NIR, B11 SWIR).
-          </p>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+              <h1 style={styles.pageTitle}>Satellite Monitoring</h1>
+              <span style={styles.geeSourceTag}>Google Earth Engine • Copernicus Sentinel-2</span>
+            </div>
+            <p style={styles.pageSub}>Sentinel-2 observations and imagery for your selected farm.</p>
+          </div>
         </div>
 
-        {farms.length > 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontFamily: 'Space Grotesk, sans-serif' }}>TARGET ROI:</span>
+        {/* 2. Selected Farm Selector & Refresh */}
+        <div style={styles.headerControls}>
+          <div style={styles.selectorWrapper}>
+            <label htmlFor="satFarmSelect" style={styles.selectLabel}>
+              Selected Farm:
+            </label>
             <select
+              id="satFarmSelect"
               value={selectedFarm?.id || ''}
               onChange={(e) => handleFarmChange(e.target.value)}
-              style={styles.selectInput}
+              style={styles.farmSelect}
             >
               {farms.map((f) => (
-                <option key={f.id} value={f.id} style={{ background: '#0b1612', color: '#f1f5f9' }}>
-                  {f.farmName} &bull; {f.cropType}
+                <option key={f.id} value={f.id} style={{ backgroundColor: '#0f172a', color: '#ffffff' }}>
+                  {f.farmName} ({f.cropType || 'Crop Unspecified'})
                 </option>
               ))}
             </select>
           </div>
-        )}
+
+          <button onClick={handleRefresh} disabled={isSearching} className="btn btn-secondary" style={styles.refreshBtn}>
+            <RefreshCw size={14} className={isSearching ? 'animate-spin' : ''} />
+            <span>Refresh Satellite Data</span>
+          </button>
+        </div>
       </div>
 
-      {!selectedFarm ? (
-        <div style={styles.noFarmCard}>
-          <Satellite size={48} color="#00d9ff" />
-          <h3 style={{ color: '#ffffff', fontFamily: 'Space Grotesk, sans-serif', margin: 0 }}>No ROI Registered</h3>
-          <p style={{ color: '#94a3b8', margin: 0 }}>Register a farm boundary to trigger GEE Sentinel-2 satellite data ingestion pipeline.</p>
-        </div>
-      ) : (
-        <div style={styles.grid}>
-          {/* Left Column: Scene Selector & Spectral Band Specs */}
-          <div style={styles.leftCol}>
-            <div style={styles.cardSection}>
-              <div style={styles.cardSectionHeader}>
-                <div style={styles.iconCircle}>
-                  <Calendar size={18} color="#00d9ff" />
-                </div>
-                <div>
-                  <h3 style={styles.sectionHeading}>Sentinel-2 Overpass Granules</h3>
-                  <span style={{ fontSize: '0.725rem', color: '#64748b' }}>5-day orbital revisit cycle</span>
-                </div>
+      {selectedFarm && (
+        <>
+          {/* 3. Farm Summary Card */}
+          <div style={styles.farmSummaryCard}>
+            <div style={styles.summaryGrid}>
+              <div style={styles.summaryItem}>
+                <span style={styles.summaryLabel}>Farm Name</span>
+                <span style={styles.summaryValue}>{selectedFarm.farmName}</span>
               </div>
-
-              <div style={styles.sceneList}>
-                {scenes.map((scene) => {
-                  const isSelected = selectedScene?.id === scene.id;
-                  return (
-                    <div
-                      key={scene.id}
-                      style={{
-                        ...styles.sceneItem,
-                        backgroundColor: isSelected ? 'rgba(0, 217, 255, 0.12)' : 'rgba(8, 17, 13, 0.6)',
-                        borderColor: isSelected ? '#00d9ff' : 'rgba(255, 255, 255, 0.08)',
-                        boxShadow: isSelected ? '0 0 20px rgba(0, 217, 255, 0.2)' : 'none'
-                      }}
-                      onClick={() => setSelectedScene(scene)}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontWeight: '700', fontSize: '0.9rem', color: '#ffffff', fontFamily: 'Space Grotesk, sans-serif' }}>
-                          {scene.date}
-                        </span>
-                        <span style={{
-                          ...styles.cloudBadge,
-                          background: scene.cloudCoverPercent < 15 ? 'rgba(34, 229, 138, 0.12)' : 'rgba(251, 191, 36, 0.12)',
-                          color: scene.cloudCoverPercent < 15 ? '#22e58a' : '#fbbf24',
-                          border: `1px solid ${scene.cloudCoverPercent < 15 ? 'rgba(34, 229, 138, 0.3)' : 'rgba(251, 191, 36, 0.3)'}`
-                        }}>
-                          <Cloud size={11} />
-                          {scene.cloudCoverPercent}% Cloud
-                        </span>
-                      </div>
-                      <p style={{ margin: '6px 0 0 0', fontSize: '0.725rem', color: '#94a3b8' }}>
-                        Platform: <span style={{ color: '#00d9ff' }}>{scene.satellite}</span> &bull; {scene.status}
-                      </p>
-                    </div>
-                  );
-                })}
+              <div style={styles.summaryItem}>
+                <span style={styles.summaryLabel}>Crop</span>
+                <span style={styles.summaryValue}>{selectedFarm.cropType || 'Not specified'}</span>
               </div>
-            </div>
-
-            {/* Spectral Bands Specification Card */}
-            <div style={styles.cardSection}>
-              <div style={styles.cardSectionHeader}>
-                <div style={{ ...styles.iconCircle, background: 'rgba(34, 229, 138, 0.1)', borderColor: 'rgba(34, 229, 138, 0.25)' }}>
-                  <Layers size={18} color="#22e58a" />
-                </div>
-                <div>
-                  <h3 style={styles.sectionHeading}>Multispectral Sensor Bands</h3>
-                  <span style={{ fontSize: '0.725rem', color: '#64748b' }}>MSI (MultiSpectral Instrument)</span>
-                </div>
+              <div style={styles.summaryItem}>
+                <span style={styles.summaryLabel}>Area</span>
+                <span style={styles.summaryValue}>
+                  {Number(selectedFarm.areaHectares || 0).toFixed(2)} Ha ({Number(selectedFarm.areaAcres || 0).toFixed(2)} Acres)
+                </span>
               </div>
-
-              <div style={styles.bandGrid}>
-                <div style={styles.bandTile}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={styles.bandName}>B2 &bull; Blue</span>
-                    <span style={{ ...styles.bandPill, color: '#38bdf8' }}>490 nm</span>
-                  </div>
-                  <span style={styles.bandWave}>10m spatial resolution</span>
-                </div>
-                <div style={styles.bandTile}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={styles.bandName}>B4 &bull; Red</span>
-                    <span style={{ ...styles.bandPill, color: '#f87171' }}>665 nm</span>
-                  </div>
-                  <span style={styles.bandWave}>10m spatial resolution</span>
-                </div>
-                <div style={styles.bandTile}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={styles.bandName}>B5 &bull; RedEdge</span>
-                    <span style={{ ...styles.bandPill, color: '#fbbf24' }}>705 nm</span>
-                  </div>
-                  <span style={styles.bandWave}>20m spatial resolution</span>
-                </div>
-                <div style={styles.bandTile}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={styles.bandName}>B8 &bull; NIR</span>
-                    <span style={{ ...styles.bandPill, color: '#22e58a' }}>842 nm</span>
-                  </div>
-                  <span style={styles.bandWave}>10m spatial resolution</span>
-                </div>
+              <div style={styles.summaryItem}>
+                <span style={styles.summaryLabel}>Location</span>
+                <span style={styles.summaryValue}>
+                  {selectedFarm.locationAddress || `${Number(selectedFarm.latitude).toFixed(4)}° N, ${Number(selectedFarm.longitude).toFixed(4)}° E`}
+                </span>
+              </div>
+              <div style={styles.summaryItem}>
+                <span style={styles.summaryLabel}>Latitude</span>
+                <span style={styles.summaryValue}>{Number(selectedFarm.latitude).toFixed(6)}° N</span>
+              </div>
+              <div style={styles.summaryItem}>
+                <span style={styles.summaryLabel}>Longitude</span>
+                <span style={styles.summaryValue}>{Number(selectedFarm.longitude).toFixed(6)}° E</span>
               </div>
             </div>
           </div>
 
-          {/* Right Column: Scene Preview & Satellite Telemetry */}
-          <div style={styles.rightCol}>
-            {selectedScene && (
-              <div style={styles.previewCard}>
-                <div style={styles.previewHeader}>
-                  <div>
-                    <h3 style={styles.previewTitle}>Scene Granule: {selectedScene.date}</h3>
-                    <span style={{ fontSize: '0.725rem', color: '#94a3b8', fontFamily: 'Space Grotesk, sans-serif' }}>
-                      GRANULE ID: {selectedScene.id}
-                    </span>
-                  </div>
-                  <span style={styles.cloudMaskBadge}>
-                    <CheckCircle2 size={12} color="#22e58a" />
-                    QA60 CLOUD MASK APPLIED
-                  </span>
-                </div>
+          {/* 4. Satellite Overview Cards (4 Cards) */}
+          <div style={styles.overviewCardsGrid}>
+            <div style={styles.overviewCard}>
+              <span style={styles.overviewCardTitle}>Latest Observation</span>
+              <span style={styles.overviewCardVal}>{latestDate}</span>
+              <span style={styles.overviewCardSub}>5-day revisit interval</span>
+            </div>
 
-                <div style={styles.imageContainer}>
-                  <img
-                    src={selectedScene.previewUrl}
-                    alt="Sentinel-2 Satellite View"
-                    style={styles.sceneImg}
-                  />
-                  <div style={styles.imgOverlayTag}>
-                    <Satellite size={16} color="#00d9ff" />
-                    <span>Clipped to Farm Boundary ({selectedFarm.farmName})</span>
-                  </div>
-                  <div style={styles.cornerHUD}>
-                    <span>10m / PX &bull; EPSG:4326</span>
-                  </div>
-                </div>
+            <div style={styles.overviewCard}>
+              <span style={styles.overviewCardTitle}>Cloud Coverage</span>
+              <span style={{ ...styles.overviewCardVal, color: '#00d9ff' }}>{latestCloud}</span>
+              <span style={styles.overviewCardSub}>Sentinel-2 metadata</span>
+            </div>
 
-                <div style={styles.telemetryRow}>
-                  <div style={styles.telemetryBox}>
-                    <span style={styles.telLabel}>ATMOSPHERIC CORRECTION</span>
-                    <span style={styles.telVal}>Sen2Cor L2A BOA Surface Reflectance</span>
-                  </div>
-                  <div style={styles.telemetryBox}>
-                    <span style={styles.telLabel}>GROUND SAMPLING DISTANCE</span>
-                    <span style={{ ...styles.telVal, color: '#22e58a' }}>10 Metres / Pixel</span>
-                  </div>
-                  <div style={styles.telemetryBox}>
-                    <span style={styles.telLabel}>SOLAR ZENITH / ELEVATION</span>
-                    <span style={{ ...styles.telVal, color: '#fbbf24' }}>{selectedScene.sunElevation}° Elevation</span>
-                  </div>
-                </div>
+            <div style={styles.overviewCard}>
+              <span style={styles.overviewCardTitle}>Satellite Source</span>
+              <span style={{ ...styles.overviewCardVal, color: '#22e58a' }}>{latestSatellite}</span>
+              <span style={styles.overviewCardSub}>Copernicus Constellation</span>
+            </div>
+
+            <div style={styles.overviewCard}>
+              <span style={styles.overviewCardTitle}>Processing Status</span>
+              <span style={{ ...styles.overviewCardVal, color: '#22e58a' }}>{latestStatus}</span>
+              <span style={styles.overviewCardSub}>Level-2A Surface Reflectance</span>
+            </div>
+          </div>
+
+          {/* 5. Main Farm Satellite Map Section */}
+          <div style={styles.sectionCard}>
+            <div style={styles.mapHeaderRow}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <MapPin size={20} color="#00d9ff" />
+                <h2 style={styles.sectionHeading}>Farm Satellite Imagery Map</h2>
               </div>
+
+              {/* 6. Layer Switcher Controls */}
+              <div style={styles.layerControlsWrapper}>
+                <button
+                  className={`tab-btn ${activeLayer === 'trueColor' ? 'tab-btn-active' : ''}`}
+                  onClick={() => setActiveLayer('trueColor')}
+                  style={styles.layerBtn}
+                >
+                  True Color (RGB)
+                </button>
+                <button
+                  className={`tab-btn ${activeLayer === 'falseColor' ? 'tab-btn-active' : ''}`}
+                  onClick={() => setActiveLayer('falseColor')}
+                  style={styles.layerBtn}
+                >
+                  False Color (NIR)
+                </button>
+                <button
+                  className={`tab-btn ${activeLayer === 'ndvi' ? 'tab-btn-active' : ''}`}
+                  onClick={() => setActiveLayer('ndvi')}
+                  style={styles.layerBtn}
+                >
+                  NDVI Layer
+                </button>
+                <button
+                  className={`tab-btn ${activeLayer === 'ndre' ? 'tab-btn-active' : ''}`}
+                  onClick={() => setActiveLayer('ndre')}
+                  style={styles.layerBtn}
+                >
+                  NDRE Layer
+                </button>
+                <button
+                  className={`tab-btn ${activeLayer === 'savi' ? 'tab-btn-active' : ''}`}
+                  onClick={() => setActiveLayer('savi')}
+                  style={styles.layerBtn}
+                >
+                  SAVI Layer
+                </button>
+              </div>
+            </div>
+
+            {/* Map Container */}
+            <div style={styles.mapContainerWrapper}>
+              <FarmMap
+                key={selectedFarm.id}
+                initialLat={Number(selectedFarm.latitude) || 18.5204}
+                initialLng={Number(selectedFarm.longitude) || 73.8567}
+                initialBoundary={selectedFarm.boundaryGeoJSON}
+                readOnly={true}
+              />
+              <div style={styles.mapOverlayTag}>
+                <span style={styles.pulseDot}></span>
+                <span>Farm Boundary Applied • {selectedFarm.farmName}</span>
+                <span style={{ color: 'rgba(255,255,255,0.3)' }}>|</span>
+                <span style={{ color: '#00d9ff' }}>Active Layer: {activeLayer.toUpperCase()}</span>
+              </div>
+            </div>
+
+            {/* Vegetation Indices Quick Nav Buttons */}
+            <div style={styles.indicesNavRow}>
+              <span style={{ fontSize: '0.85rem', color: '#94a3b8', fontWeight: '600' }}>Vegetation Analysis:</span>
+              <button onClick={() => navigate('/crop-health')} className="btn btn-secondary" style={styles.quickNavBtn}>
+                <span>View NDVI Analysis</span>
+                <ArrowRight size={14} />
+              </button>
+              <button onClick={() => navigate('/crop-health')} className="btn btn-secondary" style={styles.quickNavBtn}>
+                <span>View NDRE Analysis</span>
+                <ArrowRight size={14} />
+              </button>
+              <button onClick={() => navigate('/crop-health')} className="btn btn-secondary" style={styles.quickNavBtn}>
+                <span>View SAVI Analysis</span>
+                <ArrowRight size={14} />
+              </button>
+            </div>
+          </div>
+
+          {/* 16. Search & Filter Observations Bar */}
+          <div style={styles.sectionCard}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+              <Filter size={18} color="#00d9ff" />
+              <h3 style={{ margin: 0, fontSize: '1rem', color: '#ffffff' }}>Search Historical Observations</h3>
+            </div>
+
+            <form onSubmit={handleSearch} style={styles.filterForm}>
+              <div style={styles.filterGroup}>
+                <label style={styles.filterLabel}>From Date</label>
+                <input
+                  type="date"
+                  value={fromDate}
+                  onChange={(e) => setFromDate(e.target.value)}
+                  style={styles.filterInput}
+                />
+              </div>
+
+              <div style={styles.filterGroup}>
+                <label style={styles.filterLabel}>To Date</label>
+                <input
+                  type="date"
+                  value={toDate}
+                  onChange={(e) => setToDate(e.target.value)}
+                  style={styles.filterInput}
+                />
+              </div>
+
+              <div style={styles.filterGroup}>
+                <label style={styles.filterLabel}>Max Cloud Coverage (%)</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={maxCloud}
+                  onChange={(e) => setMaxCloud(e.target.value)}
+                  style={styles.filterInput}
+                />
+              </div>
+
+              <button type="submit" disabled={isSearching} className="btn btn-primary" style={styles.searchSubmitBtn}>
+                <Search size={15} />
+                <span>{isSearching ? 'Searching...' : 'Search Observations'}</span>
+              </button>
+            </form>
+          </div>
+
+          {/* 7. Available Satellite Observations Table/Cards */}
+          <div style={styles.sectionCard}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Calendar size={20} color="#22e58a" />
+                <h2 style={styles.sectionHeading}>Available Satellite Observations</h2>
+              </div>
+              <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{scenes.length} Sentinel-2 scenes found</span>
+            </div>
+
+            {scenes.length > 0 ? (
+              <div style={styles.scenesTableWrapper}>
+                <table style={styles.scenesTable}>
+                  <thead>
+                    <tr>
+                      <th style={styles.th}>Acquisition Date</th>
+                      <th style={styles.th}>Satellite</th>
+                      <th style={styles.th}>Cloud Coverage</th>
+                      <th style={styles.th}>Processing Status</th>
+                      <th style={styles.th}>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {scenes.map((scene) => {
+                      const isSelected = selectedScene?.id === scene.id;
+                      return (
+                        <tr
+                          key={scene.id}
+                          style={{
+                            backgroundColor: isSelected ? 'rgba(0, 217, 255, 0.12)' : 'transparent'
+                          }}
+                        >
+                          <td style={styles.td}>
+                            <strong>{scene.date}</strong>
+                          </td>
+                          <td style={styles.td}>{scene.satellite}</td>
+                          <td style={styles.td}>
+                            <span style={{ color: scene.cloudCoverPercent < 10 ? '#22e58a' : '#fbbf24', fontWeight: '700' }}>
+                              {scene.cloudCoverPercent}% Cloud
+                            </span>
+                          </td>
+                          <td style={styles.td}>
+                            <span style={styles.statusBadge}>{scene.status}</span>
+                          </td>
+                          <td style={styles.td}>
+                            <button
+                              onClick={() => setSelectedScene(scene)}
+                              className="btn btn-secondary"
+                              style={{
+                                ...styles.viewSceneBtn,
+                                backgroundColor: isSelected ? '#00d9ff' : 'rgba(255, 255, 255, 0.08)',
+                                color: isSelected ? '#0f172a' : '#ffffff'
+                              }}
+                            >
+                              <Eye size={13} />
+                              <span>{isSelected ? 'Selected' : 'View'}</span>
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p style={styles.noDataText}>No Sentinel-2 observations found for this farm and date range.</p>
             )}
           </div>
-        </div>
+
+          {/* 9 & 10. Selected Observation Details & Product Specifications */}
+          {selectedScene && (
+            <div style={styles.sectionCard}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem' }}>
+                <h2 style={styles.sectionHeading}>Selected Observation Details</h2>
+                <span style={styles.productLevelBadge}>Sentinel-2 Level-2A Surface Reflectance</span>
+              </div>
+
+              <div style={styles.selectedSceneGrid}>
+                <div style={styles.sceneDetailBox}>
+                  <span>Acquisition Date</span>
+                  <strong>{selectedScene.date}</strong>
+                </div>
+                <div style={styles.sceneDetailBox}>
+                  <span>Satellite</span>
+                  <strong>{selectedScene.satellite}</strong>
+                </div>
+                <div style={styles.sceneDetailBox}>
+                  <span>Product Level</span>
+                  <strong>Sentinel-2 Level-2A</strong>
+                </div>
+                <div style={styles.sceneDetailBox}>
+                  <span>Cloud Coverage</span>
+                  <strong style={{ color: '#00d9ff' }}>{selectedScene.cloudCoverPercent}%</strong>
+                </div>
+                <div style={styles.sceneDetailBox}>
+                  <span>Processing Status</span>
+                  <strong style={{ color: '#22e58a' }}>{selectedScene.status}</strong>
+                </div>
+                <div style={styles.sceneDetailBox}>
+                  <span>Product / Granule ID</span>
+                  <strong style={{ fontSize: '0.75rem', fontFamily: 'monospace' }}>{selectedScene.granuleId}</strong>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 11 & 12. Spectral Bands Section */}
+          <div style={styles.sectionCard}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Layers size={20} color="#22e58a" />
+                <h2 style={styles.sectionHeading}>Spectral Bands</h2>
+              </div>
+              <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
+                10 m / 20 m spatial resolution depending on spectral band.
+              </span>
+            </div>
+
+            <div style={styles.bandsGrid}>
+              <div style={styles.bandCard}>
+                <div style={styles.bandHeader}>
+                  <strong style={{ color: '#38bdf8' }}>B2 — Blue</strong>
+                  <span style={styles.resBadge}>10 m</span>
+                </div>
+                <p style={styles.bandPurpose}>Blue reflectance</p>
+              </div>
+
+              <div style={styles.bandCard}>
+                <div style={styles.bandHeader}>
+                  <strong style={{ color: '#f87171' }}>B4 — Red</strong>
+                  <span style={styles.resBadge}>10 m</span>
+                </div>
+                <p style={styles.bandPurpose}>Red reflectance</p>
+              </div>
+
+              <div style={styles.bandCard}>
+                <div style={styles.bandHeader}>
+                  <strong style={{ color: '#fbbf24' }}>B5 — Red Edge</strong>
+                  <span style={styles.resBadge}>20 m</span>
+                </div>
+                <p style={styles.bandPurpose}>Red-edge vegetation information</p>
+              </div>
+
+              <div style={styles.bandCard}>
+                <div style={styles.bandHeader}>
+                  <strong style={{ color: '#22e58a' }}>B8 — NIR</strong>
+                  <span style={styles.resBadge}>10 m</span>
+                </div>
+                <p style={styles.bandPurpose}>Near-infrared vegetation information</p>
+              </div>
+
+              <div style={styles.bandCard}>
+                <div style={styles.bandHeader}>
+                  <strong style={{ color: '#c084fc' }}>B11 — SWIR</strong>
+                  <span style={styles.resBadge}>20 m</span>
+                </div>
+                <p style={styles.bandPurpose}>Short-wave infrared surface information</p>
+              </div>
+            </div>
+          </div>
+
+          {/* 13 & 14. Satellite Processing Pipeline Section */}
+          <div style={styles.sectionCard}>
+            <h2 style={styles.sectionHeading}>Satellite Processing Pipeline</h2>
+            <div style={styles.pipelineSteps}>
+              <div style={styles.pipelineStep}>
+                <CheckCircle2 size={18} color="#22e58a" />
+                <span>Farm Boundary Loaded</span>
+              </div>
+              <div style={styles.pipelineStep}>
+                <CheckCircle2 size={18} color="#22e58a" />
+                <span>Sentinel-2 Collection Queried</span>
+              </div>
+              <div style={styles.pipelineStep}>
+                <CheckCircle2 size={18} color="#22e58a" />
+                <span>Date & Cloud Filter Applied</span>
+              </div>
+              <div style={styles.pipelineStep}>
+                <CheckCircle2 size={18} color="#22e58a" />
+                <span>Image Clipped to Farm Boundary</span>
+              </div>
+              <div style={styles.pipelineStep}>
+                <CheckCircle2 size={18} color="#22e58a" />
+                <span>Surface Reflectance Loaded</span>
+              </div>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );
@@ -259,281 +586,412 @@ const styles = {
   container: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '1.5rem'
+    gap: '1.5rem',
+    maxWidth: '1280px',
+    margin: '0 auto',
+    padding: '0.5rem'
   },
-  loadingContainer: {
-    padding: '6rem 2rem',
-    textAlign: 'center',
+  loadingState: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    justifyContent: 'center'
-  },
-  spinner: {
-    width: '40px',
-    height: '40px',
-    border: '3px solid rgba(0, 217, 255, 0.15)',
-    borderTop: '3px solid #00d9ff',
-    borderRadius: '50%',
-    animation: 'spin 1s linear infinite'
-  },
-  header: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    flexWrap: 'wrap',
+    justifyContent: 'center',
+    minHeight: '380px',
     gap: '1rem'
   },
-  title: {
-    fontSize: '1.45rem',
-    fontWeight: '800',
-    color: '#ffffff',
-    margin: 0,
-    fontFamily: 'Space Grotesk, sans-serif'
-  },
-  subtitle: {
-    fontSize: '0.825rem',
-    color: '#94a3b8',
-    margin: '4px 0 0 0'
-  },
-  geeBadge: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '0.35rem',
-    padding: '0.2rem 0.65rem',
-    borderRadius: '9999px',
-    background: 'rgba(34, 229, 138, 0.12)',
-    border: '1px solid rgba(34, 229, 138, 0.35)',
-    color: '#22e58a',
-    fontSize: '0.7rem',
-    fontWeight: '700',
-    fontFamily: 'Space Grotesk, sans-serif'
-  },
-  selectInput: {
-    padding: '0.55rem 1rem',
-    borderRadius: '12px',
-    fontWeight: '600',
-    background: 'rgba(9, 18, 14, 0.85)',
-    border: '1px solid rgba(34, 229, 138, 0.25)',
-    color: '#f8fafc',
-    fontSize: '0.825rem',
-    outline: 'none',
-    cursor: 'pointer'
-  },
-  noFarmCard: {
-    padding: '4rem 2rem',
-    textAlign: 'center',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '1rem',
-    background: 'rgba(15, 27, 21, 0.72)',
-    borderRadius: '18px',
-    border: '1px solid rgba(34, 229, 138, 0.18)'
-  },
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1.6fr',
-    gap: '1.5rem',
-    alignItems: 'start'
-  },
-  leftCol: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1.25rem'
-  },
-  rightCol: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1.25rem'
-  },
-  cardSection: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1.25rem',
-    background: 'rgba(15, 27, 21, 0.72)',
+  emptyStateCard: {
+    backgroundColor: 'rgba(15, 27, 21, 0.85)',
     backdropFilter: 'blur(20px)',
-    border: '1px solid rgba(34, 229, 138, 0.18)',
-    borderRadius: '18px',
-    padding: '1.5rem',
+    borderRadius: '16px',
+    border: '1px solid rgba(0, 217, 255, 0.3)',
+    borderTop: '4px solid #00d9ff',
+    padding: '3.5rem 2rem',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    textAlign: 'center'
+  },
+  headerCard: {
+    backgroundColor: 'rgba(15, 27, 21, 0.85)',
+    backdropFilter: 'blur(20px)',
+    borderRadius: '16px',
+    border: '1px solid rgba(34, 229, 138, 0.25)',
+    padding: '1.25rem 1.5rem',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '1.5rem',
+    flexWrap: 'wrap',
     boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
   },
-  cardSectionHeader: {
+  headerTitleGroup: {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.75rem',
-    paddingBottom: '0.875rem',
-    borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
+    gap: '1rem'
   },
   iconCircle: {
-    width: '36px',
-    height: '36px',
-    borderRadius: '10px',
-    background: 'rgba(0, 217, 255, 0.1)',
-    border: '1px solid rgba(0, 217, 255, 0.25)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  sectionHeading: {
-    margin: 0,
-    fontSize: '1.05rem',
-    fontWeight: '700',
-    color: '#ffffff',
-    fontFamily: 'Space Grotesk, sans-serif'
-  },
-  sceneList: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.75rem'
-  },
-  sceneItem: {
-    padding: '1rem',
-    borderRadius: '14px',
-    border: '1px solid',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease'
-  },
-  cloudBadge: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '0.3rem',
-    padding: '0.2rem 0.55rem',
-    borderRadius: '9999px',
-    fontSize: '0.7rem',
-    fontWeight: '700',
-    fontFamily: 'Space Grotesk, sans-serif'
-  },
-  bandGrid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '0.75rem'
-  },
-  bandTile: {
-    padding: '0.75rem 0.875rem',
-    backgroundColor: 'rgba(8, 17, 13, 0.7)',
+    width: '46px',
+    height: '46px',
     borderRadius: '12px',
-    border: '1px solid rgba(255, 255, 255, 0.08)',
+    backgroundColor: 'rgba(0, 217, 255, 0.15)',
+    border: '1px solid rgba(0, 217, 255, 0.3)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0
+  },
+  pageTitle: {
+    fontSize: '1.4rem',
+    fontWeight: '800',
+    color: '#ffffff',
+    margin: 0
+  },
+  pageSub: {
+    fontSize: '0.85rem',
+    color: '#94a3b8',
+    margin: '3px 0 0 0'
+  },
+  geeSourceTag: {
+    backgroundColor: 'rgba(0, 217, 255, 0.12)',
+    color: '#00d9ff',
+    border: '1px solid rgba(0, 217, 255, 0.3)',
+    padding: '0.15rem 0.55rem',
+    borderRadius: '6px',
+    fontSize: '0.725rem',
+    fontWeight: '700'
+  },
+  headerControls: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '1rem',
+    flexWrap: 'wrap'
+  },
+  selectorWrapper: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.65rem'
+  },
+  selectLabel: {
+    fontSize: '0.85rem',
+    fontWeight: '700',
+    color: '#ffffff'
+  },
+  farmSelect: {
+    padding: '0.5rem 0.85rem',
+    fontSize: '0.85rem',
+    borderRadius: '8px',
+    border: '1px solid rgba(34, 229, 138, 0.3)',
+    backgroundColor: 'rgba(23, 34, 29, 0.9)',
+    color: '#ffffff',
+    fontWeight: '600',
+    minWidth: '220px',
+    cursor: 'pointer'
+  },
+  refreshBtn: {
+    padding: '0.5rem 0.9rem',
+    fontSize: '0.825rem',
+    borderRadius: '8px',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    color: '#ffffff',
+    border: '1px solid rgba(255, 255, 255, 0.15)',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.4rem',
+    fontWeight: '600',
+    cursor: 'pointer'
+  },
+  farmSummaryCard: {
+    backgroundColor: 'rgba(15, 27, 21, 0.85)',
+    backdropFilter: 'blur(20px)',
+    borderRadius: '14px',
+    border: '1px solid rgba(34, 229, 138, 0.2)',
+    padding: '1.15rem 1.35rem'
+  },
+  summaryGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+    gap: '1rem'
+  },
+  summaryItem: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.25rem'
+    gap: '0.2rem'
   },
-  bandName: {
-    fontSize: '0.825rem',
+  summaryLabel: {
+    fontSize: '0.75rem',
+    color: '#94a3b8'
+  },
+  summaryValue: {
+    fontSize: '0.925rem',
     fontWeight: '700',
-    color: '#ffffff',
-    fontFamily: 'Space Grotesk, sans-serif'
+    color: '#ffffff'
   },
-  bandPill: {
-    fontSize: '0.675rem',
-    fontWeight: '700',
-    fontFamily: 'Space Grotesk, sans-serif'
+  overviewCardsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+    gap: '1rem'
   },
-  bandWave: {
-    fontSize: '0.7rem',
+  overviewCard: {
+    backgroundColor: 'rgba(15, 27, 21, 0.85)',
+    backdropFilter: 'blur(20px)',
+    borderRadius: '14px',
+    border: '1px solid rgba(34, 229, 138, 0.2)',
+    padding: '1.15rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.35rem'
+  },
+  overviewCardTitle: {
+    fontSize: '0.8rem',
+    color: '#94a3b8'
+  },
+  overviewCardVal: {
+    fontSize: '1.2rem',
+    fontWeight: '800',
+    color: '#ffffff'
+  },
+  overviewCardSub: {
+    fontSize: '0.725rem',
     color: '#64748b'
   },
-  previewCard: {
+  sectionCard: {
+    backgroundColor: 'rgba(15, 27, 21, 0.85)',
+    backdropFilter: 'blur(20px)',
+    borderRadius: '16px',
+    border: '1px solid rgba(34, 229, 138, 0.25)',
+    padding: '1.25rem 1.5rem',
     display: 'flex',
     flexDirection: 'column',
-    gap: '1.25rem',
-    background: 'rgba(15, 27, 21, 0.72)',
-    backdropFilter: 'blur(20px)',
-    border: '1px solid rgba(34, 229, 138, 0.18)',
-    borderRadius: '18px',
-    padding: '1.5rem',
+    gap: '1rem',
     boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
   },
-  previewHeader: {
-    display: 'flex',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    flexWrap: 'wrap',
-    gap: '0.5rem'
-  },
-  previewTitle: {
-    margin: 0,
-    fontSize: '1.2rem',
-    fontWeight: '700',
+  sectionHeading: {
+    fontSize: '1.1rem',
+    fontWeight: '800',
     color: '#ffffff',
-    fontFamily: 'Space Grotesk, sans-serif'
+    margin: 0
   },
-  cloudMaskBadge: {
-    display: 'inline-flex',
+  mapHeaderRow: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '1rem',
+    flexWrap: 'wrap'
+  },
+  layerControlsWrapper: {
+    display: 'flex',
     alignItems: 'center',
     gap: '0.35rem',
-    padding: '0.25rem 0.65rem',
-    borderRadius: '9999px',
-    background: 'rgba(34, 229, 138, 0.12)',
-    border: '1px solid rgba(34, 229, 138, 0.35)',
-    color: '#22e58a',
-    fontSize: '0.7rem',
-    fontWeight: '700',
-    fontFamily: 'Space Grotesk, sans-serif'
+    backgroundColor: 'rgba(7, 14, 11, 0.6)',
+    padding: '0.25rem',
+    borderRadius: '8px',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    flexWrap: 'wrap'
   },
-  imageContainer: {
+  layerBtn: {
+    padding: '0.35rem 0.65rem',
+    fontSize: '0.78rem',
+    borderRadius: '6px',
+    fontWeight: '600',
+    cursor: 'pointer'
+  },
+  mapContainerWrapper: {
     position: 'relative',
-    borderRadius: '14px',
+    height: '420px',
+    borderRadius: '12px',
     overflow: 'hidden',
-    height: '340px',
-    border: '1px solid rgba(34, 229, 138, 0.25)',
-    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5)'
+    border: '1px solid rgba(34, 229, 138, 0.3)'
   },
-  sceneImg: {
-    width: '100%',
-    height: '100%',
-    objectFit: 'cover'
-  },
-  imgOverlayTag: {
+  mapOverlayTag: {
     position: 'absolute',
-    bottom: '12px',
-    left: '12px',
+    bottom: '0.85rem',
+    left: '0.85rem',
     backgroundColor: 'rgba(7, 14, 11, 0.85)',
-    color: '#ffffff',
+    backdropFilter: 'blur(10px)',
     padding: '0.4rem 0.85rem',
-    borderRadius: '10px',
-    fontSize: '0.75rem',
+    borderRadius: '8px',
+    border: '1px solid rgba(255, 255, 255, 0.15)',
+    fontSize: '0.78rem',
+    color: '#ffffff',
     display: 'flex',
     alignItems: 'center',
     gap: '0.5rem',
-    backdropFilter: 'blur(8px)',
-    border: '1px solid rgba(0, 217, 255, 0.3)'
+    pointerEvents: 'none'
   },
-  cornerHUD: {
-    position: 'absolute',
-    top: '12px',
-    right: '12px',
-    backgroundColor: 'rgba(7, 14, 11, 0.85)',
-    color: '#22e58a',
-    padding: '0.35rem 0.75rem',
-    borderRadius: '8px',
-    fontSize: '0.7rem',
-    fontWeight: '700',
-    fontFamily: 'Space Grotesk, sans-serif',
-    border: '1px solid rgba(34, 229, 138, 0.3)'
+  pulseDot: {
+    width: '7px',
+    height: '7px',
+    borderRadius: '50%',
+    backgroundColor: '#00d9ff',
+    boxShadow: '0 0 8px #00d9ff'
   },
-  telemetryRow: {
+  indicesNavRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.85rem',
+    paddingTop: '0.75rem',
+    borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+    flexWrap: 'wrap'
+  },
+  quickNavBtn: {
+    padding: '0.4rem 0.8rem',
+    fontSize: '0.8rem',
+    borderRadius: '6px',
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    color: '#ffffff',
+    border: '1px solid rgba(255, 255, 255, 0.12)',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.4rem'
+  },
+  filterForm: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
     gap: '1rem',
-    paddingTop: '1rem',
-    borderTop: '1px solid rgba(255, 255, 255, 0.08)'
+    alignItems: 'end'
   },
-  telemetryBox: {
+  filterGroup: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.25rem'
+    gap: '0.35rem'
   },
-  telLabel: {
-    fontSize: '0.675rem',
-    color: '#64748b',
-    fontWeight: '700',
-    fontFamily: 'Space Grotesk, sans-serif',
-    letterSpacing: '0.04em'
+  filterLabel: {
+    fontSize: '0.78rem',
+    color: '#94a3b8'
   },
-  telVal: {
+  filterInput: {
+    padding: '0.45rem 0.75rem',
     fontSize: '0.85rem',
-    fontWeight: '700',
-    color: '#f8fafc'
+    borderRadius: '8px',
+    border: '1px solid rgba(255, 255, 255, 0.12)',
+    backgroundColor: 'rgba(7, 14, 11, 0.6)',
+    color: '#ffffff',
+    outline: 'none'
+  },
+  searchSubmitBtn: {
+    padding: '0.5rem 1rem',
+    fontSize: '0.85rem',
+    borderRadius: '8px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '0.4rem'
+  },
+  scenesTableWrapper: {
+    overflowX: 'auto'
+  },
+  scenesTable: {
+    width: '100%',
+    borderCollapse: 'collapse',
+    textAlign: 'left',
+    fontSize: '0.85rem'
+  },
+  th: {
+    padding: '0.75rem 1rem',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+    color: '#94a3b8',
+    fontSize: '0.78rem'
+  },
+  td: {
+    padding: '0.85rem 1rem',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+    color: '#ffffff'
+  },
+  statusBadge: {
+    backgroundColor: 'rgba(34, 229, 138, 0.12)',
+    color: '#22e58a',
+    border: '1px solid rgba(34, 229, 138, 0.25)',
+    padding: '0.15rem 0.5rem',
+    borderRadius: '6px',
+    fontSize: '0.725rem'
+  },
+  viewSceneBtn: {
+    padding: '0.35rem 0.75rem',
+    fontSize: '0.78rem',
+    borderRadius: '6px',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.35rem',
+    cursor: 'pointer',
+    fontWeight: '600'
+  },
+  productLevelBadge: {
+    backgroundColor: 'rgba(0, 217, 255, 0.12)',
+    color: '#00d9ff',
+    border: '1px solid rgba(0, 217, 255, 0.3)',
+    padding: '0.2rem 0.6rem',
+    borderRadius: '6px',
+    fontSize: '0.75rem',
+    fontWeight: '700'
+  },
+  selectedSceneGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+    gap: '1rem'
+  },
+  sceneDetailBox: {
+    backgroundColor: 'rgba(7, 14, 11, 0.6)',
+    padding: '0.85rem 1rem',
+    borderRadius: '10px',
+    border: '1px solid rgba(255, 255, 255, 0.08)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem',
+    fontSize: '0.825rem',
+    color: '#94a3b8'
+  },
+  bandsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+    gap: '1rem'
+  },
+  bandCard: {
+    backgroundColor: 'rgba(7, 14, 11, 0.6)',
+    padding: '0.85rem 1rem',
+    borderRadius: '10px',
+    border: '1px solid rgba(255, 255, 255, 0.08)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.35rem'
+  },
+  bandHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    fontSize: '0.875rem'
+  },
+  resBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    color: '#94a3b8',
+    padding: '0.1rem 0.4rem',
+    borderRadius: '4px',
+    fontSize: '0.7rem'
+  },
+  bandPurpose: {
+    fontSize: '0.78rem',
+    color: '#94a3b8',
+    margin: 0
+  },
+  pipelineSteps: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+    gap: '1rem'
+  },
+  pipelineStep: {
+    backgroundColor: 'rgba(7, 14, 11, 0.6)',
+    padding: '0.85rem 1rem',
+    borderRadius: '10px',
+    border: '1px solid rgba(34, 229, 138, 0.2)',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.65rem',
+    fontSize: '0.85rem',
+    color: '#ffffff'
+  },
+  noDataText: {
+    fontSize: '0.85rem',
+    color: '#94a3b8',
+    fontStyle: 'italic',
+    margin: 0
   }
 };
