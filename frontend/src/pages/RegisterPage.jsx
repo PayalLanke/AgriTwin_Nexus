@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authService } from '../services/authService';
+import { useLanguage } from '../context/LanguageContext';
+import LanguageSelector from '../components/LanguageSelector';
 import { Sprout, User, Mail, Phone, Lock, CheckCircle2, ArrowRight, ArrowLeft } from 'lucide-react';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [mobileNumber, setMobileNumber] = useState('');
@@ -21,23 +24,23 @@ export default function RegisterPage() {
     setSuccess('');
 
     if (!fullName.trim() || fullName.trim().length < 2) {
-      setError('Please enter your full name (minimum 2 characters).');
+      setError(t('auth_val_required'));
       return;
     }
     if (!email || !email.includes('@')) {
-      setError('Please enter a valid email address.');
+      setError(t('auth_val_required'));
       return;
     }
     if (!mobileNumber || mobileNumber.replace(/\D/g, '').length < 10) {
-      setError('Please enter a valid 10-digit mobile number.');
+      setError(t('auth_val_required'));
       return;
     }
     if (!password || password.length < 8) {
-      setError('Password must be at least 8 characters long.');
+      setError(t('auth_val_min8'));
       return;
     }
     if (password !== confirmPassword) {
-      setError('Password and Confirm Password do not match.');
+      setError(t('auth_val_required'));
       return;
     }
 
@@ -61,18 +64,21 @@ export default function RegisterPage() {
       <div style={styles.ambientAuraBottom}></div>
 
       <div style={styles.card} className="animate-fade-in">
-        <Link to="/" style={styles.backHomeBtn}>
-          <ArrowLeft size={16} />
-          <span>Back to Homepage</span>
-        </Link>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Link to="/" style={styles.backHomeBtn}>
+            <ArrowLeft size={16} />
+            <span>{t('auth_back_home')}</span>
+          </Link>
+          <LanguageSelector />
+        </div>
 
         {/* Branding Header */}
         <div style={styles.brandHeader}>
           <div style={styles.logoBadge} className="hud-glow">
             <Sprout size={30} color="#070e0b" />
           </div>
-          <h1 style={styles.appTitle}>Farmer Registration</h1>
-          <p style={styles.tagline}>Create your digital farm operator profile</p>
+          <h1 style={styles.appTitle}>{t('auth_register_title')}</h1>
+          <p style={styles.tagline}>{t('farmer_portal')}</p>
         </div>
 
         {error && (
@@ -91,7 +97,7 @@ export default function RegisterPage() {
         {/* Form Controls */}
         <form onSubmit={handleRegister} style={styles.form}>
           <div style={styles.formGroup}>
-            <label style={styles.label} htmlFor="fullName">FULL NAME</label>
+            <label style={styles.label} htmlFor="fullName">{t('settings_full_name').toUpperCase()}</label>
             <div style={styles.inputWrapper}>
               <User size={16} color="#64748b" style={styles.inputIcon} />
               <input
@@ -107,7 +113,7 @@ export default function RegisterPage() {
           </div>
 
           <div style={styles.formGroup}>
-            <label style={styles.label} htmlFor="email">EMAIL ADDRESS</label>
+            <label style={styles.label} htmlFor="email">{t('settings_email').toUpperCase()}</label>
             <div style={styles.inputWrapper}>
               <Mail size={16} color="#64748b" style={styles.inputIcon} />
               <input
@@ -123,7 +129,7 @@ export default function RegisterPage() {
           </div>
 
           <div style={styles.formGroup}>
-            <label style={styles.label} htmlFor="mobileNumber">MOBILE NUMBER</label>
+            <label style={styles.label} htmlFor="mobileNumber">{t('settings_mobile').toUpperCase()}</label>
             <div style={styles.inputWrapper}>
               <Phone size={16} color="#64748b" style={styles.inputIcon} />
               <input
@@ -140,7 +146,7 @@ export default function RegisterPage() {
 
           <div style={styles.formGrid}>
             <div style={styles.formGroup}>
-              <label style={styles.label} htmlFor="password">PASSWORD</label>
+              <label style={styles.label} htmlFor="password">{t('auth_password').toUpperCase()}</label>
               <div style={styles.inputWrapper}>
                 <Lock size={16} color="#64748b" style={styles.inputIcon} />
                 <input
@@ -156,7 +162,7 @@ export default function RegisterPage() {
             </div>
 
             <div style={styles.formGroup}>
-              <label style={styles.label} htmlFor="confirmPassword">CONFIRM PASSWORD</label>
+              <label style={styles.label} htmlFor="confirmPassword">{t('auth_password').toUpperCase()}</label>
               <div style={styles.inputWrapper}>
                 <Lock size={16} color="#64748b" style={styles.inputIcon} />
                 <input
@@ -179,10 +185,10 @@ export default function RegisterPage() {
             style={{ width: '100%', marginTop: '0.75rem', padding: '0.875rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.625rem' }}
           >
             {isLoading ? (
-              <span>Registering Account...</span>
+              <span>{t('common_loading')}</span>
             ) : (
               <>
-                <span>Register & Access Dashboard</span>
+                <span>{t('auth_register_btn')}</span>
                 <ArrowRight size={18} />
               </>
             )}
@@ -194,7 +200,7 @@ export default function RegisterPage() {
             Already registered?
           </span>
           <Link to="/farmer/login" style={styles.loginLink}>
-            Back to Farmer Login &rarr;
+            {t('auth_login_btn')} &rarr;
           </Link>
         </div>
       </div>

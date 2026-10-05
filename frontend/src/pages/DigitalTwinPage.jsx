@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { farmService } from '../services/farmService';
 import DigitalTwinCanvas from '../components/DigitalTwinCanvas';
 import FarmMap from '../components/FarmMap';
+import { useLanguage } from '../context/LanguageContext';
 import {
   LineChart,
   Line,
@@ -34,12 +35,25 @@ import {
 export default function DigitalTwinPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const [farms, setFarms] = useState([]);
   const [selectedFarm, setSelectedFarm] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState(null);
+
+  const getCropLabel = (crop) => {
+    if (!crop) return t('crop_unspecified');
+    const normalized = crop.toLowerCase();
+    if (normalized.includes('wheat')) return t('crop_wheat');
+    if (normalized.includes('rice') || normalized.includes('paddy')) return t('crop_rice');
+    if (normalized.includes('cotton')) return t('crop_cotton');
+    if (normalized.includes('sugarcane')) return t('crop_sugarcane');
+    if (normalized.includes('soybean')) return t('crop_soybean');
+    if (normalized.includes('maize')) return t('crop_maize');
+    return crop;
+  };
 
   useEffect(() => {
     loadFarmsAndSelect();
@@ -100,12 +114,12 @@ export default function DigitalTwinPage() {
 
   // Calculate Days Since Sowing
   const calculateDaysSinceSowing = (sowingDateStr) => {
-    if (!sowingDateStr) return 'N/A';
+    if (!sowingDateStr) return t('common_no_data');
     const sowingDate = new Date(sowingDateStr);
-    if (isNaN(sowingDate.getTime())) return 'N/A';
+    if (isNaN(sowingDate.getTime())) return t('common_no_data');
     const diffTime = new Date() - sowingDate;
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays >= 0 ? `${diffDays} days` : 'N/A';
+    return diffDays >= 0 ? `${diffDays} ${t('common_days')}` : t('common_no_data');
   };
 
   // Check backend availability for features
@@ -122,8 +136,8 @@ export default function DigitalTwinPage() {
     return (
       <div style={styles.loadingContainer}>
         <RefreshCw size={36} color="#22e58a" className="animate-spin" />
-        <h3 style={{ color: '#ffffff', fontSize: '1.2rem', margin: 0 }}>Loading farm digital twin...</h3>
-        <p style={{ color: '#94a3b8', fontSize: '0.875rem' }}>Fetching geospatial boundaries and satellite observations</p>
+        <h3 style={{ color: '#ffffff', fontSize: '1.2rem', margin: 0 }}>{t('common_loading')}</h3>
+        <p style={{ color: '#94a3b8', fontSize: '0.875rem' }}>{t('twin_subtitle')}</p>
       </div>
     );
   }
@@ -134,10 +148,10 @@ export default function DigitalTwinPage() {
         <AlertTriangle size={40} color="#fbbf24" style={{ marginBottom: '0.75rem' }} />
         <h3 style={{ color: '#ffffff', fontSize: '1.3rem', margin: '0 0 0.5rem 0' }}>{error}</h3>
         <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '1.25rem' }}>
-          Please select a valid farm from your registered directory.
+          {t('select_farm')}
         </p>
         <Link to="/farms" className="btn btn-primary" style={{ padding: '0.65rem 1.25rem' }}>
-          Go to My Farms
+          {t('nav_my_farms')}
         </Link>
       </div>
     );
@@ -147,13 +161,13 @@ export default function DigitalTwinPage() {
     return (
       <div style={styles.emptyStateCard}>
         <Sprout size={48} color="#22e58a" style={{ marginBottom: '1rem' }} />
-        <h2 style={{ color: '#ffffff', fontSize: '1.4rem', margin: '0 0 0.5rem 0' }}>No farm registered yet.</h2>
+        <h2 style={{ color: '#ffffff', fontSize: '1.4rem', margin: '0 0 0.5rem 0' }}>{t('farms_title')}</h2>
         <p style={{ color: '#94a3b8', fontSize: '0.925rem', maxWidth: '520px', lineHeight: '1.5', margin: '0 0 1.5rem 0' }}>
-          Register your farm location, plot boundary coordinates, and crop details to generate its 3D spatial digital twin.
+          {t('add_farm_subtitle')}
         </p>
         <Link to="/farms/add" className="btn btn-primary" style={{ padding: '0.75rem 1.5rem' }}>
           <PlusCircle size={18} />
-          <span>Register Your First Farm</span>
+          <span>+ {t('nav_add_farm')}</span>
         </Link>
       </div>
     );
@@ -168,10 +182,8 @@ export default function DigitalTwinPage() {
             <Compass size={24} color="#22e58a" />
           </div>
           <div>
-            <h1 style={styles.pageTitle}>Farm Digital Twin</h1>
-            <p style={styles.pageSub}>
-              Virtual representation of your selected farm using geospatial, satellite and weather data.
-            </p>
+            <h1 style={styles.pageTitle}>{t('twin_title')}</h1>
+            <p style={styles.pageSub}>{t('twin_subtitle')}</p>
           </div>
         </div>
 
@@ -179,7 +191,7 @@ export default function DigitalTwinPage() {
           {/* Farm Selector Dropdown */}
           <div style={styles.selectorWrapper}>
             <label htmlFor="digitalTwinFarmSelect" style={styles.selectorLabel}>
-              Select Farm:
+              {t('select_farm')}:
             </label>
             <select
               id="digitalTwinFarmSelect"
@@ -189,7 +201,7 @@ export default function DigitalTwinPage() {
             >
               {farms.map((f) => (
                 <option key={f.id} value={f.id} style={{ backgroundColor: '#0f172a', color: '#ffffff' }}>
-                  {f.farmName} ({f.cropType || 'Crop Unspecified'})
+                  {f.farmName} ({getCropLabel(f.cropType)})
                 </option>
               ))}
             </select>
@@ -202,7 +214,7 @@ export default function DigitalTwinPage() {
             style={styles.refreshBtn}
           >
             <RefreshCw size={15} className={isRefreshing ? 'animate-spin' : ''} />
-            <span>{isRefreshing ? 'Refreshing...' : 'Refresh Data'}</span>
+            <span>{isRefreshing ? t('common_loading') : t('refresh_data')}</span>
           </button>
         </div>
       </div>
@@ -213,35 +225,35 @@ export default function DigitalTwinPage() {
           <div style={styles.farmOverviewCard}>
             <div style={styles.overviewGrid}>
               <div style={styles.overviewItem}>
-                <span style={styles.overviewLabel}>Farm Name</span>
+                <span style={styles.overviewLabel}>{t('farms_name')}</span>
                 <span style={styles.overviewValue}>{selectedFarm.farmName}</span>
               </div>
               <div style={styles.overviewItem}>
-                <span style={styles.overviewLabel}>Crop</span>
-                <span style={styles.overviewValue}>{selectedFarm.cropType || 'Not specified'}</span>
+                <span style={styles.overviewLabel}>{t('common_crop')}</span>
+                <span style={styles.overviewValue}>{getCropLabel(selectedFarm.cropType)}</span>
               </div>
               <div style={styles.overviewItem}>
-                <span style={styles.overviewLabel}>Calculated Area</span>
+                <span style={styles.overviewLabel}>{t('common_area')}</span>
                 <span style={styles.overviewValue}>
-                  {Number(selectedFarm.areaHectares || 0).toFixed(2)} Ha ({Number(selectedFarm.areaAcres || 0).toFixed(2)} Acres)
+                  {Number(selectedFarm.areaHectares || 0).toFixed(2)} {t('common_hectares')} ({Number(selectedFarm.areaAcres || 0).toFixed(2)} {t('common_acres')})
                 </span>
               </div>
               <div style={styles.overviewItem}>
-                <span style={styles.overviewLabel}>Location</span>
+                <span style={styles.overviewLabel}>{t('common_location')}</span>
                 <span style={styles.overviewValue}>
                   {selectedFarm.locationAddress || `${Number(selectedFarm.latitude).toFixed(4)}° N, ${Number(selectedFarm.longitude).toFixed(4)}° E`}
                 </span>
               </div>
               <div style={styles.overviewItem}>
-                <span style={styles.overviewLabel}>Sowing Date</span>
-                <span style={styles.overviewValue}>{selectedFarm.sowingDate || 'Not specified'}</span>
+                <span style={styles.overviewLabel}>{t('common_sowing_date')}</span>
+                <span style={styles.overviewValue}>{selectedFarm.sowingDate || t('common_no_data')}</span>
               </div>
               <div style={styles.overviewItem}>
-                <span style={styles.overviewLabel}>Latitude</span>
+                <span style={styles.overviewLabel}>{t('common_lat')}</span>
                 <span style={styles.overviewValue}>{Number(selectedFarm.latitude).toFixed(6)}° N</span>
               </div>
               <div style={styles.overviewItem}>
-                <span style={styles.overviewLabel}>Longitude</span>
+                <span style={styles.overviewLabel}>{t('common_lng')}</span>
                 <span style={styles.overviewValue}>{Number(selectedFarm.longitude).toFixed(6)}° E</span>
               </div>
             </div>
@@ -252,42 +264,42 @@ export default function DigitalTwinPage() {
 
           {/* 5. Digital Twin Data Layers Section */}
           <div style={styles.sectionCard}>
-            <h2 style={styles.sectionHeading}>Digital Twin Data Layers</h2>
+            <h2 style={styles.sectionHeading}>{t('dash_twin_map_title')}</h2>
             <div style={styles.layersGrid}>
               <div style={styles.layerCard}>
-                <span style={styles.layerName}>Farm Boundary</span>
+                <span style={styles.layerName}>{t('twin_status_boundary')}</span>
                 <span style={selectedFarm.boundaryGeoJSON ? styles.badgeAvailable : styles.badgeAwaiting}>
-                  {selectedFarm.boundaryGeoJSON ? 'Available' : 'Awaiting Boundary'}
+                  {selectedFarm.boundaryGeoJSON ? t('common_available') : t('farms_boundary_marker')}
                 </span>
               </div>
               <div style={styles.layerCard}>
-                <span style={styles.layerName}>Satellite Image</span>
+                <span style={styles.layerName}>{t('twin_status_satellite')}</span>
                 <span style={satelliteInfo ? styles.badgeAvailable : styles.badgeAwaiting}>
-                  {satelliteInfo ? 'Available' : 'Awaiting Data'}
+                  {satelliteInfo ? t('common_available') : t('common_awaiting')}
                 </span>
               </div>
               <div style={styles.layerCard}>
-                <span style={styles.layerName}>NDVI</span>
+                <span style={styles.layerName}>{t('twin_status_ndvi')}</span>
                 <span style={cropHealthInfo?.ndvi !== undefined ? styles.badgeAvailable : styles.badgeAwaiting}>
-                  {cropHealthInfo?.ndvi !== undefined ? 'Available' : 'Awaiting Data'}
+                  {cropHealthInfo?.ndvi !== undefined ? t('common_available') : t('common_awaiting')}
                 </span>
               </div>
               <div style={styles.layerCard}>
-                <span style={styles.layerName}>NDRE</span>
+                <span style={styles.layerName}>{t('twin_status_ndre')}</span>
                 <span style={cropHealthInfo?.ndre !== undefined ? styles.badgeAvailable : styles.badgeAwaiting}>
-                  {cropHealthInfo?.ndre !== undefined ? 'Available' : 'Awaiting Data'}
+                  {cropHealthInfo?.ndre !== undefined ? t('common_available') : t('common_awaiting')}
                 </span>
               </div>
               <div style={styles.layerCard}>
-                <span style={styles.layerName}>SAVI</span>
+                <span style={styles.layerName}>{t('twin_status_savi')}</span>
                 <span style={cropHealthInfo?.savi !== undefined ? styles.badgeAvailable : styles.badgeAwaiting}>
-                  {cropHealthInfo?.savi !== undefined ? 'Available' : 'Awaiting Data'}
+                  {cropHealthInfo?.savi !== undefined ? t('common_available') : t('common_awaiting')}
                 </span>
               </div>
               <div style={styles.layerCard}>
-                <span style={styles.layerName}>Weather</span>
+                <span style={styles.layerName}>{t('twin_status_weather')}</span>
                 <span style={weatherInfo ? styles.badgeAvailable : styles.badgeNotConfigured}>
-                  {weatherInfo ? 'Connected' : 'Not Configured'}
+                  {weatherInfo ? t('dash_status_connected') : t('common_not_available')}
                 </span>
               </div>
             </div>
@@ -298,10 +310,10 @@ export default function DigitalTwinPage() {
             <div style={styles.cardHeaderRow}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <MapPin size={20} color="#22e58a" />
-                <h2 style={styles.sectionHeading}>Farm Boundary Map</h2>
+                <h2 style={styles.sectionHeading}>{t('dash_twin_map_title')}</h2>
               </div>
               <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
-                Coordinates: {Number(selectedFarm.latitude).toFixed(4)}° N, {Number(selectedFarm.longitude).toFixed(4)}° E
+                {t('common_lat')}: {Number(selectedFarm.latitude).toFixed(4)}° N, {t('common_lng')}: {Number(selectedFarm.longitude).toFixed(4)}° E
               </span>
             </div>
 
@@ -317,24 +329,24 @@ export default function DigitalTwinPage() {
               </div>
 
               <div style={styles.boundaryDetailsBox}>
-                <h4 style={styles.detailsBoxTitle}>Spatial Specifications</h4>
+                <h4 style={styles.detailsBoxTitle}>{t('dash_plot_specs')}</h4>
                 <div style={styles.detailsList}>
                   <div style={styles.detailRow}>
-                    <span>Total Field Area:</span>
-                    <strong>{Number(selectedFarm.areaHectares || 0).toFixed(2)} Ha ({Number(selectedFarm.areaAcres || 0).toFixed(2)} Acres)</strong>
+                    <span>{t('common_area')}:</span>
+                    <strong>{Number(selectedFarm.areaHectares || 0).toFixed(2)} {t('common_hectares')} ({Number(selectedFarm.areaAcres || 0).toFixed(2)} {t('common_acres')})</strong>
                   </div>
                   <div style={styles.detailRow}>
-                    <span>Center Latitude:</span>
+                    <span>{t('common_lat')}:</span>
                     <strong>{Number(selectedFarm.latitude).toFixed(6)}° N</strong>
                   </div>
                   <div style={styles.detailRow}>
-                    <span>Center Longitude:</span>
+                    <span>{t('common_lng')}:</span>
                     <strong>{Number(selectedFarm.longitude).toFixed(6)}° E</strong>
                   </div>
                   <div style={styles.detailRow}>
-                    <span>Boundary Geometry:</span>
+                    <span>{t('dash_boundary_data')}:</span>
                     <strong style={{ color: selectedFarm.boundaryGeoJSON ? '#22e58a' : '#fbbf24' }}>
-                      {selectedFarm.boundaryGeoJSON ? 'GeoJSON Polygon Defined' : 'Center Marker Only'}
+                      {selectedFarm.boundaryGeoJSON ? t('farms_boundary_geojson') : t('farms_boundary_marker')}
                     </strong>
                   </div>
                 </div>
@@ -342,10 +354,10 @@ export default function DigitalTwinPage() {
                 {!selectedFarm.boundaryGeoJSON && (
                   <div style={styles.geojsonNotice}>
                     <p style={{ margin: 0, fontSize: '0.8rem', color: '#fbbf24' }}>
-                      Farm boundary polygon unavailable. Return to farm registration to draw boundary polygon.
+                      {t('draw_instructions')}
                     </p>
                     <Link to={`/farms/edit/${selectedFarm.id}`} className="btn btn-secondary" style={{ marginTop: '0.5rem', padding: '0.4rem 0.8rem', fontSize: '0.78rem' }}>
-                      Return to Farm Registration
+                      {t('common_edit')}
                     </Link>
                   </div>
                 )}
@@ -357,29 +369,29 @@ export default function DigitalTwinPage() {
           <div style={styles.sectionCard}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.85rem' }}>
               <Satellite size={20} color="#00d9ff" />
-              <h2 style={styles.sectionHeading}>Satellite Observation</h2>
+              <h2 style={styles.sectionHeading}>{t('sat_title')}</h2>
             </div>
             {satelliteInfo ? (
               <div style={styles.satelliteDetailsGrid}>
                 <div style={styles.satItem}>
-                  <span>Source:</span>
+                  <span>{t('sat_card_source')}:</span>
                   <strong>Sentinel-2 L2A (10m Resolution)</strong>
                 </div>
                 <div style={styles.satItem}>
-                  <span>Observation Date:</span>
+                  <span>{t('sat_card_latest')}:</span>
                   <strong>{satelliteInfo.lastDate || 'Recent Copernicus Pass'}</strong>
                 </div>
                 <div style={styles.satItem}>
-                  <span>Cloud Coverage:</span>
+                  <span>{t('sat_card_cloud')}:</span>
                   <strong>{satelliteInfo.cloudCover !== undefined ? `${satelliteInfo.cloudCover}%` : 'Low'}</strong>
                 </div>
                 <div style={styles.satItem}>
-                  <span>Processing Status:</span>
+                  <span>{t('sat_card_status')}:</span>
                   <strong>{satelliteInfo.status || 'Surface Reflectance Processed'}</strong>
                 </div>
               </div>
             ) : (
-              <p style={styles.noDataText}>Satellite observation not available for this farm yet.</p>
+              <p style={styles.noDataText}>{t('dash_sat_no_data')}</p>
             )}
           </div>
 
@@ -387,25 +399,25 @@ export default function DigitalTwinPage() {
           <div style={styles.sectionCard}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.85rem' }}>
               <Layers size={20} color="#22e58a" />
-              <h2 style={styles.sectionHeading}>Vegetation Indices (NDVI / NDRE / SAVI)</h2>
+              <h2 style={styles.sectionHeading}>{t('twin_health_title')}</h2>
             </div>
             {cropHealthInfo ? (
               <div style={styles.indicesGrid}>
                 <div style={styles.indexBox}>
-                  <span style={styles.indexName}>NDVI (Vegetation Vigor)</span>
-                  <span style={styles.indexVal}>{cropHealthInfo.ndvi !== undefined ? cropHealthInfo.ndvi : 'Awaiting satellite analysis.'}</span>
+                  <span style={styles.indexName}>NDVI ({t('dash_avg_ndvi')})</span>
+                  <span style={styles.indexVal}>{cropHealthInfo.ndvi !== undefined ? cropHealthInfo.ndvi : t('common_awaiting')}</span>
                 </div>
                 <div style={styles.indexBox}>
-                  <span style={styles.indexName}>NDRE (Canopy Chlorophyll)</span>
-                  <span style={styles.indexVal}>{cropHealthInfo.ndre !== undefined ? cropHealthInfo.ndre : 'Awaiting satellite analysis.'}</span>
+                  <span style={styles.indexName}>NDRE ({t('twin_status_ndre')})</span>
+                  <span style={styles.indexVal}>{cropHealthInfo.ndre !== undefined ? cropHealthInfo.ndre : t('common_awaiting')}</span>
                 </div>
                 <div style={styles.indexBox}>
-                  <span style={styles.indexName}>SAVI (Soil-Adjusted Index)</span>
-                  <span style={styles.indexVal}>{cropHealthInfo.savi !== undefined ? cropHealthInfo.savi : 'Awaiting satellite analysis.'}</span>
+                  <span style={styles.indexName}>SAVI ({t('twin_status_savi')})</span>
+                  <span style={styles.indexVal}>{cropHealthInfo.savi !== undefined ? cropHealthInfo.savi : t('common_awaiting')}</span>
                 </div>
               </div>
             ) : (
-              <p style={styles.noDataText}>Awaiting satellite analysis.</p>
+              <p style={styles.noDataText}>{t('common_awaiting')}</p>
             )}
           </div>
 
@@ -413,29 +425,29 @@ export default function DigitalTwinPage() {
           <div style={styles.sectionCard}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.85rem' }}>
               <CloudSun size={20} color="#00d9ff" />
-              <h2 style={styles.sectionHeading}>Weather Data</h2>
+              <h2 style={styles.sectionHeading}>{t('wx_title')}</h2>
             </div>
             {weatherInfo ? (
               <div style={styles.weatherGrid}>
                 <div style={styles.weatherItem}>
-                  <span>Temperature:</span>
+                  <span>{t('dash_temp')}:</span>
                   <strong>{weatherInfo.temperature}°C</strong>
                 </div>
                 <div style={styles.weatherItem}>
-                  <span>Humidity:</span>
+                  <span>{t('dash_humidity')}:</span>
                   <strong>{weatherInfo.humidity}%</strong>
                 </div>
                 <div style={styles.weatherItem}>
-                  <span>Rainfall:</span>
+                  <span>{t('dash_rainfall')}:</span>
                   <strong>{weatherInfo.rainfall} mm</strong>
                 </div>
                 <div style={styles.weatherItem}>
-                  <span>Wind Speed:</span>
+                  <span>{t('dash_wind')}:</span>
                   <strong>{weatherInfo.windSpeed} km/h</strong>
                 </div>
               </div>
             ) : (
-              <p style={styles.noDataText}>Weather data unavailable.</p>
+              <p style={styles.noDataText}>{t('common_not_available')}</p>
             )}
           </div>
 
@@ -443,69 +455,69 @@ export default function DigitalTwinPage() {
           <div style={styles.sectionCard}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.85rem' }}>
               <Sprout size={20} color="#22e58a" />
-              <h2 style={styles.sectionHeading}>Crop Information</h2>
+              <h2 style={styles.sectionHeading}>{t('twin_health_title')}</h2>
             </div>
             <div style={styles.cropInfoGrid}>
               <div style={styles.cropInfoItem}>
-                <span>Crop Type:</span>
-                <strong>{selectedFarm.cropType || 'Not specified'}</strong>
+                <span>{t('common_crop')}:</span>
+                <strong>{getCropLabel(selectedFarm.cropType)}</strong>
               </div>
               <div style={styles.cropInfoItem}>
-                <span>Sowing Date:</span>
-                <strong>{selectedFarm.sowingDate || 'Not specified'}</strong>
+                <span>{t('common_sowing_date')}:</span>
+                <strong>{selectedFarm.sowingDate || t('common_no_data')}</strong>
               </div>
               <div style={styles.cropInfoItem}>
-                <span>Days Since Sowing:</span>
+                <span>{t('common_days')}:</span>
                 <strong>{calculateDaysSinceSowing(selectedFarm.sowingDate)}</strong>
               </div>
               <div style={styles.cropInfoItem}>
-                <span>Crop Growth Stage:</span>
-                <strong>{selectedFarm.cropGrowthStage || 'Crop stage: Not available'}</strong>
+                <span>{t('twin_health_stage')}:</span>
+                <strong>{selectedFarm.cropGrowthStage || t('common_no_data')}</strong>
               </div>
             </div>
           </div>
 
           {/* 12. Farm Analysis (Analytical Status) */}
           <div style={styles.sectionCard}>
-            <h2 style={styles.sectionHeading}>Farm Analysis</h2>
+            <h2 style={styles.sectionHeading}>{t('dash_modules_status')}</h2>
             <div style={styles.analysisGrid}>
               <div style={styles.analysisCard}>
                 <div style={styles.analysisCardHeader}>
                   <Sprout size={18} color="#22e58a" />
-                  <h4 style={styles.analysisTitle}>Crop Health</h4>
+                  <h4 style={styles.analysisTitle}>{t('dash_crop_health')}</h4>
                 </div>
                 <p style={styles.analysisStatusText}>
-                  {cropHealthInfo ? 'Calculated from Sentinel-2 pass' : 'Awaiting satellite analysis'}
+                  {cropHealthInfo ? t('dash_status_calculated') : t('dash_status_pending')}
                 </p>
               </div>
 
               <div style={styles.analysisCard}>
                 <div style={styles.analysisCardHeader}>
                   <ShieldAlert size={18} color="#fbbf24" />
-                  <h4 style={styles.analysisTitle}>Risk Analysis</h4>
+                  <h4 style={styles.analysisTitle}>{t('dash_risk_analysis')}</h4>
                 </div>
                 <p style={styles.analysisStatusText}>
-                  {riskInfo !== null ? `Evaluated: ${typeof riskInfo === 'number' ? `${riskInfo}%` : riskInfo}` : 'Model not run'}
+                  {riskInfo !== null ? `${t('dash_status_evaluated')}: ${typeof riskInfo === 'number' ? `${riskInfo}%` : riskInfo}` : t('dash_status_pending')}
                 </p>
               </div>
 
               <div style={styles.analysisCard}>
                 <div style={styles.analysisCardHeader}>
                   <TrendingUp size={18} color="#22e58a" />
-                  <h4 style={styles.analysisTitle}>Yield Estimation</h4>
+                  <h4 style={styles.analysisTitle}>{t('dash_yield_est')}</h4>
                 </div>
                 <p style={styles.analysisStatusText}>
-                  {yieldInfo !== null ? `Predicted: ${typeof yieldInfo === 'number' ? `${yieldInfo} Tons/Ha` : yieldInfo}` : 'Model not run'}
+                  {yieldInfo !== null ? `${t('dash_status_predicted')}: ${typeof yieldInfo === 'number' ? `${yieldInfo} Tons/Ha` : yieldInfo}` : t('dash_status_pending')}
                 </p>
               </div>
 
               <div style={styles.analysisCard}>
                 <div style={styles.analysisCardHeader}>
                   <FileText size={18} color="#00d9ff" />
-                  <h4 style={styles.analysisTitle}>Recommendations</h4>
+                  <h4 style={styles.analysisTitle}>{t('dash_recommendations')}</h4>
                 </div>
                 <p style={styles.analysisStatusText}>
-                  {recommendationsList.length > 0 ? `${recommendationsList.length} advisories available` : 'No recommendations generated'}
+                  {recommendationsList.length > 0 ? `${recommendationsList.length} ${t('dash_status_ready')}` : t('dash_no_rec_yet')}
                 </p>
               </div>
             </div>
@@ -513,7 +525,7 @@ export default function DigitalTwinPage() {
 
           {/* 13. Historical Vegetation Trend Section */}
           <div style={styles.sectionCard}>
-            <h2 style={styles.sectionHeading}>Historical Vegetation Trend</h2>
+            <h2 style={styles.sectionHeading}>{t('twin_trend_title')}</h2>
             {historicalSeries.length > 0 ? (
               <div style={{ width: '100%', height: 280, marginTop: '1rem' }}>
                 <ResponsiveContainer width="100%" height="100%">

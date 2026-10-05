@@ -1,17 +1,31 @@
 import React, { useState } from 'react';
 import { Box, Rotate3d, Layers, Compass, Sprout, Activity, Eye, Maximize2 } from 'lucide-react';
 import DigitalTwin3DScene from './DigitalTwin3DScene';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function DigitalTwinCanvas({ farm, onRefresh }) {
+  const { t } = useLanguage();
   const [activeLayer, setActiveLayer] = useState('canopy'); // 'canopy' | 'terrain' | 'grid' | 'contour'
   const [viewMode, setViewMode] = useState('3d'); // '3d' | 'ortho'
   const [autoRotate, setAutoRotate] = useState(false);
 
+  const getCropLabel = (crop) => {
+    if (!crop) return t('crop_unspecified');
+    const normalized = crop.toLowerCase();
+    if (normalized.includes('wheat')) return t('crop_wheat');
+    if (normalized.includes('rice') || normalized.includes('paddy')) return t('crop_rice');
+    if (normalized.includes('cotton')) return t('crop_cotton');
+    if (normalized.includes('sugarcane')) return t('crop_sugarcane');
+    if (normalized.includes('soybean')) return t('crop_soybean');
+    if (normalized.includes('maize')) return t('crop_maize');
+    return crop;
+  };
+
   const hasGeoJSON = Boolean(farm && farm.boundaryGeoJSON);
   const lat = Number(farm?.latitude) || 18.5204;
   const lng = Number(farm?.longitude) || 73.8567;
-  const farmName = farm?.farmName || 'Selected Farm';
-  const cropType = farm?.cropType || 'Crop';
+  const farmName = farm?.farmName || t('selected_farm');
+  const cropType = getCropLabel(farm?.cropType);
   const areaHectares = Number(farm?.areaHectares || 0).toFixed(2);
 
   return (
@@ -24,11 +38,11 @@ export default function DigitalTwinCanvas({ farm, onRefresh }) {
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <h3 style={styles.title}>3D Farm Digital Twin Engine</h3>
+              <h3 style={styles.title}>{t('twin_title')}</h3>
               <span style={styles.badgeLive}>3D SPATIAL MODEL</span>
             </div>
             <p style={styles.subtitle}>
-              Interactive spatial representation of {farmName} boundary ({cropType} • {areaHectares} Ha)
+              {t('twin_subtitle')} — {farmName} ({cropType} • {areaHectares} {t('common_hectares')})
             </p>
           </div>
         </div>
@@ -43,7 +57,7 @@ export default function DigitalTwinCanvas({ farm, onRefresh }) {
               title="3D Spatial Isometric Perspective"
             >
               <Eye size={14} />
-              <span>3D Perspective</span>
+              <span>{t('twin_view_3d')}</span>
             </button>
             <button
               className={`tab-btn ${viewMode === 'ortho' ? 'tab-btn-active' : ''}`}
@@ -52,7 +66,7 @@ export default function DigitalTwinCanvas({ farm, onRefresh }) {
               title="2D Top-Down Orthographic View"
             >
               <Layers size={14} />
-              <span>2D Ortho View</span>
+              <span>{t('twin_view_ortho')}</span>
             </button>
           </div>
 
@@ -66,7 +80,7 @@ export default function DigitalTwinCanvas({ farm, onRefresh }) {
             }}
           >
             <Rotate3d size={15} />
-            <span>{autoRotate ? 'Pause Orbit' : '360° Orbit'}</span>
+            <span>{autoRotate ? t('twin_orbit_pause') : t('twin_orbit_start')}</span>
           </button>
         </div>
       </div>
@@ -87,13 +101,13 @@ export default function DigitalTwinCanvas({ farm, onRefresh }) {
         <div style={styles.hudRibbon}>
           <div style={styles.hudBadge}>
             <span style={styles.livePulseDot}></span>
-            <span>LAT: {lat.toFixed(6)}° N | LON: {lng.toFixed(6)}° E</span>
+            <span>{t('common_lat')}: {lat.toFixed(6)}° N | {t('common_lng')}: {lng.toFixed(6)}° E</span>
           </div>
           <div style={styles.hudBadge}>
-            <span>PARCEL AREA: {areaHectares} HA</span>
+            <span>{t('common_area')}: {areaHectares} {t('common_hectares')}</span>
             <span style={{ color: 'rgba(255,255,255,0.3)' }}>|</span>
             <span style={{ color: hasGeoJSON ? '#22e58a' : '#fbbf24' }}>
-              {hasGeoJSON ? 'GEOJSON BOUNDARY ACTIVE' : 'CENTER MARKER'}
+              {hasGeoJSON ? t('farms_boundary_geojson') : t('farms_boundary_marker')}
             </span>
           </div>
         </div>

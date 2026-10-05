@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { farmService } from '../services/farmService';
 import { authService } from '../services/authService';
+import { useLanguage } from '../context/LanguageContext';
 import FarmMap from '../components/FarmMap';
 import {
   Sprout,
@@ -27,6 +28,7 @@ import {
 
 export default function DashboardPage() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const currentUser = authService.getCurrentUser();
 
   const [farms, setFarms] = useState([]);
@@ -63,6 +65,18 @@ export default function DashboardPage() {
     }
   };
 
+  const getCropLabel = (crop) => {
+    if (!crop) return t('crop_unspecified');
+    const normalized = crop.toLowerCase();
+    if (normalized.includes('wheat')) return t('crop_wheat');
+    if (normalized.includes('rice') || normalized.includes('paddy')) return t('crop_rice');
+    if (normalized.includes('cotton')) return t('crop_cotton');
+    if (normalized.includes('sugarcane')) return t('crop_sugarcane');
+    if (normalized.includes('soybean')) return t('crop_soybean');
+    if (normalized.includes('maize')) return t('crop_maize');
+    return crop;
+  };
+
   // Real Database Metrics
   const totalFarms = farms.length;
   const totalAreaHectares = farms.reduce((sum, f) => sum + (Number(f.areaHectares) || 0), 0);
@@ -95,10 +109,10 @@ export default function DashboardPage() {
           </div>
           <div>
             <h1 style={styles.welcomeTitle}>
-              Welcome, {currentUser?.fullName || 'Farmer'}
+              {t('welcome')}, {currentUser?.fullName || 'Farmer'}
             </h1>
             <p style={styles.welcomeSub}>
-              Monitor your farms, satellite observations and crop analysis from one place.
+              {t('dash_subtitle')}
             </p>
           </div>
         </div>
@@ -106,7 +120,7 @@ export default function DashboardPage() {
         <div style={styles.headerBtnGroup}>
           <Link to="/farms/add" className="btn btn-primary" style={styles.greenBtn}>
             <PlusCircle size={16} />
-            <span>+ Add Farm</span>
+            <span>+ {t('nav_add_farm')}</span>
           </Link>
           <Link
             to={selectedFarm ? `/farms/${selectedFarm.id}/digital-twin` : '/digital-twin'}
@@ -114,7 +128,7 @@ export default function DashboardPage() {
             style={styles.secondaryBtn}
           >
             <Compass size={16} />
-            <span>View Digital Twin</span>
+            <span>{t('common_view')} {t('nav_digital_twin')}</span>
           </Link>
         </div>
       </div>
@@ -124,7 +138,7 @@ export default function DashboardPage() {
         <div style={styles.selectorBar}>
           <div style={styles.selectorGroup}>
             <label htmlFor="farmSelector" style={styles.selectorLabel}>
-              Selected Farm:
+              {t('selected_farm')}:
             </label>
             <select
               id="farmSelector"
@@ -134,7 +148,7 @@ export default function DashboardPage() {
             >
               {farms.map((f) => (
                 <option key={f.id} value={f.id} style={{ backgroundColor: '#0f172a', color: '#ffffff' }}>
-                  {f.farmName} ({f.cropType || 'Crop Unspecified'})
+                  {f.farmName} ({getCropLabel(f.cropType)})
                 </option>
               ))}
             </select>
@@ -142,21 +156,21 @@ export default function DashboardPage() {
 
           <div style={styles.quickOverviewPills}>
             <div style={styles.pillItem}>
-              <span style={styles.pillLabel}>Registered Farms:</span>
-              <span style={styles.pillValue}>{totalFarms} Plot(s)</span>
+              <span style={styles.pillLabel}>{t('dash_total_farms')}:</span>
+              <span style={styles.pillValue}>{totalFarms}</span>
             </div>
             <div style={styles.pillItem}>
-              <span style={styles.pillLabel}>Total Farm Area:</span>
+              <span style={styles.pillLabel}>{t('dash_total_area_ha')}:</span>
               <span style={styles.pillValue}>
-                {totalAreaHectares.toFixed(2)} Ha ({totalAreaAcres.toFixed(2)} Acres)
+                {totalAreaHectares.toFixed(2)} {t('common_hectares')} ({totalAreaAcres.toFixed(2)} {t('common_acres')})
               </span>
             </div>
             <div style={styles.pillItem}>
-              <span style={styles.pillLabel}>Selected Crop:</span>
-              <span style={styles.pillValue}>{selectedFarm?.cropType || 'Not specified'}</span>
+              <span style={styles.pillLabel}>{t('common_crop')}:</span>
+              <span style={styles.pillValue}>{getCropLabel(selectedFarm?.cropType)}</span>
             </div>
             <div style={styles.pillItem}>
-              <span style={styles.pillLabel}>Location:</span>
+              <span style={styles.pillLabel}>{t('common_location')}:</span>
               <span style={styles.pillValue}>
                 {selectedFarm
                   ? `${Number(selectedFarm.latitude).toFixed(4)}° N, ${Number(selectedFarm.longitude).toFixed(4)}° E`
@@ -171,13 +185,13 @@ export default function DashboardPage() {
           <div style={styles.emptyIconCircle}>
             <Sprout size={44} color="#22e58a" />
           </div>
-          <h2 style={styles.emptyTitle}>No farm registered yet.</h2>
+          <h2 style={styles.emptyTitle}>{t('common_no_data')}</h2>
           <p style={styles.emptyDesc}>
-            Register your farm location, plot boundary coordinates, and crop details to unlock satellite monitoring and digital twin capabilities.
+            {t('add_farm_subtitle')}
           </p>
           <Link to="/farms/add" className="btn btn-primary" style={{ padding: '0.75rem 1.5rem', fontSize: '0.95rem' }}>
             <PlusCircle size={18} />
-            <span>Register Your First Farm</span>
+            <span>{t('nav_add_farm')}</span>
           </Link>
         </div>
       )}
@@ -188,14 +202,14 @@ export default function DashboardPage() {
           <div style={styles.mapHeaderRow}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
               <Compass size={20} color="#22e58a" />
-              <h2 style={styles.sectionTitle}>Digital Twin Field Map — {selectedFarm.farmName}</h2>
+              <h2 style={styles.sectionTitle}>{t('dash_twin_map_title')} — {selectedFarm.farmName}</h2>
             </div>
             <Link
               to={`/farms/${selectedFarm.id}/digital-twin`}
               className="btn btn-primary"
               style={styles.openTwinBtn}
             >
-              <span>Open Digital Twin</span>
+              <span>{t('dash_open_twin_btn')}</span>
               <ArrowRight size={15} />
             </Link>
           </div>
@@ -214,38 +228,38 @@ export default function DashboardPage() {
 
             {/* Farm Database Fields Detail Sidebar */}
             <div style={styles.mapDetailsSidebar}>
-              <h3 style={styles.sidebarHeading}>Plot Specifications</h3>
+              <h3 style={styles.sidebarHeading}>{t('dash_plot_specs')}</h3>
               <div style={styles.detailsList}>
                 <div style={styles.detailRow}>
-                  <span style={styles.detailKey}>Farm Name:</span>
+                  <span style={styles.detailKey}>{t('farms_name')}:</span>
                   <span style={styles.detailVal}>{selectedFarm.farmName}</span>
                 </div>
                 <div style={styles.detailRow}>
-                  <span style={styles.detailKey}>Calculated Area:</span>
+                  <span style={styles.detailKey}>{t('farms_area')}:</span>
                   <span style={styles.detailVal}>
-                    {Number(selectedFarm.areaHectares || 0).toFixed(2)} Ha ({Number(selectedFarm.areaAcres || 0).toFixed(2)} Acres)
+                    {Number(selectedFarm.areaHectares || 0).toFixed(2)} {t('common_hectares')} ({Number(selectedFarm.areaAcres || 0).toFixed(2)} {t('common_acres')})
                   </span>
                 </div>
                 <div style={styles.detailRow}>
-                  <span style={styles.detailKey}>Latitude:</span>
+                  <span style={styles.detailKey}>{t('common_lat')}:</span>
                   <span style={styles.detailVal}>{Number(selectedFarm.latitude || 0).toFixed(6)}° N</span>
                 </div>
                 <div style={styles.detailRow}>
-                  <span style={styles.detailKey}>Longitude:</span>
+                  <span style={styles.detailKey}>{t('common_lng')}:</span>
                   <span style={styles.detailVal}>{Number(selectedFarm.longitude || 0).toFixed(6)}° E</span>
                 </div>
                 <div style={styles.detailRow}>
-                  <span style={styles.detailKey}>Crop Type:</span>
-                  <span style={styles.detailVal}>{selectedFarm.cropType || 'Not specified'}</span>
+                  <span style={styles.detailKey}>{t('farms_crop')}:</span>
+                  <span style={styles.detailVal}>{getCropLabel(selectedFarm.cropType)}</span>
                 </div>
                 <div style={styles.detailRow}>
-                  <span style={styles.detailKey}>Sowing Date:</span>
-                  <span style={styles.detailVal}>{selectedFarm.sowingDate || 'Not specified'}</span>
+                  <span style={styles.detailKey}>{t('farms_sowing')}:</span>
+                  <span style={styles.detailVal}>{selectedFarm.sowingDate || t('common_not_available')}</span>
                 </div>
                 <div style={styles.detailRow}>
-                  <span style={styles.detailKey}>Boundary Data:</span>
+                  <span style={styles.detailKey}>{t('dash_boundary_data')}:</span>
                   <span style={{ ...styles.detailVal, color: selectedFarm.boundaryGeoJSON ? '#22e58a' : '#fbbf24' }}>
-                    {selectedFarm.boundaryGeoJSON ? 'GeoJSON Defined' : 'Center Marker Only'}
+                    {selectedFarm.boundaryGeoJSON ? t('dash_geojson_defined') : t('dash_center_marker')}
                   </span>
                 </div>
               </div>
@@ -255,7 +269,7 @@ export default function DashboardPage() {
                   to={`/farms/${selectedFarm.id}/digital-twin`}
                   style={styles.fullTwinLink}
                 >
-                  <span>Explore Full Spatial Boundary &rarr;</span>
+                  <span>{t('dash_explore_twin')} &rarr;</span>
                 </Link>
               </div>
             </div>
@@ -266,7 +280,7 @@ export default function DashboardPage() {
       {/* Data Status Section (6 Real Status Cards) */}
       {selectedFarm && (
         <div style={styles.dataStatusSection}>
-          <h2 style={styles.sectionTitle}>Analytical Modules Status</h2>
+          <h2 style={styles.sectionTitle}>{t('dash_modules_status')}</h2>
 
           <div style={styles.statusCardsGrid}>
             {/* 1. Satellite Data Card */}
@@ -274,21 +288,21 @@ export default function DashboardPage() {
               <div style={styles.statusCardHeader}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <Satellite size={18} color="#00d9ff" />
-                  <h3 style={styles.statusCardTitle}>Satellite Data</h3>
+                  <h3 style={styles.statusCardTitle}>{t('dash_sat_data')}</h3>
                 </div>
                 <span style={satelliteInfo ? styles.badgeAvailable : styles.badgeAwaiting}>
-                  {satelliteInfo ? 'Available' : 'Awaiting Data'}
+                  {satelliteInfo ? t('common_available') : t('common_awaiting')}
                 </span>
               </div>
               <div style={styles.statusCardBody}>
                 {satelliteInfo ? (
                   <div style={styles.dataList}>
-                    <div><strong>Last Observation:</strong> {satelliteInfo.lastDate || 'Recent Pass'}</div>
-                    <div><strong>Cloud Cover:</strong> {satelliteInfo.cloudCover !== undefined ? `${satelliteInfo.cloudCover}%` : 'Low'}</div>
-                    <div><strong>Bands Available:</strong> Sentinel-2 L2A (10m)</div>
+                    <div><strong>{t('dash_last_obs')}:</strong> {satelliteInfo.lastDate || 'Recent Pass'}</div>
+                    <div><strong>{t('dash_cloud_cover')}:</strong> {satelliteInfo.cloudCover !== undefined ? `${satelliteInfo.cloudCover}%` : 'Low'}</div>
+                    <div><strong>{t('dash_bands_avail')}:</strong> Sentinel-2 L2A (10m)</div>
                   </div>
                 ) : (
-                  <p style={styles.noDataText}>Satellite analysis is not available for this farm yet.</p>
+                  <p style={styles.noDataText}>{t('dash_sat_no_data')}</p>
                 )}
               </div>
             </div>
@@ -298,22 +312,22 @@ export default function DashboardPage() {
               <div style={styles.statusCardHeader}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <CloudSun size={18} color="#00d9ff" />
-                  <h3 style={styles.statusCardTitle}>Weather Data</h3>
+                  <h3 style={styles.statusCardTitle}>{t('dash_wx_data')}</h3>
                 </div>
                 <span style={weatherInfo ? styles.badgeAvailable : styles.badgeNotConfigured}>
-                  {weatherInfo ? 'Connected' : 'Unavailable'}
+                  {weatherInfo ? t('dash_status_connected') : t('dash_status_unavailable')}
                 </span>
               </div>
               <div style={styles.statusCardBody}>
                 {weatherInfo ? (
                   <div style={styles.dataList}>
-                    <div><strong>Temperature:</strong> {weatherInfo.temperature}°C</div>
-                    <div><strong>Humidity:</strong> {weatherInfo.humidity}%</div>
-                    <div><strong>Rainfall:</strong> {weatherInfo.rainfall} mm</div>
-                    <div><strong>Wind Speed:</strong> {weatherInfo.windSpeed} km/h</div>
+                    <div><strong>{t('dash_temp')}:</strong> {weatherInfo.temperature}°C</div>
+                    <div><strong>{t('dash_humidity')}:</strong> {weatherInfo.humidity}%</div>
+                    <div><strong>{t('dash_rainfall')}:</strong> {weatherInfo.rainfall} mm</div>
+                    <div><strong>{t('dash_wind')}:</strong> {weatherInfo.windSpeed} km/h</div>
                   </div>
                 ) : (
-                  <p style={styles.noDataText}>Weather data unavailable.</p>
+                  <p style={styles.noDataText}>{t('common_no_data')}</p>
                 )}
               </div>
             </div>
@@ -323,10 +337,10 @@ export default function DashboardPage() {
               <div style={styles.statusCardHeader}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <Sprout size={18} color="#22e58a" />
-                  <h3 style={styles.statusCardTitle}>Crop Health</h3>
+                  <h3 style={styles.statusCardTitle}>{t('dash_crop_health')}</h3>
                 </div>
                 <span style={cropHealthInfo ? styles.badgeAvailable : styles.badgeAwaiting}>
-                  {cropHealthInfo ? 'Calculated' : 'Awaiting Data'}
+                  {cropHealthInfo ? t('dash_status_calculated') : t('common_awaiting')}
                 </span>
               </div>
               <div style={styles.statusCardBody}>
@@ -337,7 +351,7 @@ export default function DashboardPage() {
                     {cropHealthInfo.savi !== undefined && <div><strong>SAVI:</strong> {cropHealthInfo.savi}</div>}
                   </div>
                 ) : (
-                  <p style={styles.noDataText}>Awaiting satellite analysis.</p>
+                  <p style={styles.noDataText}>{t('common_awaiting')}</p>
                 )}
               </div>
             </div>
@@ -347,19 +361,19 @@ export default function DashboardPage() {
               <div style={styles.statusCardHeader}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <ShieldAlert size={18} color="#fbbf24" />
-                  <h3 style={styles.statusCardTitle}>Risk Analysis</h3>
+                  <h3 style={styles.statusCardTitle}>{t('dash_risk_analysis')}</h3>
                 </div>
                 <span style={riskInfo !== null ? styles.badgeAvailable : styles.badgePending}>
-                  {riskInfo !== null ? 'Evaluated' : 'Pending Analysis'}
+                  {riskInfo !== null ? t('dash_status_evaluated') : t('dash_status_pending')}
                 </span>
               </div>
               <div style={styles.statusCardBody}>
                 {riskInfo !== null ? (
                   <div style={styles.dataList}>
-                    <div><strong>Overall Risk Score:</strong> {typeof riskInfo === 'number' ? `${riskInfo}%` : riskInfo}</div>
+                    <div><strong>{t('dash_overall_risk')}:</strong> {typeof riskInfo === 'number' ? `${riskInfo}%` : riskInfo}</div>
                   </div>
                 ) : (
-                  <p style={styles.noDataText}>Risk analysis pending.</p>
+                  <p style={styles.noDataText}>{t('dash_status_pending')}</p>
                 )}
               </div>
             </div>
@@ -369,19 +383,19 @@ export default function DashboardPage() {
               <div style={styles.statusCardHeader}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <TrendingUp size={18} color="#22e58a" />
-                  <h3 style={styles.statusCardTitle}>Yield Estimation</h3>
+                  <h3 style={styles.statusCardTitle}>{t('dash_yield_est')}</h3>
                 </div>
                 <span style={yieldInfo !== null ? styles.badgeAvailable : styles.badgePending}>
-                  {yieldInfo !== null ? 'Predicted' : 'Pending Analysis'}
+                  {yieldInfo !== null ? t('dash_status_predicted') : t('dash_status_pending')}
                 </span>
               </div>
               <div style={styles.statusCardBody}>
                 {yieldInfo !== null ? (
                   <div style={styles.dataList}>
-                    <div><strong>Predicted Yield:</strong> {typeof yieldInfo === 'number' ? `${yieldInfo} Tons/Ha` : yieldInfo}</div>
+                    <div><strong>{t('dash_predicted_yield')}:</strong> {typeof yieldInfo === 'number' ? `${yieldInfo} Tons/Ha` : yieldInfo}</div>
                   </div>
                 ) : (
-                  <p style={styles.noDataText}>Yield estimation pending.</p>
+                  <p style={styles.noDataText}>{t('dash_status_pending')}</p>
                 )}
               </div>
             </div>
@@ -391,10 +405,10 @@ export default function DashboardPage() {
               <div style={styles.statusCardHeader}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <FileText size={18} color="#00d9ff" />
-                  <h3 style={styles.statusCardTitle}>Recommendations</h3>
+                  <h3 style={styles.statusCardTitle}>{t('dash_recommendations')}</h3>
                 </div>
                 <span style={recommendationsList.length > 0 ? styles.badgeAvailable : styles.badgeNoAdvisory}>
-                  {recommendationsList.length > 0 ? `${recommendationsList.length} Active` : 'No Active Advisory'}
+                  {recommendationsList.length > 0 ? `${recommendationsList.length} Active` : t('dash_no_advisory')}
                 </span>
               </div>
               <div style={styles.statusCardBody}>
@@ -405,7 +419,7 @@ export default function DashboardPage() {
                     ))}
                   </div>
                 ) : (
-                  <p style={styles.noDataText}>No recommendations generated yet.</p>
+                  <p style={styles.noDataText}>{t('dash_no_rec_yet')}</p>
                 )}
               </div>
             </div>
@@ -415,7 +429,7 @@ export default function DashboardPage() {
 
       {/* Core Platform Modules Navigation Grid */}
       <div style={styles.modulesSection}>
-        <h2 style={styles.sectionTitle}>Platform Modules Overview</h2>
+        <h2 style={styles.sectionTitle}>{t('dash_platform_overview')}</h2>
 
         <div style={styles.modulesGrid}>
           <Link to="/farms" style={styles.moduleCardLink}>
@@ -424,10 +438,10 @@ export default function DashboardPage() {
                 <Sprout size={20} color="#22e58a" />
               </div>
               <div style={{ flex: 1 }}>
-                <h4 style={styles.moduleTitle}>Farm Management</h4>
-                <p style={styles.moduleSub}>View, register and manage GeoJSON plot boundaries</p>
+                <h4 style={styles.moduleTitle}>{t('mod_farm_mgmt_title')}</h4>
+                <p style={styles.moduleSub}>{t('mod_farm_mgmt_sub')}</p>
               </div>
-              <span style={styles.moduleBadgeActive}>{farms.length > 0 ? `${farms.length} Active` : '0 Farms'}</span>
+              <span style={styles.moduleBadgeActive}>{farms.length > 0 ? `${farms.length} Active` : `0 ${t('nav_my_farms')}`}</span>
             </div>
           </Link>
 
@@ -437,11 +451,11 @@ export default function DashboardPage() {
                 <Compass size={20} color="#22e58a" />
               </div>
               <div style={{ flex: 1 }}>
-                <h4 style={styles.moduleTitle}>Digital Twin</h4>
-                <p style={styles.moduleSub}>Vector map geometry and spatial field specs</p>
+                <h4 style={styles.moduleTitle}>{t('nav_digital_twin')}</h4>
+                <p style={styles.moduleSub}>{t('mod_twin_sub')}</p>
               </div>
               <span style={selectedFarm ? styles.moduleBadgeActive : styles.moduleBadgePending}>
-                {selectedFarm ? 'Ready' : 'Awaiting Farm'}
+                {selectedFarm ? t('dash_status_ready') : t('common_awaiting')}
               </span>
             </div>
           </Link>
@@ -452,11 +466,11 @@ export default function DashboardPage() {
                 <Satellite size={20} color="#00d9ff" />
               </div>
               <div style={{ flex: 1 }}>
-                <h4 style={styles.moduleTitle}>Satellite Data</h4>
-                <p style={styles.moduleSub}>Copernicus Sentinel-2 multispectral imagery</p>
+                <h4 style={styles.moduleTitle}>{t('dash_sat_data')}</h4>
+                <p style={styles.moduleSub}>{t('mod_sat_sub')}</p>
               </div>
               <span style={satelliteInfo ? styles.moduleBadgeActive : styles.moduleBadgePending}>
-                {satelliteInfo ? 'Available' : 'Awaiting Data'}
+                {satelliteInfo ? t('common_available') : t('common_awaiting')}
               </span>
             </div>
           </Link>
@@ -467,11 +481,11 @@ export default function DashboardPage() {
                 <CloudSun size={20} color="#00d9ff" />
               </div>
               <div style={{ flex: 1 }}>
-                <h4 style={styles.moduleTitle}>Weather</h4>
-                <p style={styles.moduleSub}>Micro-climate forecasts and telemetry</p>
+                <h4 style={styles.moduleTitle}>{t('nav_weather')}</h4>
+                <p style={styles.moduleSub}>{t('mod_wx_sub')}</p>
               </div>
               <span style={weatherInfo ? styles.moduleBadgeActive : styles.moduleBadgePending}>
-                {weatherInfo ? 'Connected' : 'Unavailable'}
+                {weatherInfo ? t('dash_status_connected') : t('dash_status_unavailable')}
               </span>
             </div>
           </Link>
@@ -482,11 +496,11 @@ export default function DashboardPage() {
                 <Layers size={20} color="#22e58a" />
               </div>
               <div style={{ flex: 1 }}>
-                <h4 style={styles.moduleTitle}>Crop Health</h4>
-                <p style={styles.moduleSub}>NDVI / NDRE / SAVI vegetation indices</p>
+                <h4 style={styles.moduleTitle}>{t('dash_crop_health')}</h4>
+                <p style={styles.moduleSub}>{t('mod_crop_health_sub')}</p>
               </div>
               <span style={cropHealthInfo ? styles.moduleBadgeActive : styles.moduleBadgePending}>
-                {cropHealthInfo ? 'Calculated' : 'Pending Analysis'}
+                {cropHealthInfo ? t('dash_status_calculated') : t('dash_status_pending')}
               </span>
             </div>
           </Link>
@@ -497,11 +511,11 @@ export default function DashboardPage() {
                 <ShieldAlert size={20} color="#fbbf24" />
               </div>
               <div style={{ flex: 1 }}>
-                <h4 style={styles.moduleTitle}>Risk Analysis</h4>
-                <p style={styles.moduleSub}>Pest and infection vulnerability model</p>
+                <h4 style={styles.moduleTitle}>{t('nav_pest_risk')}</h4>
+                <p style={styles.moduleSub}>{t('mod_risk_sub')}</p>
               </div>
               <span style={riskInfo !== null ? styles.moduleBadgeActive : styles.moduleBadgePending}>
-                {riskInfo !== null ? 'Evaluated' : 'Pending Analysis'}
+                {riskInfo !== null ? t('dash_status_evaluated') : t('dash_status_pending')}
               </span>
             </div>
           </Link>
@@ -512,11 +526,11 @@ export default function DashboardPage() {
                 <TrendingUp size={20} color="#22e58a" />
               </div>
               <div style={{ flex: 1 }}>
-                <h4 style={styles.moduleTitle}>Yield Estimation</h4>
-                <p style={styles.moduleSub}>Crop production & yield model</p>
+                <h4 style={styles.moduleTitle}>{t('nav_yield')}</h4>
+                <p style={styles.moduleSub}>{t('mod_yield_sub')}</p>
               </div>
               <span style={yieldInfo !== null ? styles.moduleBadgeActive : styles.moduleBadgePending}>
-                {yieldInfo !== null ? 'Predicted' : 'Pending Analysis'}
+                {yieldInfo !== null ? t('dash_status_predicted') : t('dash_status_pending')}
               </span>
             </div>
           </Link>
@@ -527,11 +541,11 @@ export default function DashboardPage() {
                 <FileText size={20} color="#00d9ff" />
               </div>
               <div style={{ flex: 1 }}>
-                <h4 style={styles.moduleTitle}>Recommendations</h4>
-                <p style={styles.moduleSub}>Agronomic advisory rules engine</p>
+                <h4 style={styles.moduleTitle}>{t('nav_recommendations')}</h4>
+                <p style={styles.moduleSub}>{t('mod_rec_sub')}</p>
               </div>
               <span style={recommendationsList.length > 0 ? styles.moduleBadgeActive : styles.moduleBadgePending}>
-                {recommendationsList.length > 0 ? `${recommendationsList.length} Active` : 'No Active Advisory'}
+                {recommendationsList.length > 0 ? `${recommendationsList.length} Active` : t('dash_no_advisory')}
               </span>
             </div>
           </Link>
@@ -542,10 +556,10 @@ export default function DashboardPage() {
                 <BarChart3 size={20} color="#22e58a" />
               </div>
               <div style={{ flex: 1 }}>
-                <h4 style={styles.moduleTitle}>Reports</h4>
-                <p style={styles.moduleSub}>Exportable spatial & crop summary reports</p>
+                <h4 style={styles.moduleTitle}>{t('nav_reports')}</h4>
+                <p style={styles.moduleSub}>{t('mod_reports_sub')}</p>
               </div>
-              <span style={styles.moduleBadgeActive}>Ready</span>
+              <span style={styles.moduleBadgeActive}>{t('dash_status_ready')}</span>
             </div>
           </Link>
         </div>

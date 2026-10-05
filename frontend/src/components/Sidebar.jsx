@@ -51,7 +51,7 @@ export default function Sidebar() {
       {/* Navigation Groups */}
       <div style={styles.navScrollArea}>
         <div style={styles.navGroup}>
-          {!collapsed && <div style={styles.sectionHeader}>FARM & DIGITAL TWIN</div>}
+          {!collapsed && <div style={styles.sectionHeader}>{t('nav_group_farm')}</div>}
           {farmNavItems.map((item) => {
             const Icon = item.icon;
             return (
@@ -76,7 +76,7 @@ export default function Sidebar() {
         </div>
 
         <div style={styles.navGroup}>
-          {!collapsed && <div style={styles.sectionHeader}>TELEMETRY & ANALYTICS</div>}
+          {!collapsed && <div style={styles.sectionHeader}>{t('nav_group_analytics')}</div>}
           {analyticsNavItems.map((item) => {
             const Icon = item.icon;
             return (
@@ -108,10 +108,10 @@ export default function Sidebar() {
         <button
           onClick={() => setCollapsed(!collapsed)}
           style={styles.collapseBtn}
-          title={collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+          title={collapsed ? t('nav_collapse_dock') : t('nav_collapse_dock')}
         >
           {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-          {!collapsed && <span>Collapse Dock</span>}
+          {!collapsed && <span>{t('nav_collapse_dock')}</span>}
         </button>
 
         {!collapsed && (
@@ -125,7 +125,7 @@ export default function Sidebar() {
             fontFamily: 'Space Grotesk, sans-serif'
           }}>
             <ShieldCheck size={16} />
-            <span>Digital Twin Live</span>
+            <span>{t('nav_twin_live')}</span>
           </div>
         )}
       </div>

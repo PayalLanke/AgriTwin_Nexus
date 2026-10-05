@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { farmService } from '../services/farmService';
 import { satelliteService } from '../services/satelliteService';
 import FarmMap from '../components/FarmMap';
+import { useLanguage } from '../context/LanguageContext';
 import {
   Satellite,
   Cloud,
@@ -20,6 +21,7 @@ import {
 
 export default function SatellitePage() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const [farms, setFarms] = useState([]);
   const [selectedFarm, setSelectedFarm] = useState(null);
@@ -29,6 +31,18 @@ export default function SatellitePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState(null);
+
+  const getCropLabel = (crop) => {
+    if (!crop) return t('crop_unspecified');
+    const normalized = crop.toLowerCase();
+    if (normalized.includes('wheat')) return t('crop_wheat');
+    if (normalized.includes('rice') || normalized.includes('paddy')) return t('crop_rice');
+    if (normalized.includes('cotton')) return t('crop_cotton');
+    if (normalized.includes('sugarcane')) return t('crop_sugarcane');
+    if (normalized.includes('soybean')) return t('crop_soybean');
+    if (normalized.includes('maize')) return t('crop_maize');
+    return crop;
+  };
 
   // Search Filters
   const [fromDate, setFromDate] = useState('');
@@ -110,10 +124,18 @@ export default function SatellitePage() {
     if (!selectedFarm) return;
     setIsSearching(true);
     try {
-      const s = await satelliteService.getSentinelScenes(selectedFarm.id, { maxCloud });
-      setScenes(s || []);
-      if (s && s.length > 0) {
-        setSelectedScene(s[0]);
+      const farmList = await farmService.getFarms();
+      const list = farmList || [];
+      setFarms(list);
+      const currentId = selectedFarm.id;
+      const updatedFarm = list.find((f) => String(f.id) === String(currentId)) || list[0] || null;
+      if (updatedFarm) {
+        setSelectedFarm(updatedFarm);
+        const s = await satelliteService.getSentinelScenes(updatedFarm.id, { fromDate, toDate, maxCloud });
+        setScenes(s || []);
+        if (s && s.length > 0) {
+          setSelectedScene(s[0]);
+        }
       }
     } catch (err) {
       console.error('Error refreshing satellite observations:', err);
@@ -162,10 +184,10 @@ export default function SatellitePage() {
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-              <h1 style={styles.pageTitle}>Satellite Monitoring</h1>
-              <span style={styles.geeSourceTag}>Google Earth Engine • Copernicus Sentinel-2</span>
+              <h1 style={styles.pageTitle}>{t('sat_title')}</h1>
+              <span style={styles.geeSourceTag}>{t('sat_source_tag')}</span>
             </div>
-            <p style={styles.pageSub}>Sentinel-2 observations and imagery for your selected farm.</p>
+            <p style={styles.pageSub}>{t('sat_subtitle')}</p>
           </div>
         </div>
 
@@ -173,7 +195,7 @@ export default function SatellitePage() {
         <div style={styles.headerControls}>
           <div style={styles.selectorWrapper}>
             <label htmlFor="satFarmSelect" style={styles.selectLabel}>
-              Selected Farm:
+              {t('selected_farm')}:
             </label>
             <select
               id="satFarmSelect"
@@ -183,7 +205,7 @@ export default function SatellitePage() {
             >
               {farms.map((f) => (
                 <option key={f.id} value={f.id} style={{ backgroundColor: '#0f172a', color: '#ffffff' }}>
-                  {f.farmName} ({f.cropType || 'Crop Unspecified'})
+                  {f.farmName} ({getCropLabel(f.cropType)})
                 </option>
               ))}
             </select>
@@ -191,7 +213,7 @@ export default function SatellitePage() {
 
           <button onClick={handleRefresh} disabled={isSearching} className="btn btn-secondary" style={styles.refreshBtn}>
             <RefreshCw size={14} className={isSearching ? 'animate-spin' : ''} />
-            <span>Refresh Satellite Data</span>
+            <span>{t('refresh_data')}</span>
           </button>
         </div>
       </div>
@@ -202,31 +224,31 @@ export default function SatellitePage() {
           <div style={styles.farmSummaryCard}>
             <div style={styles.summaryGrid}>
               <div style={styles.summaryItem}>
-                <span style={styles.summaryLabel}>Farm Name</span>
+                <span style={styles.summaryLabel}>{t('farms_name')}</span>
                 <span style={styles.summaryValue}>{selectedFarm.farmName}</span>
               </div>
               <div style={styles.summaryItem}>
-                <span style={styles.summaryLabel}>Crop</span>
-                <span style={styles.summaryValue}>{selectedFarm.cropType || 'Not specified'}</span>
+                <span style={styles.summaryLabel}>{t('common_crop')}</span>
+                <span style={styles.summaryValue}>{getCropLabel(selectedFarm.cropType)}</span>
               </div>
               <div style={styles.summaryItem}>
-                <span style={styles.summaryLabel}>Area</span>
+                <span style={styles.summaryLabel}>{t('common_area')}</span>
                 <span style={styles.summaryValue}>
-                  {Number(selectedFarm.areaHectares || 0).toFixed(2)} Ha ({Number(selectedFarm.areaAcres || 0).toFixed(2)} Acres)
+                  {Number(selectedFarm.areaHectares || 0).toFixed(2)} {t('common_hectares')} ({Number(selectedFarm.areaAcres || 0).toFixed(2)} {t('common_acres')})
                 </span>
               </div>
               <div style={styles.summaryItem}>
-                <span style={styles.summaryLabel}>Location</span>
+                <span style={styles.summaryLabel}>{t('common_location')}</span>
                 <span style={styles.summaryValue}>
                   {selectedFarm.locationAddress || `${Number(selectedFarm.latitude).toFixed(4)}° N, ${Number(selectedFarm.longitude).toFixed(4)}° E`}
                 </span>
               </div>
               <div style={styles.summaryItem}>
-                <span style={styles.summaryLabel}>Latitude</span>
+                <span style={styles.summaryLabel}>{t('common_lat')}</span>
                 <span style={styles.summaryValue}>{Number(selectedFarm.latitude).toFixed(6)}° N</span>
               </div>
               <div style={styles.summaryItem}>
-                <span style={styles.summaryLabel}>Longitude</span>
+                <span style={styles.summaryLabel}>{t('common_lng')}</span>
                 <span style={styles.summaryValue}>{Number(selectedFarm.longitude).toFixed(6)}° E</span>
               </div>
             </div>
@@ -235,25 +257,25 @@ export default function SatellitePage() {
           {/* 4. Satellite Overview Cards (4 Cards) */}
           <div style={styles.overviewCardsGrid}>
             <div style={styles.overviewCard}>
-              <span style={styles.overviewCardTitle}>Latest Observation</span>
+              <span style={styles.overviewCardTitle}>{t('sat_card_latest')}</span>
               <span style={styles.overviewCardVal}>{latestDate}</span>
               <span style={styles.overviewCardSub}>5-day revisit interval</span>
             </div>
 
             <div style={styles.overviewCard}>
-              <span style={styles.overviewCardTitle}>Cloud Coverage</span>
+              <span style={styles.overviewCardTitle}>{t('sat_card_cloud')}</span>
               <span style={{ ...styles.overviewCardVal, color: '#00d9ff' }}>{latestCloud}</span>
               <span style={styles.overviewCardSub}>Sentinel-2 metadata</span>
             </div>
 
             <div style={styles.overviewCard}>
-              <span style={styles.overviewCardTitle}>Satellite Source</span>
+              <span style={styles.overviewCardTitle}>{t('sat_card_source')}</span>
               <span style={{ ...styles.overviewCardVal, color: '#22e58a' }}>{latestSatellite}</span>
               <span style={styles.overviewCardSub}>Copernicus Constellation</span>
             </div>
 
             <div style={styles.overviewCard}>
-              <span style={styles.overviewCardTitle}>Processing Status</span>
+              <span style={styles.overviewCardTitle}>{t('sat_card_status')}</span>
               <span style={{ ...styles.overviewCardVal, color: '#22e58a' }}>{latestStatus}</span>
               <span style={styles.overviewCardSub}>Level-2A Surface Reflectance</span>
             </div>
@@ -264,7 +286,7 @@ export default function SatellitePage() {
             <div style={styles.mapHeaderRow}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <MapPin size={20} color="#00d9ff" />
-                <h2 style={styles.sectionHeading}>Farm Satellite Imagery Map</h2>
+                <h2 style={styles.sectionHeading}>{t('sat_map_heading')}</h2>
               </div>
 
               {/* 6. Layer Switcher Controls */}
@@ -274,28 +296,28 @@ export default function SatellitePage() {
                   onClick={() => setActiveLayer('trueColor')}
                   style={styles.layerBtn}
                 >
-                  True Color (RGB)
+                  {t('sat_layer_true')}
                 </button>
                 <button
                   className={`tab-btn ${activeLayer === 'falseColor' ? 'tab-btn-active' : ''}`}
                   onClick={() => setActiveLayer('falseColor')}
                   style={styles.layerBtn}
                 >
-                  False Color (NIR)
+                  {t('sat_layer_false')}
                 </button>
                 <button
                   className={`tab-btn ${activeLayer === 'ndvi' ? 'tab-btn-active' : ''}`}
                   onClick={() => setActiveLayer('ndvi')}
                   style={styles.layerBtn}
                 >
-                  NDVI Layer
+                  {t('sat_layer_ndvi')}
                 </button>
                 <button
                   className={`tab-btn ${activeLayer === 'ndre' ? 'tab-btn-active' : ''}`}
                   onClick={() => setActiveLayer('ndre')}
                   style={styles.layerBtn}
                 >
-                  NDRE Layer
+                  {t('sat_layer_ndre')}
                 </button>
                 <button
                   className={`tab-btn ${activeLayer === 'savi' ? 'tab-btn-active' : ''}`}

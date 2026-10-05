@@ -84,7 +84,7 @@ export default function MyFarmsPage() {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
               <h2 style={styles.farmerName}>{currentUser?.fullName || 'Rajesh Patil'}</h2>
-              <span style={styles.roleTag}>REGISTERED FARMER</span>
+              <span style={styles.roleTag}>{t('farmer_portal').toUpperCase()}</span>
             </div>
             <p style={styles.farmerMeta}>
               {currentUser?.email || 'farmer@agritwin.org'} • Mobile: {currentUser?.mobileNumber || '+91 98765 43210'}
@@ -94,12 +94,12 @@ export default function MyFarmsPage() {
 
         <div style={styles.statsPillGroup}>
           <div style={styles.statPill}>
-            <span style={styles.pillLabel}>TOTAL REGISTERED FARMS</span>
-            <span style={styles.pillVal}>{farms.length} Plots</span>
+            <span style={styles.pillLabel}>{t('dash_total_farms').toUpperCase()}</span>
+            <span style={styles.pillVal}>{farms.length}</span>
           </div>
           <div style={styles.statPill}>
-            <span style={styles.pillLabel}>TOTAL LAND AREA</span>
-            <span style={styles.pillVal}>{totalAreaHectares.toFixed(2)} Ha ({totalAreaAcres.toFixed(2)} Acres)</span>
+            <span style={styles.pillLabel}>{t('dash_total_area_ha').toUpperCase()}</span>
+            <span style={styles.pillVal}>{totalAreaHectares.toFixed(2)} {t('common_hectares')} ({totalAreaAcres.toFixed(2)} {t('common_acres')})</span>
           </div>
         </div>
       </div>
@@ -107,12 +107,12 @@ export default function MyFarmsPage() {
       {/* Header Bar with Action Button */}
       <div style={styles.header}>
         <div>
-          <h1 style={styles.title}>{t('my_farms_title')}</h1>
-          <p style={styles.subtitle}>{t('my_farms_subtitle')}</p>
+          <h1 style={styles.title}>{t('farms_title')}</h1>
+          <p style={styles.subtitle}>{t('farms_subtitle')}</p>
         </div>
         <Link to="/farms/add" className="btn btn-primary cyber-gradient-btn" style={{ textDecoration: 'none' }}>
           <PlusCircle size={18} />
-          <span>+ {t('add_farm_btn')}</span>
+          <span>+ {t('nav_add_farm')}</span>
         </Link>
       </div>
 
@@ -123,14 +123,14 @@ export default function MyFarmsPage() {
             <Search size={16} color="#9ca3af" style={styles.searchIcon} />
             <input
               type="text"
-              placeholder="Search by farm plot name or crop type..."
+              placeholder={t('search_location_placeholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={styles.searchInput}
             />
           </div>
           <div style={{ fontSize: '0.875rem', color: '#94a3b8', fontFamily: 'Space Grotesk, sans-serif' }}>
-            Showing <b style={{ color: '#ffffff' }}>{filteredFarms.length}</b> of <b style={{ color: '#22e58a' }}>{farms.length}</b> Registered Farms
+            {t('common_searching')} <b style={{ color: '#ffffff' }}>{filteredFarms.length}</b> / <b style={{ color: '#22e58a' }}>{farms.length}</b>
           </div>
         </div>
       )}
@@ -138,7 +138,7 @@ export default function MyFarmsPage() {
       {/* Farms Grid or Professional Empty State */}
       {isLoading ? (
         <div style={styles.loadingBox}>
-          <p>Loading registered farms list...</p>
+          <p>{t('common_loading')}</p>
         </div>
       ) : farms.length === 0 ? (
         <div className="card" style={styles.emptyCard}>
@@ -146,22 +146,22 @@ export default function MyFarmsPage() {
             <Sprout size={36} color="var(--color-primary)" />
           </div>
           <h3 style={{ margin: '0.5rem 0 0.25rem 0', fontSize: '1.25rem', color: '#ffffff' }}>
-            {t('my_farms_title')}
+            {t('farms_title')}
           </h3>
           <p style={{ color: '#94a3b8', fontSize: '0.875rem', maxWidth: '420px', lineHeight: '1.5', margin: 0 }}>
             {t('add_farm_subtitle')}
           </p>
           <Link to="/farms/add" className="cyber-gradient-btn" style={{ marginTop: '0.75rem', padding: '0.6rem 1.25rem', textDecoration: 'none' }}>
             <PlusCircle size={18} />
-            <span>+ {t('add_farm_btn')}</span>
+            <span>+ {t('nav_add_farm')}</span>
           </Link>
         </div>
       ) : filteredFarms.length === 0 ? (
         <div className="card" style={styles.emptyCard}>
           <Search size={32} color="#94a3b8" />
-          <h3 style={{ color: '#ffffff' }}>No matching farms found</h3>
+          <h3 style={{ color: '#ffffff' }}>{t('common_no_data')}</h3>
           <p style={{ color: '#94a3b8', fontSize: '0.875rem', margin: 0 }}>
-            No farm plot matched "{searchQuery}". Try altering your search query.
+            No farm plot matched "{searchQuery}".
           </p>
         </div>
       ) : (
@@ -171,16 +171,16 @@ export default function MyFarmsPage() {
               <div style={styles.cardHeader}>
                 <div>
                   <h3 style={styles.farmName}>{farm.farmName}</h3>
-                  <span style={styles.cropBadge}>{farm.cropType}</span>
+                  <span style={styles.cropBadge}>{farm.cropType ? t(`crop_${farm.cropType.toLowerCase()}`) || farm.cropType : t('crop_unspecified')}</span>
                 </div>
-                <span className="badge badge-teal font-mono">{farm.status || t('boundary_active')}</span>
+                <span className="badge badge-teal font-mono">{farm.status || t('common_available')}</span>
               </div>
 
               <div style={styles.cardDetails}>
                 <div style={styles.detailRow}>
                   <div style={styles.detailIconGroup}>
                     <Calendar size={15} color="#00d9ff" />
-                    <span style={styles.detailLabel}>{t('sowing_date')}:</span>
+                    <span style={styles.detailLabel}>{t('common_sowing_date')}:</span>
                   </div>
                   <span style={styles.detailVal}>{farm.sowingDate}</span>
                 </div>
@@ -188,17 +188,17 @@ export default function MyFarmsPage() {
                 <div style={styles.detailRow}>
                   <div style={styles.detailIconGroup}>
                     <Layers size={15} color="#fbbf24" />
-                    <span style={styles.detailLabel}>{t('field_area')}:</span>
+                    <span style={styles.detailLabel}>{t('common_area')}:</span>
                   </div>
                   <span style={styles.detailVal}>
-                    <b style={{ color: '#22e58a' }}>{farm.areaHectares} {t('hectares')}</b> ({farm.areaAcres} {t('acres')})
+                    <b style={{ color: '#22e58a' }}>{farm.areaHectares} {t('common_hectares')}</b> ({farm.areaAcres} {t('common_acres')})
                   </span>
                 </div>
 
                 <div style={styles.detailRow}>
                   <div style={styles.detailIconGroup}>
                     <MapPin size={15} color="#22e58a" />
-                    <span style={styles.detailLabel}>{t('location')}:</span>
+                    <span style={styles.detailLabel}>{t('common_location')}:</span>
                   </div>
                   <span style={styles.detailVal}>
                     {farm.latitude.toFixed(4)}° N, {farm.longitude.toFixed(4)}° E
@@ -210,11 +210,11 @@ export default function MyFarmsPage() {
               <div style={styles.cardActions}>
                 <Link to={`/farms/view/${farm.id}`} className="btn btn-teal" style={styles.actionBtn}>
                   <Eye size={15} />
-                  <span>3D Twin View</span>
+                  <span>{t('nav_digital_twin')}</span>
                 </Link>
                 <Link to={`/farms/edit/${farm.id}`} className="btn btn-secondary" style={styles.actionBtn}>
                   <Edit2 size={15} />
-                  <span>{t('edit')}</span>
+                  <span>{t('common_edit')}</span>
                 </Link>
                 <button
                   type="button"
@@ -224,7 +224,7 @@ export default function MyFarmsPage() {
                   title="Delete farm record"
                 >
                   <Trash2 size={15} />
-                  <span>{t('delete')}</span>
+                  <span>{t('common_delete')}</span>
                 </button>
               </div>
             </div>

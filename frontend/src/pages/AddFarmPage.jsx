@@ -102,7 +102,7 @@ export default function AddFarmPage() {
           <div>
             <h1 style={styles.title}>{t('add_farm_title')}</h1>
             <p style={styles.subtitle}>
-              Search location (e.g. Jalna, Kopargaon) & delineate field boundary polygon on interactive satellite map.
+              {t('add_farm_subtitle')}
             </p>
           </div>
         </div>
@@ -128,7 +128,7 @@ export default function AddFarmPage() {
 
             <div style={styles.formGroup}>
               <label style={styles.label} htmlFor="farmName">
-                {t('farm_name')} <span style={{ color: '#f87171' }}>*</span>
+                {t('farms_name')} <span style={{ color: '#f87171' }}>*</span>
               </label>
               <div style={styles.inputIconWrapper}>
                 <FileText size={16} color="#64748b" style={styles.inputIcon} />
@@ -146,7 +146,7 @@ export default function AddFarmPage() {
 
             <div style={styles.formGroup}>
               <label style={styles.label} htmlFor="cropType">
-                {t('crop_type')} <span style={{ color: '#f87171' }}>*</span>
+                {t('farms_crop')} <span style={{ color: '#f87171' }}>*</span>
               </label>
               <div style={styles.inputIconWrapper}>
                 <Sprout size={16} color="#64748b" style={styles.inputIcon} />
@@ -160,7 +160,7 @@ export default function AddFarmPage() {
                   <option value="" style={{ background: '#0b1612', color: '#94a3b8' }}>-- Select Crop Variety --</option>
                   {CROP_OPTIONS.map((c) => (
                     <option key={c} value={c} style={{ background: '#0b1612', color: '#f1f5f9' }}>
-                      {c}
+                      {t(`crop_${c.toLowerCase()}`) || c}
                     </option>
                   ))}
                 </select>
@@ -169,7 +169,7 @@ export default function AddFarmPage() {
 
             <div style={styles.formGroup}>
               <label style={styles.label} htmlFor="sowingDate">
-                {t('sowing_date')} <span style={{ color: '#f87171' }}>*</span>
+                {t('farms_sowing')} <span style={{ color: '#f87171' }}>*</span>
               </label>
               <div style={styles.inputIconWrapper}>
                 <Calendar size={16} color="#64748b" style={styles.inputIcon} />
@@ -186,13 +186,13 @@ export default function AddFarmPage() {
 
             {/* Area Display Box */}
             <div style={styles.areaInfoBox}>
-              <span style={styles.areaInfoLabel}>COMPUTED FIELD AREA:</span>
+              <span style={styles.areaInfoLabel}>{t('farms_area').toUpperCase()}:</span>
               <div style={styles.areaValRow}>
                 <span style={styles.areaValPrimary}>
-                  {calculatedAreaHa > 0 ? `${calculatedAreaHa} Ha` : '—'}
+                  {calculatedAreaHa > 0 ? `${calculatedAreaHa} ${t('common_hectares')}` : '—'}
                 </span>
                 <span style={styles.areaValSecondary}>
-                  {calculatedAreaAcres > 0 ? `(${calculatedAreaAcres} Acres)` : '(Draw polygon to compute)'}
+                  {calculatedAreaAcres > 0 ? `(${calculatedAreaAcres} ${t('common_acres')})` : `(${t('draw_instructions')})`}
                 </span>
               </div>
             </div>
@@ -207,11 +207,8 @@ export default function AddFarmPage() {
               style={{ width: '100%', padding: '0.875rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.625rem' }}
             >
               <Save size={18} />
-              <span>{isLoading ? 'Saving Farm Record...' : t('save_farm_btn')}</span>
+              <span>{isLoading ? t('common_loading') : t('save_farm_btn')}</span>
             </button>
-            <p style={styles.actionNote}>
-              Saving boundary automatically instantiates the 3D Digital Twin mesh & Sentinel-2 monitoring pipeline.
-            </p>
           </div>
         </div>
 

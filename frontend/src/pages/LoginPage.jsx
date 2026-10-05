@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authService } from '../services/authService';
+import { useLanguage } from '../context/LanguageContext';
+import LanguageSelector from '../components/LanguageSelector';
 import { Sprout, Eye, EyeOff, Lock, Mail, ArrowRight, ArrowLeft } from 'lucide-react';
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -16,11 +19,11 @@ export default function LoginPage() {
     setError('');
 
     if (!email || !email.includes('@')) {
-      setError('Please enter a valid email address.');
+      setError(t('auth_val_required'));
       return;
     }
     if (!password) {
-      setError('Please enter your password.');
+      setError(t('auth_val_required'));
       return;
     }
 
@@ -37,15 +40,17 @@ export default function LoginPage() {
 
   return (
     <div style={styles.pageContainer}>
-      {/* Background ambient lighting */}
       <div style={styles.ambientAuraTop}></div>
       <div style={styles.ambientAuraBottom}></div>
 
       <div style={styles.loginCard} className="animate-fade-in">
-        <Link to="/" style={styles.backHomeBtn}>
-          <ArrowLeft size={16} />
-          <span>Back to Homepage</span>
-        </Link>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Link to="/" style={styles.backHomeBtn}>
+            <ArrowLeft size={16} />
+            <span>{t('auth_back_home')}</span>
+          </Link>
+          <LanguageSelector />
+        </div>
 
         {/* Logo Branding */}
         <div style={styles.brandHeader}>
@@ -54,9 +59,9 @@ export default function LoginPage() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.25rem' }}>
             <h1 style={styles.appTitle}>AgriTwin <span style={{ color: '#00d9ff' }}>Nexus</span></h1>
-            <span style={styles.versionPill}>3D TWIN v2.4</span>
+            <span style={styles.versionPill}>3D TWIN</span>
           </div>
-          <p style={styles.tagline}>Autonomous Spatial Intelligence & Digital Twin Command</p>
+          <p style={styles.tagline}>{t('auth_login_sub')}</p>
         </div>
 
         {error && (
@@ -68,7 +73,7 @@ export default function LoginPage() {
         {/* Form Controls */}
         <form onSubmit={handleSubmit} style={styles.form}>
           <div style={styles.formGroup}>
-            <label style={styles.label} htmlFor="email">FARMER EMAIL</label>
+            <label style={styles.label} htmlFor="email">{t('auth_username')}</label>
             <div style={styles.inputWrapper}>
               <Mail size={16} color="#64748b" style={styles.inputIcon} />
               <input
@@ -84,7 +89,7 @@ export default function LoginPage() {
           </div>
 
           <div style={styles.formGroup}>
-            <label style={styles.label} htmlFor="password">PASSWORD</label>
+            <label style={styles.label} htmlFor="password">{t('auth_password')}</label>
             <div style={styles.inputWrapper}>
               <Lock size={16} color="#64748b" style={styles.inputIcon} />
               <input
@@ -114,10 +119,10 @@ export default function LoginPage() {
             style={{ width: '100%', marginTop: '0.75rem', padding: '0.875rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.625rem' }}
           >
             {isLoading ? (
-              <span>Decrypting Session Token...</span>
+              <span>{t('common_loading')}</span>
             ) : (
               <>
-                <span>Launch Digital Twin Console</span>
+                <span>{t('auth_login_btn')}</span>
                 <ArrowRight size={18} />
               </>
             )}
@@ -130,7 +135,7 @@ export default function LoginPage() {
             New to AgriTwin Platform?
           </span>
           <Link to="/register" style={styles.registerLink}>
-            Initialize Farmer Account &rarr;
+            {t('auth_register_btn')} &rarr;
           </Link>
         </div>
       </div>
@@ -244,23 +249,6 @@ const styles = {
     fontSize: '0.8rem',
     textAlign: 'center',
     fontWeight: '500'
-  },
-  demoHintBox: {
-    backgroundColor: 'rgba(0, 217, 255, 0.08)',
-    border: '1px solid rgba(0, 217, 255, 0.25)',
-    color: '#94a3b8',
-    padding: '0.625rem 0.875rem',
-    borderRadius: '12px',
-    fontSize: '0.75rem',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-    lineHeight: '1.4'
-  },
-  codeSnippet: {
-    color: '#00d9ff',
-    fontFamily: 'monospace',
-    fontWeight: '700'
   },
   form: {
     display: 'flex',

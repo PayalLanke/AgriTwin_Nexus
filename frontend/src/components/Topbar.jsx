@@ -94,34 +94,15 @@ export default function Topbar({ pageTitle }) {
               fontFamily: 'Space Grotesk, sans-serif',
               whiteSpace: 'nowrap'
             }}>
-              Cyber-Agronomic Mission Hub
+              {t('topbar_tagline')}
             </p>
           </div>
         </div>
 
-        {/* Right: Language Selector, Micro-Climate Capsule, Notification Center, Profile Badge & Logout */}
+        {/* Right: Language Selector, Notification Center, Profile Badge & Logout */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
           {/* Language Selector Dropdown */}
           <LanguageSelector />
-
-          {/* Micro-Climate Capsule */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            backgroundColor: 'rgba(23, 34, 29, 0.7)',
-            border: '1px solid var(--color-border)',
-            borderRadius: 'var(--radius-md)',
-            padding: '0.35rem 0.65rem'
-          }}>
-            <Thermometer size={15} color="var(--color-secondary)" />
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ display: 'flex', gap: '0.35rem', fontSize: '0.75rem', fontWeight: '600', color: '#ffffff', fontFamily: 'Space Grotesk, sans-serif', whiteSpace: 'nowrap' }}>
-                <span>27.4°C</span>
-                <span style={{ color: 'var(--color-text-secondary)' }}>65% RH</span>
-              </div>
-            </div>
-          </div>
 
           {/* Notification Center */}
           <NotificationCenter />
@@ -141,7 +122,7 @@ export default function Topbar({ pageTitle }) {
               boxSizing: 'border-box'
             }}
             onClick={() => setIsProfileOpen(true)}
-            title="Click to view farmer profile"
+            title={t('topbar_view_profile')}
           >
             <div style={{
               width: '28px',

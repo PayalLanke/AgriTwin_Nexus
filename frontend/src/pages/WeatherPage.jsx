@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { farmService } from '../services/farmService';
 import { weatherService } from '../services/weatherService';
+import { useLanguage } from '../context/LanguageContext';
 import {
   CloudSun,
   Sun,
@@ -19,12 +20,25 @@ import {
 } from 'lucide-react';
 
 export default function WeatherPage() {
+  const { t } = useLanguage();
   const [farms, setFarms] = useState([]);
   const [selectedFarm, setSelectedFarm] = useState(null);
   const [weatherData, setWeatherData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState(null);
+
+  const getCropLabel = (crop) => {
+    if (!crop) return t('crop_unspecified');
+    const normalized = crop.toLowerCase();
+    if (normalized.includes('wheat')) return t('crop_wheat');
+    if (normalized.includes('rice') || normalized.includes('paddy')) return t('crop_rice');
+    if (normalized.includes('cotton')) return t('crop_cotton');
+    if (normalized.includes('sugarcane')) return t('crop_sugarcane');
+    if (normalized.includes('soybean')) return t('crop_soybean');
+    if (normalized.includes('maize')) return t('crop_maize');
+    return crop;
+  };
 
   useEffect(() => {
     loadFarmsAndWeather();
@@ -132,19 +146,17 @@ export default function WeatherPage() {
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-              <h1 style={styles.pageTitle}>Weather & Climate</h1>
-              <span style={styles.sourceTag}>AgriTwin Agronomic Weather Station</span>
+              <h1 style={styles.pageTitle}>{t('wx_title')}</h1>
+              <span style={styles.sourceTag}>{t('wx_subtitle')}</span>
             </div>
-            <p style={styles.pageSub}>
-              Micro-climate telemetry and 7-day agronomic forecast for your selected farm.
-            </p>
+            <p style={styles.pageSub}>{t('wx_subtitle')}</p>
           </div>
         </div>
 
         <div style={styles.headerControls}>
           <div style={styles.selectorWrapper}>
             <label htmlFor="weatherFarmSelect" style={styles.selectLabel}>
-              Selected Farm:
+              {t('selected_farm')}:
             </label>
             <select
               id="weatherFarmSelect"
@@ -154,7 +166,7 @@ export default function WeatherPage() {
             >
               {farms.map((f) => (
                 <option key={f.id} value={f.id} style={{ backgroundColor: '#0f172a', color: '#ffffff' }}>
-                  {f.farmName} ({f.cropType || 'Crop Unspecified'})
+                  {f.farmName} ({getCropLabel(f.cropType)})
                 </option>
               ))}
             </select>
@@ -162,7 +174,7 @@ export default function WeatherPage() {
 
           <button onClick={handleRefresh} disabled={isRefreshing} className="btn btn-secondary" style={styles.refreshBtn}>
             <RefreshCw size={14} className={isRefreshing ? 'animate-spin' : ''} />
-            <span>Refresh Weather Data</span>
+            <span>{t('refresh_data')}</span>
           </button>
         </div>
       </div>
@@ -173,31 +185,31 @@ export default function WeatherPage() {
           <div style={styles.farmSummaryCard}>
             <div style={styles.summaryGrid}>
               <div style={styles.summaryItem}>
-                <span style={styles.summaryLabel}>Farm Name</span>
+                <span style={styles.summaryLabel}>{t('farms_name')}</span>
                 <span style={styles.summaryValue}>{selectedFarm.farmName}</span>
               </div>
               <div style={styles.summaryItem}>
-                <span style={styles.summaryLabel}>Crop</span>
-                <span style={styles.summaryValue}>{selectedFarm.cropType || 'Not specified'}</span>
+                <span style={styles.summaryLabel}>{t('common_crop')}</span>
+                <span style={styles.summaryValue}>{getCropLabel(selectedFarm.cropType)}</span>
               </div>
               <div style={styles.summaryItem}>
-                <span style={styles.summaryLabel}>Calculated Area</span>
+                <span style={styles.summaryLabel}>{t('common_area')}</span>
                 <span style={styles.summaryValue}>
-                  {Number(selectedFarm.areaHectares || 0).toFixed(2)} Ha ({Number(selectedFarm.areaAcres || 0).toFixed(2)} Acres)
+                  {Number(selectedFarm.areaHectares || 0).toFixed(2)} {t('common_hectares')} ({Number(selectedFarm.areaAcres || 0).toFixed(2)} {t('common_acres')})
                 </span>
               </div>
               <div style={styles.summaryItem}>
-                <span style={styles.summaryLabel}>Location</span>
+                <span style={styles.summaryLabel}>{t('common_location')}</span>
                 <span style={styles.summaryValue}>
                   {selectedFarm.locationAddress || `${Number(selectedFarm.latitude).toFixed(4)}° N, ${Number(selectedFarm.longitude).toFixed(4)}° E`}
                 </span>
               </div>
               <div style={styles.summaryItem}>
-                <span style={styles.summaryLabel}>Latitude</span>
+                <span style={styles.summaryLabel}>{t('common_lat')}</span>
                 <span style={styles.summaryValue}>{Number(selectedFarm.latitude).toFixed(6)}° N</span>
               </div>
               <div style={styles.summaryItem}>
-                <span style={styles.summaryLabel}>Longitude</span>
+                <span style={styles.summaryLabel}>{t('common_lng')}</span>
                 <span style={styles.summaryValue}>{Number(selectedFarm.longitude).toFixed(6)}° E</span>
               </div>
             </div>
@@ -210,7 +222,7 @@ export default function WeatherPage() {
                 <Thermometer size={22} color="#fbbf24" />
               </div>
               <div style={{ flex: 1 }}>
-                <span style={styles.kpiLabel}>AMBIENT CANOPY TEMP</span>
+                <span style={styles.kpiLabel}>{t('dash_temp')}</span>
                 <div style={{ ...styles.kpiVal, color: '#fbbf24' }}>{current.tempCelsius}°C</div>
                 <span style={styles.kpiHelper}>
                   {current.tempFahrenheit}°F &bull; Soil Temp: <b style={{ color: '#22e58a' }}>{current.soilTemperatureC}°C</b>
@@ -223,7 +235,7 @@ export default function WeatherPage() {
                 <Droplets size={22} color="#00d9ff" />
               </div>
               <div style={{ flex: 1 }}>
-                <span style={styles.kpiLabel}>RELATIVE HUMIDITY</span>
+                <span style={styles.kpiLabel}>{t('dash_humidity')}</span>
                 <div style={{ ...styles.kpiVal, color: '#00d9ff' }}>{current.humidityPercent}%</div>
                 <span style={styles.kpiHelper}>Leaf Wetness: <b style={{ color: '#ffffff' }}>{current.leafWetnessHours} hrs</b></span>
               </div>

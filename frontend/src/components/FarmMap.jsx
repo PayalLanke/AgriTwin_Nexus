@@ -5,6 +5,7 @@ import '@geoman-io/leaflet-geoman-free';
 import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css';
 import { calculatePolygonArea, isValidPolygon } from '../utils/geoUtils';
 import { Search, MapPin, Trash2, CheckCircle2, AlertCircle, Edit3, Compass, Navigation, Building2, Locate, Eye } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 // Fix for default Leaflet icon paths in Vite / React build
 delete L.Icon.Default.prototype._getIconUrl;
@@ -22,6 +23,7 @@ export default function FarmMap({
   onLocationChange,
   onBoundaryChange
 }) {
+  const { t } = useLanguage();
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const centerMarkerRef = useRef(null);
@@ -495,7 +497,7 @@ export default function FarmMap({
                 title="Detect my exact GPS position"
               >
                 <Locate size={15} color="#00d9ff" />
-                <span>{isLocatingGPS ? 'GPS...' : 'Detect My GPS'}</span>
+                <span>{isLocatingGPS ? 'GPS...' : t('map_detect_gps')}</span>
               </button>
             </form>
 
@@ -534,7 +536,7 @@ export default function FarmMap({
           {boundaryGeoJSON && (
             <button type="button" onClick={handleClearPolygon} style={styles.clearBtn}>
               <Trash2 size={16} color="#f87171" />
-              <span>Clear Polygon</span>
+              <span>{t('map_clear_poly')}</span>
             </button>
           )}
         </div>
@@ -560,7 +562,7 @@ export default function FarmMap({
         <div style={styles.tileModeSwitcher}>
           <span style={styles.tileModeLabel}>
             <Eye size={13} color="#00d9ff" />
-            MAP VIEW:
+            {t('map_view')}
           </span>
           <button
             type="button"
@@ -570,7 +572,7 @@ export default function FarmMap({
               ...(tileMode === 'hybrid' ? styles.tileBtnActive : {})
             }}
           >
-            🛰️ Hybrid (Sat + Labels)
+            🛰️ {t('map_hybrid')}
           </button>
           <button
             type="button"
@@ -580,7 +582,7 @@ export default function FarmMap({
               ...(tileMode === 'satellite' ? styles.tileBtnActive : {})
             }}
           >
-            🌍 Google Satellite
+            🌍 {t('map_satellite')}
           </button>
           <button
             type="button"
@@ -590,7 +592,7 @@ export default function FarmMap({
               ...(tileMode === 'street' ? styles.tileBtnActive : {})
             }}
           >
-            🗺️ Street Map
+            🗺️ {t('map_street')}
           </button>
         </div>
 
@@ -600,7 +602,7 @@ export default function FarmMap({
         {!readOnly && !boundaryGeoJSON && (
           <div style={styles.instructionOverlay}>
             <Edit3 size={16} color="#22e58a" />
-            <span>Click polygon tool (polygon icon on top-left toolbar) to draw farm boundary</span>
+            <span>{t('draw_instructions')}</span>
           </div>
         )}
       </div>
@@ -611,14 +613,14 @@ export default function FarmMap({
           <div style={styles.coordItem}>
             <MapPin size={16} color="#22e58a" />
             <div>
-              <span style={styles.metaLabel}>Latitude</span>
+              <span style={styles.metaLabel}>{t('common_lat')}</span>
               <span style={styles.metaVal}>{lat.toFixed(6)}° N</span>
             </div>
           </div>
           <div style={styles.coordItem}>
             <Compass size={16} color="#00d9ff" />
             <div>
-              <span style={styles.metaLabel}>Longitude</span>
+              <span style={styles.metaLabel}>{t('common_lng')}</span>
               <span style={styles.metaVal}>{lng.toFixed(6)}° E</span>
             </div>
           </div>
@@ -631,10 +633,10 @@ export default function FarmMap({
               <CheckCircle2 size={18} color="#22e58a" />
               <div>
                 <span style={{ fontWeight: '700', color: '#22e58a', fontSize: '0.875rem' }}>
-                  Farm Boundary Delineated
+                  {t('farms_boundary_geojson')}
                 </span>
                 <div style={styles.areaRow}>
-                  <span>Calculated Area: <b style={{ color: '#ffffff' }}>{areaStats.hectares} Ha</b> ({areaStats.acres} Acres)</span>
+                  <span>{t('farms_area')}: <b style={{ color: '#ffffff' }}>{areaStats.hectares} {t('common_hectares')}</b> ({areaStats.acres} {t('common_acres')})</span>
                 </div>
               </div>
             </div>
@@ -642,7 +644,7 @@ export default function FarmMap({
             <div style={styles.statusWarningBadge}>
               <AlertCircle size={18} color="#fbbf24" />
               <span style={{ fontWeight: '600', color: '#fbbf24', fontSize: '0.85rem' }}>
-                No boundary polygon drawn yet
+                {t('farms_boundary_marker')}
               </span>
             </div>
           )}
