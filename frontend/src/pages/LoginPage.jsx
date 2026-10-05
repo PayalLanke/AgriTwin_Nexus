@@ -60,16 +60,10 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* Demo Hint Helper */}
-        <div style={styles.demoHintBox}>
-          <ShieldCheck size={16} color="#00d9ff" style={{ flexShrink: 0 }} />
-          <span><b>Demo Access</b>: Use <code style={styles.codeSnippet}>farmer@agritwin.com</code> / <code style={styles.codeSnippet}>farmer123</code></span>
-        </div>
-
         {/* Form Controls */}
         <form onSubmit={handleSubmit} style={styles.form}>
           <div style={styles.formGroup}>
-            <label style={styles.label} htmlFor="email">OPERATOR / AGRONOMIST EMAIL</label>
+            <label style={styles.label} htmlFor="email">FARMER EMAIL</label>
             <div style={styles.inputWrapper}>
               <Mail size={16} color="#64748b" style={styles.inputIcon} />
               <input
@@ -85,7 +79,7 @@ export default function LoginPage() {
           </div>
 
           <div style={styles.formGroup}>
-            <label style={styles.label} htmlFor="password">GATEWAY ACCESS PASSPHRASE</label>
+            <label style={styles.label} htmlFor="password">PASSWORD</label>
             <div style={styles.inputWrapper}>
               <Lock size={16} color="#64748b" style={styles.inputIcon} />
               <input
