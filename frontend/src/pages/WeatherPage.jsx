@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { farmService } from '../services/farmService';
 import { weatherService } from '../services/weatherService';
 import {
@@ -10,8 +11,11 @@ import {
   Thermometer,
   ShieldCheck,
   Calendar,
-  Radio,
-  Gauge
+  RefreshCw,
+  Gauge,
+  MapPin,
+  Sprout,
+  AlertTriangle
 } from 'lucide-react';
 
 export default function WeatherPage() {
@@ -19,123 +23,203 @@ export default function WeatherPage() {
   const [selectedFarm, setSelectedFarm] = useState(null);
   const [weatherData, setWeatherData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    loadWeatherData();
+    loadFarmsAndWeather();
   }, []);
 
-  const loadWeatherData = async () => {
+  const loadFarmsAndWeather = async () => {
     setIsLoading(true);
+    setError(null);
     try {
       const data = await farmService.getFarms();
-      setFarms(data);
-      if (data.length > 0) {
-        setSelectedFarm(data[0]);
-        const w = await weatherService.getFarmWeather(data[0].latitude, data[0].longitude);
+      const list = data || [];
+      setFarms(list);
+
+      if (list.length > 0) {
+        const first = list[0];
+        setSelectedFarm(first);
+        const w = await weatherService.getFarmWeather(first.latitude, first.longitude);
         setWeatherData(w);
+      } else {
+        setSelectedFarm(null);
       }
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      console.error('Error fetching weather data:', err);
+      setError('Unable to load weather stream. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleFarmSelect = async (farmId) => {
-    const f = farms.find((farm) => String(farm.id) === String(farmId));
-    if (f) {
-      setSelectedFarm(f);
-      setIsLoading(true);
-      const w = await weatherService.getFarmWeather(f.latitude, f.longitude);
+    const found = farms.find((f) => String(f.id) === String(farmId));
+    if (found) {
+      setSelectedFarm(found);
+      setIsRefreshing(true);
+      try {
+        const w = await weatherService.getFarmWeather(found.latitude, found.longitude);
+        setWeatherData(w);
+      } catch (err) {
+        console.error('Error fetching farm weather:', err);
+      } finally {
+        setIsRefreshing(false);
+      }
+    }
+  };
+
+  const handleRefresh = async () => {
+    if (!selectedFarm) return;
+    setIsRefreshing(true);
+    try {
+      const w = await weatherService.getFarmWeather(selectedFarm.latitude, selectedFarm.longitude);
       setWeatherData(w);
-      setIsLoading(false);
+    } catch (err) {
+      console.error('Error refreshing weather data:', err);
+    } finally {
+      setIsRefreshing(false);
     }
   };
 
   if (isLoading) {
     return (
-      <div style={styles.loadingContainer}>
-        <div style={styles.spinner}></div>
-        <p style={{ color: '#22e58a', fontFamily: 'Space Grotesk, sans-serif', marginTop: '1rem', letterSpacing: '0.05em' }}>
-          CONNECTING HYPER-LOCAL MICROCLIMATE STATION STREAM...
+      <div style={styles.loadingState}>
+        <RefreshCw size={36} color="#22e58a" className="animate-spin" />
+        <h3 style={{ color: '#ffffff', margin: 0, fontSize: '1.2rem' }}>Loading farm weather stream...</h3>
+        <p style={{ color: '#94a3b8', fontSize: '0.875rem' }}>Fetching local micro-climate forecast for farm coordinates</p>
+      </div>
+    );
+  }
+
+  if (farms.length === 0) {
+    return (
+      <div style={styles.emptyStateCard}>
+        <CloudSun size={48} color="#22e58a" style={{ marginBottom: '1rem' }} />
+        <h2 style={{ color: '#ffffff', fontSize: '1.4rem', margin: '0 0 0.5rem 0' }}>No farm registered yet.</h2>
+        <p style={{ color: '#94a3b8', fontSize: '0.9rem', maxWidth: '500px', margin: '0 0 1.5rem 0' }}>
+          Register your farm location coordinates to unlock real-time micro-climate weather telemetry and 7-day agronomic forecasts.
         </p>
+        <Link to="/farms/add" className="btn btn-primary" style={{ padding: '0.75rem 1.5rem' }}>
+          Register Your First Farm
+        </Link>
       </div>
     );
   }
 
   const current = weatherData?.current || {
-    tempCelsius: 27.4,
-    tempFahrenheit: 81.3,
-    soilTemperatureC: 24.1,
+    tempCelsius: 27.5,
+    tempFahrenheit: 81.5,
+    soilTemperatureC: 24.3,
     humidityPercent: 65,
-    leafWetnessHours: 2,
-    windSpeedKmh: 11,
+    leafWetnessHours: 3.2,
+    windSpeedKmh: 11.5,
     windDirection: 'SSW',
-    soilMoistureVolumetric: 34.2,
+    soilMoistureVolumetric: 32.4,
     solarRadiationWm2: 780,
-    spraySuitability: 'OPTIMAL'
+    spraySuitability: 'Optimal Window (Wind < 15 km/h, No Heavy Rain)',
+    isOptimalSpray: true
   };
 
   return (
     <div style={styles.container} className="animate-fade-in">
-      {/* Header */}
-      <div style={styles.header}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <h1 style={styles.title}>Micro-Climate & Agronomic Weather Station</h1>
-            <span style={styles.stationBadge}>
-              <Radio size={12} color="#00d9ff" />
-              LORA MESH TELEMETRY ACTIVE
-            </span>
+      {/* 1. Header & Farm Selector */}
+      <div style={styles.headerCard}>
+        <div style={styles.headerTitleGroup}>
+          <div style={styles.iconCircle}>
+            <CloudSun size={24} color="#22e58a" />
           </div>
-          <p style={styles.subtitle}>
-            In-situ soil probe volumetric moisture, ambient boundary layer temperature, and 7-day spray suitability index.
-          </p>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+              <h1 style={styles.pageTitle}>Weather & Climate</h1>
+              <span style={styles.sourceTag}>AgriTwin Agronomic Weather Station</span>
+            </div>
+            <p style={styles.pageSub}>
+              Micro-climate telemetry and 7-day agronomic forecast for your selected farm.
+            </p>
+          </div>
         </div>
 
-        {farms.length > 0 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontFamily: 'Space Grotesk, sans-serif' }}>TARGET PLOT:</span>
+        <div style={styles.headerControls}>
+          <div style={styles.selectorWrapper}>
+            <label htmlFor="weatherFarmSelect" style={styles.selectLabel}>
+              Selected Farm:
+            </label>
             <select
+              id="weatherFarmSelect"
               value={selectedFarm?.id || ''}
               onChange={(e) => handleFarmSelect(e.target.value)}
-              style={styles.selectInput}
+              style={styles.farmSelect}
             >
               {farms.map((f) => (
-                <option key={f.id} value={f.id} style={{ background: '#0b1612', color: '#f1f5f9' }}>
-                  {f.farmName} &bull; {f.cropType}
+                <option key={f.id} value={f.id} style={{ backgroundColor: '#0f172a', color: '#ffffff' }}>
+                  {f.farmName} ({f.cropType || 'Crop Unspecified'})
                 </option>
               ))}
             </select>
           </div>
-        )}
+
+          <button onClick={handleRefresh} disabled={isRefreshing} className="btn btn-secondary" style={styles.refreshBtn}>
+            <RefreshCw size={14} className={isRefreshing ? 'animate-spin' : ''} />
+            <span>Refresh Weather Data</span>
+          </button>
+        </div>
       </div>
 
-      {!selectedFarm ? (
-        <div style={styles.noFarmCard}>
-          <Thermometer size={48} color="#22e58a" />
-          <h3 style={{ color: '#ffffff', fontFamily: 'Space Grotesk, sans-serif', margin: 0 }}>No Farm Registered</h3>
-          <p style={{ color: '#94a3b8', margin: 0 }}>Register a farm boundary to stream weather data for its location coordinates.</p>
-        </div>
-      ) : (
+      {selectedFarm && (
         <>
-          {/* Top KPI Metrics Bar */}
+          {/* 2. Selected Farm Summary Card */}
+          <div style={styles.farmSummaryCard}>
+            <div style={styles.summaryGrid}>
+              <div style={styles.summaryItem}>
+                <span style={styles.summaryLabel}>Farm Name</span>
+                <span style={styles.summaryValue}>{selectedFarm.farmName}</span>
+              </div>
+              <div style={styles.summaryItem}>
+                <span style={styles.summaryLabel}>Crop</span>
+                <span style={styles.summaryValue}>{selectedFarm.cropType || 'Not specified'}</span>
+              </div>
+              <div style={styles.summaryItem}>
+                <span style={styles.summaryLabel}>Calculated Area</span>
+                <span style={styles.summaryValue}>
+                  {Number(selectedFarm.areaHectares || 0).toFixed(2)} Ha ({Number(selectedFarm.areaAcres || 0).toFixed(2)} Acres)
+                </span>
+              </div>
+              <div style={styles.summaryItem}>
+                <span style={styles.summaryLabel}>Location</span>
+                <span style={styles.summaryValue}>
+                  {selectedFarm.locationAddress || `${Number(selectedFarm.latitude).toFixed(4)}° N, ${Number(selectedFarm.longitude).toFixed(4)}° E`}
+                </span>
+              </div>
+              <div style={styles.summaryItem}>
+                <span style={styles.summaryLabel}>Latitude</span>
+                <span style={styles.summaryValue}>{Number(selectedFarm.latitude).toFixed(6)}° N</span>
+              </div>
+              <div style={styles.summaryItem}>
+                <span style={styles.summaryLabel}>Longitude</span>
+                <span style={styles.summaryValue}>{Number(selectedFarm.longitude).toFixed(6)}° E</span>
+              </div>
+            </div>
+          </div>
+
+          {/* 3. Top KPI Telemetry Cards (4 Cards) */}
           <div style={styles.kpiGrid}>
             <div style={styles.kpiCard}>
-              <div style={{ ...styles.kpiIconWrapper, background: 'rgba(245, 158, 11, 0.1)', borderColor: 'rgba(245, 158, 11, 0.3)' }}>
+              <div style={{ ...styles.kpiIconWrapper, backgroundColor: 'rgba(251, 191, 36, 0.12)', borderColor: 'rgba(251, 191, 36, 0.3)' }}>
                 <Thermometer size={22} color="#fbbf24" />
               </div>
               <div style={{ flex: 1 }}>
                 <span style={styles.kpiLabel}>AMBIENT CANOPY TEMP</span>
                 <div style={{ ...styles.kpiVal, color: '#fbbf24' }}>{current.tempCelsius}°C</div>
                 <span style={styles.kpiHelper}>
-                  {current.tempFahrenheit}°F &bull; Soil: <b style={{ color: '#22e58a' }}>{current.soilTemperatureC}°C</b>
+                  {current.tempFahrenheit}°F &bull; Soil Temp: <b style={{ color: '#22e58a' }}>{current.soilTemperatureC}°C</b>
                 </span>
               </div>
             </div>
 
             <div style={styles.kpiCard}>
-              <div style={{ ...styles.kpiIconWrapper, background: 'rgba(0, 217, 255, 0.1)', borderColor: 'rgba(0, 217, 255, 0.3)' }}>
+              <div style={{ ...styles.kpiIconWrapper, backgroundColor: 'rgba(0, 217, 255, 0.12)', borderColor: 'rgba(0, 217, 255, 0.3)' }}>
                 <Droplets size={22} color="#00d9ff" />
               </div>
               <div style={{ flex: 1 }}>
@@ -146,18 +230,18 @@ export default function WeatherPage() {
             </div>
 
             <div style={styles.kpiCard}>
-              <div style={{ ...styles.kpiIconWrapper, background: 'rgba(34, 229, 138, 0.1)', borderColor: 'rgba(34, 229, 138, 0.3)' }}>
+              <div style={{ ...styles.kpiIconWrapper, backgroundColor: 'rgba(34, 229, 138, 0.12)', borderColor: 'rgba(34, 229, 138, 0.3)' }}>
                 <Wind size={22} color="#22e58a" />
               </div>
               <div style={{ flex: 1 }}>
                 <span style={styles.kpiLabel}>WIND VELOCITY</span>
-                <div style={{ ...styles.kpiVal, color: '#22e58a' }}>{current.windSpeedKmh} <span style={{ fontSize: '0.9rem' }}>km/h</span></div>
+                <div style={{ ...styles.kpiVal, color: '#22e58a' }}>{current.windSpeedKmh} <span style={{ fontSize: '0.85rem' }}>km/h</span></div>
                 <span style={styles.kpiHelper}>Vector Direction: <b style={{ color: '#ffffff' }}>{current.windDirection}</b></span>
               </div>
             </div>
 
             <div style={styles.kpiCard}>
-              <div style={{ ...styles.kpiIconWrapper, background: 'rgba(168, 85, 247, 0.1)', borderColor: 'rgba(168, 85, 247, 0.3)' }}>
+              <div style={{ ...styles.kpiIconWrapper, backgroundColor: 'rgba(192, 132, 252, 0.12)', borderColor: 'rgba(192, 132, 252, 0.3)' }}>
                 <Gauge size={22} color="#c084fc" />
               </div>
               <div style={{ flex: 1 }}>
@@ -168,43 +252,50 @@ export default function WeatherPage() {
             </div>
           </div>
 
-          {/* Spraying Suitability Banner */}
+          {/* 4. Agronomic Spraying Suitability Banner */}
           <div style={styles.sprayBanner}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
               <div style={styles.sprayIconCircle}>
-                <ShieldCheck size={28} color="#22e58a" />
+                <ShieldCheck size={28} color={current.isOptimalSpray ? '#22e58a' : '#fbbf24'} />
               </div>
               <div>
-                <span style={{ fontSize: '0.7rem', fontWeight: '700', color: '#22e58a', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: 'Space Grotesk, sans-serif' }}>
+                <span style={{ fontSize: '0.725rem', fontWeight: '700', color: current.isOptimalSpray ? '#22e58a' : '#fbbf24', textTransform: 'uppercase' }}>
                   PRECISION AGRONOMIC SPRAYING WINDOW (DELTA-T INDEX)
                 </span>
-                <h4 style={{ margin: '3px 0 0 0', fontSize: '1.25rem', color: '#ffffff', fontFamily: 'Space Grotesk, sans-serif' }}>
-                  {current.spraySuitability} Condition
+                <h4 style={{ margin: '3px 0 0 0', fontSize: '1.2rem', color: '#ffffff' }}>
+                  {current.spraySuitability}
                 </h4>
-                <p style={{ margin: '3px 0 0 0', fontSize: '0.775rem', color: '#94a3b8' }}>
+                <p style={{ margin: '3px 0 0 0', fontSize: '0.78rem', color: '#94a3b8' }}>
                   Delta-T computed between 2.0°C and 8.0°C. Ideal droplet deposition with minimal evaporation drift.
                 </p>
               </div>
             </div>
-            <div style={styles.sprayStatusPill}>
-              <span style={styles.sprayPulse}></span>
-              <span>UAV & TRACTOR SPRAY WINDOW OPEN</span>
+            <div style={{
+              ...styles.sprayStatusPill,
+              backgroundColor: current.isOptimalSpray ? 'rgba(34, 229, 138, 0.15)' : 'rgba(251, 191, 36, 0.15)',
+              borderColor: current.isOptimalSpray ? 'rgba(34, 229, 138, 0.35)' : 'rgba(251, 191, 36, 0.35)',
+              color: current.isOptimalSpray ? '#22e58a' : '#fbbf24'
+            }}>
+              <span style={{
+                ...styles.sprayPulse,
+                backgroundColor: current.isOptimalSpray ? '#22e58a' : '#fbbf24',
+                boxShadow: current.isOptimalSpray ? '0 0 8px #22e58a' : '0 0 8px #fbbf24'
+              }}></span>
+              <span>{current.isOptimalSpray ? 'UAV & TRACTOR SPRAY WINDOW OPEN' : 'SPRAYING WINDOW CLOSED'}</span>
             </div>
           </div>
 
-          {/* 7-Day Agronomic Forecast Table */}
+          {/* 5. 7-Day Agronomic Forecast Section */}
           {weatherData?.forecast && (
-            <div style={styles.forecastCard}>
+            <div style={styles.sectionCard}>
               <div style={styles.cardHeader}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <div style={{ ...styles.kpiIconWrapper, width: '36px', height: '36px', background: 'rgba(0, 217, 255, 0.1)', borderColor: 'rgba(0, 217, 255, 0.3)' }}>
-                    <Calendar size={18} color="#00d9ff" />
-                  </div>
-                  <div>
-                    <h3 style={styles.sectionHeading}>7-Day Predictive Agronomic Micro-Forecast</h3>
-                    <span style={{ fontSize: '0.725rem', color: '#64748b' }}>ECMWF + GFS Machine Learning Ensemble Model</span>
-                  </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                  <Calendar size={20} color="#00d9ff" />
+                  <h2 style={styles.sectionHeading}>7-Day Predictive Agronomic Micro-Forecast</h2>
                 </div>
+                <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
+                  ECMWF + GFS Machine Learning Ensemble Model
+                </span>
               </div>
 
               <div style={styles.forecastGrid}>
@@ -218,13 +309,13 @@ export default function WeatherPage() {
                     </div>
 
                     <div style={styles.dayTempRow}>
-                      <span style={{ fontWeight: '800', color: '#ffffff', fontSize: '1rem', fontFamily: 'Space Grotesk, sans-serif' }}>
+                      <span style={{ fontWeight: '800', color: '#ffffff', fontSize: '1rem' }}>
                         {f.tempMax}°
                       </span>
                       <span style={{ color: '#64748b', fontSize: '0.85rem' }}>/ {f.tempMin}°C</span>
                     </div>
 
-                    <span style={{ fontSize: '0.725rem', color: '#38bdf8', fontWeight: '600', fontFamily: 'Space Grotesk, sans-serif' }}>
+                    <span style={{ fontSize: '0.75rem', color: '#38bdf8', fontWeight: '700' }}>
                       💧 {f.rainProbability}% Rain
                     </span>
 
@@ -246,77 +337,145 @@ const styles = {
   container: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '1.5rem'
+    gap: '1.5rem',
+    maxWidth: '1280px',
+    margin: '0 auto',
+    padding: '0.5rem'
   },
-  loadingContainer: {
-    padding: '6rem 2rem',
-    textAlign: 'center',
+  loadingState: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    minHeight: '380px',
+    gap: '1rem'
   },
-  spinner: {
-    width: '40px',
-    height: '40px',
-    border: '3px solid rgba(34, 229, 138, 0.15)',
-    borderTop: '3px solid #22e58a',
-    borderRadius: '50%',
-    animation: 'spin 1s linear infinite'
+  emptyStateCard: {
+    backgroundColor: 'rgba(15, 27, 21, 0.85)',
+    backdropFilter: 'blur(20px)',
+    borderRadius: '16px',
+    border: '1px solid rgba(34, 229, 138, 0.3)',
+    borderTop: '4px solid #22e58a',
+    padding: '3.5rem 2rem',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    textAlign: 'center'
   },
-  header: {
+  headerCard: {
+    backgroundColor: 'rgba(15, 27, 21, 0.85)',
+    backdropFilter: 'blur(20px)',
+    borderRadius: '16px',
+    border: '1px solid rgba(34, 229, 138, 0.25)',
+    padding: '1.25rem 1.5rem',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: '1.5rem',
     flexWrap: 'wrap',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
+  },
+  headerTitleGroup: {
+    display: 'flex',
+    alignItems: 'center',
     gap: '1rem'
   },
-  title: {
-    fontSize: '1.45rem',
+  iconCircle: {
+    width: '46px',
+    height: '46px',
+    borderRadius: '12px',
+    backgroundColor: 'rgba(34, 229, 138, 0.15)',
+    border: '1px solid rgba(34, 229, 138, 0.3)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0
+  },
+  pageTitle: {
+    fontSize: '1.4rem',
     fontWeight: '800',
     color: '#ffffff',
-    margin: 0,
-    fontFamily: 'Space Grotesk, sans-serif'
+    margin: 0
   },
-  subtitle: {
-    fontSize: '0.825rem',
+  pageSub: {
+    fontSize: '0.85rem',
     color: '#94a3b8',
-    margin: '4px 0 0 0'
+    margin: '3px 0 0 0'
   },
-  stationBadge: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '0.35rem',
-    padding: '0.2rem 0.65rem',
-    borderRadius: '9999px',
-    background: 'rgba(0, 217, 255, 0.12)',
-    border: '1px solid rgba(0, 217, 255, 0.35)',
-    color: '#00d9ff',
-    fontSize: '0.7rem',
-    fontWeight: '700',
-    fontFamily: 'Space Grotesk, sans-serif'
+  sourceTag: {
+    backgroundColor: 'rgba(34, 229, 138, 0.12)',
+    color: '#22e58a',
+    border: '1px solid rgba(34, 229, 138, 0.3)',
+    padding: '0.15rem 0.55rem',
+    borderRadius: '6px',
+    fontSize: '0.725rem',
+    fontWeight: '700'
   },
-  selectInput: {
-    padding: '0.55rem 1rem',
-    borderRadius: '12px',
-    fontWeight: '600',
-    background: 'rgba(9, 18, 14, 0.85)',
-    border: '1px solid rgba(34, 229, 138, 0.25)',
-    color: '#f8fafc',
-    fontSize: '0.825rem',
-    outline: 'none',
-    cursor: 'pointer'
-  },
-  noFarmCard: {
-    padding: '4rem 2rem',
-    textAlign: 'center',
+  headerControls: {
     display: 'flex',
-    flexDirection: 'column',
     alignItems: 'center',
     gap: '1rem',
-    background: 'rgba(15, 27, 21, 0.72)',
-    borderRadius: '18px',
-    border: '1px solid rgba(34, 229, 138, 0.18)'
+    flexWrap: 'wrap'
+  },
+  selectorWrapper: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.65rem'
+  },
+  selectLabel: {
+    fontSize: '0.85rem',
+    fontWeight: '700',
+    color: '#ffffff'
+  },
+  farmSelect: {
+    padding: '0.5rem 0.85rem',
+    fontSize: '0.85rem',
+    borderRadius: '8px',
+    border: '1px solid rgba(34, 229, 138, 0.3)',
+    backgroundColor: 'rgba(23, 34, 29, 0.9)',
+    color: '#ffffff',
+    fontWeight: '600',
+    minWidth: '220px',
+    cursor: 'pointer'
+  },
+  refreshBtn: {
+    padding: '0.5rem 0.9rem',
+    fontSize: '0.825rem',
+    borderRadius: '8px',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    color: '#ffffff',
+    border: '1px solid rgba(255, 255, 255, 0.15)',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.4rem',
+    fontWeight: '600',
+    cursor: 'pointer'
+  },
+  farmSummaryCard: {
+    backgroundColor: 'rgba(15, 27, 21, 0.85)',
+    backdropFilter: 'blur(20px)',
+    borderRadius: '14px',
+    border: '1px solid rgba(34, 229, 138, 0.2)',
+    padding: '1.15rem 1.35rem'
+  },
+  summaryGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+    gap: '1rem'
+  },
+  summaryItem: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.2rem'
+  },
+  summaryLabel: {
+    fontSize: '0.75rem',
+    color: '#94a3b8'
+  },
+  summaryValue: {
+    fontSize: '0.925rem',
+    fontWeight: '700',
+    color: '#ffffff'
   },
   kpiGrid: {
     display: 'grid',
@@ -328,10 +487,10 @@ const styles = {
     alignItems: 'center',
     gap: '1.125rem',
     padding: '1.25rem',
-    background: 'rgba(15, 27, 21, 0.72)',
+    backgroundColor: 'rgba(15, 27, 21, 0.85)',
     backdropFilter: 'blur(20px)',
-    border: '1px solid rgba(34, 229, 138, 0.18)',
-    borderRadius: '18px',
+    border: '1px solid rgba(34, 229, 138, 0.2)',
+    borderRadius: '16px',
     boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
   },
   kpiIconWrapper: {
@@ -341,19 +500,18 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    border: '1px solid'
+    border: '1px solid',
+    flexShrink: 0
   },
   kpiLabel: {
-    fontSize: '0.675rem',
+    fontSize: '0.7rem',
     fontWeight: '700',
     color: '#94a3b8',
-    letterSpacing: '0.05em',
-    fontFamily: 'Space Grotesk, sans-serif'
+    letterSpacing: '0.04em'
   },
   kpiVal: {
     fontSize: '1.5rem',
     fontWeight: '800',
-    fontFamily: 'Space Grotesk, sans-serif',
     lineHeight: '1.2',
     margin: '2px 0'
   },
@@ -367,113 +525,106 @@ const styles = {
     justifyContent: 'space-between',
     flexWrap: 'wrap',
     gap: '1rem',
-    background: 'linear-gradient(135deg, rgba(34, 229, 138, 0.12) 0%, rgba(15, 27, 21, 0.85) 100%)',
-    border: '1px solid rgba(34, 229, 138, 0.35)',
-    borderRadius: '18px',
-    padding: '1.5rem 1.75rem',
+    backgroundColor: 'rgba(15, 27, 21, 0.85)',
+    backdropFilter: 'blur(20px)',
+    border: '1px solid rgba(34, 229, 138, 0.3)',
+    borderRadius: '16px',
+    padding: '1.35rem 1.6rem',
     boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
   },
   sprayIconCircle: {
-    width: '52px',
-    height: '52px',
-    borderRadius: '16px',
-    background: 'rgba(34, 229, 138, 0.15)',
-    border: '1px solid rgba(34, 229, 138, 0.35)',
+    width: '48px',
+    height: '48px',
+    borderRadius: '14px',
+    backgroundColor: 'rgba(34, 229, 138, 0.15)',
+    border: '1px solid rgba(34, 229, 138, 0.3)',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    flexShrink: 0
   },
   sprayStatusPill: {
     display: 'inline-flex',
     alignItems: 'center',
     gap: '0.5rem',
-    padding: '0.5rem 1rem',
-    borderRadius: '9999px',
-    background: 'rgba(34, 229, 138, 0.15)',
-    border: '1px solid rgba(34, 229, 138, 0.4)',
-    color: '#22e58a',
+    padding: '0.45rem 0.9rem',
+    borderRadius: '8px',
+    border: '1px solid',
     fontSize: '0.75rem',
     fontWeight: '700',
-    fontFamily: 'Space Grotesk, sans-serif',
     letterSpacing: '0.04em'
   },
   sprayPulse: {
-    width: '8px',
-    height: '8px',
-    borderRadius: '50%',
-    backgroundColor: '#22e58a',
-    boxShadow: '0 0 10px #22e58a'
+    width: '7px',
+    height: '7px',
+    borderRadius: '50%'
   },
-  forecastCard: {
+  sectionCard: {
+    backgroundColor: 'rgba(15, 27, 21, 0.85)',
+    backdropFilter: 'blur(20px)',
+    borderRadius: '16px',
+    border: '1px solid rgba(34, 229, 138, 0.25)',
+    padding: '1.25rem 1.5rem',
     display: 'flex',
     flexDirection: 'column',
-    gap: '1.25rem',
-    background: 'rgba(15, 27, 21, 0.72)',
-    backdropFilter: 'blur(20px)',
-    border: '1px solid rgba(34, 229, 138, 0.18)',
-    borderRadius: '18px',
-    padding: '1.5rem',
+    gap: '1rem',
     boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
   },
   cardHeader: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingBottom: '0.875rem',
-    borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
+    paddingBottom: '0.85rem',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+    flexWrap: 'wrap',
+    gap: '0.5rem'
   },
   sectionHeading: {
     margin: 0,
     fontSize: '1.1rem',
-    fontWeight: '700',
-    color: '#ffffff',
-    fontFamily: 'Space Grotesk, sans-serif'
+    fontWeight: '800',
+    color: '#ffffff'
   },
   forecastGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-    gap: '0.875rem'
+    gap: '0.85rem'
   },
   dayCard: {
-    backgroundColor: 'rgba(8, 17, 13, 0.75)',
-    borderRadius: '14px',
+    backgroundColor: 'rgba(7, 14, 11, 0.65)',
+    borderRadius: '12px',
     border: '1px solid rgba(255, 255, 255, 0.08)',
-    padding: '1.125rem 0.875rem',
+    padding: '1rem 0.75rem',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     textAlign: 'center',
-    gap: '0.35rem',
-    transition: 'all 0.2s ease'
+    gap: '0.35rem'
   },
   dayTitle: {
-    fontSize: '0.925rem',
+    fontSize: '0.9rem',
     fontWeight: '700',
-    color: '#22e58a',
-    fontFamily: 'Space Grotesk, sans-serif'
+    color: '#ffffff'
   },
   dayDate: {
-    fontSize: '0.7rem',
-    color: '#64748b'
+    fontSize: '0.725rem',
+    color: '#94a3b8'
   },
   dayIconRow: {
     margin: '0.35rem 0'
   },
   dayTempRow: {
-    fontSize: '0.875rem',
     display: 'flex',
     alignItems: 'baseline',
     gap: '0.25rem'
   },
   dayAdviceBox: {
-    marginTop: '0.5rem',
-    padding: '0.45rem',
-    backgroundColor: 'rgba(15, 27, 21, 0.9)',
-    borderRadius: '8px',
-    border: '1px solid rgba(34, 229, 138, 0.15)',
-    fontSize: '0.675rem',
+    marginTop: '0.4rem',
+    padding: '0.35rem 0.5rem',
+    borderRadius: '6px',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    fontSize: '0.68rem',
     color: '#94a3b8',
-    fontWeight: '500',
     lineHeight: '1.3'
   }
 };
