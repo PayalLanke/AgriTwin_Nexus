@@ -2,40 +2,35 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { farmService } from '../services/farmService';
 import { authService } from '../services/authService';
-import { getFarmIndicesAnalysis } from '../utils/indicesEngine';
-import { useLanguage } from '../context/LanguageContext';
+import FarmMap from '../components/FarmMap';
 import {
   Sprout,
   PlusCircle,
   MapPin,
-  Layers,
-  ArrowRight,
-  Cpu,
   Satellite,
   CloudSun,
-  Activity,
-  TrendingUp,
-  Sparkles,
   ShieldAlert,
-  Radio,
+  TrendingUp,
+  BarChart3,
+  FileText,
   CheckCircle2,
-  User,
-  ExternalLink,
-  List,
+  Clock,
+  AlertTriangle,
+  ArrowRight,
+  ChevronRight,
+  Layers,
+  Compass,
+  Cpu,
   Calendar,
-  Droplets,
-  Zap,
-  ChevronRight
+  Sparkles
 } from 'lucide-react';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const { t } = useLanguage();
   const currentUser = authService.getCurrentUser();
 
   const [farms, setFarms] = useState([]);
   const [selectedFarm, setSelectedFarm] = useState(null);
-  const [indices, setIndices] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -46,261 +41,511 @@ export default function DashboardPage() {
     setIsLoading(true);
     try {
       const data = await farmService.getFarms();
-      setFarms(data);
-      if (data.length > 0) {
+      setFarms(data || []);
+      if (data && data.length > 0) {
         setSelectedFarm(data[0]);
-        setIndices(getFarmIndicesAnalysis(data[0].cropType, data[0].sowingDate));
+      } else {
+        setSelectedFarm(null);
       }
     } catch (e) {
-      console.error('Error loading farms:', e);
+      console.error('Error loading farms for dashboard:', e);
+      setFarms([]);
+      setSelectedFarm(null);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSelectFarm = (farm) => {
-    setSelectedFarm(farm);
-    setIndices(getFarmIndicesAnalysis(farm.cropType, farm.sowingDate));
+  const handleSelectFarm = (farmId) => {
+    const found = farms.find((f) => String(f.id) === String(farmId));
+    if (found) {
+      setSelectedFarm(found);
+    }
   };
 
+  // Real Database Metrics
   const totalFarms = farms.length;
-  const totalAreaHectares = farms.reduce((acc, f) => acc + (f.areaHectares || 0), 0);
-  const totalAreaAcres = farms.reduce((acc, f) => acc + (f.areaAcres || 0), 0);
-  const uniqueCrops = Array.from(new Set(farms.map((f) => f.cropType).filter(Boolean)));
-  const cropsText = uniqueCrops.length > 0 ? uniqueCrops.join(', ') : 'Soybean, Wheat';
+  const totalAreaHectares = farms.reduce((sum, f) => sum + (Number(f.areaHectares) || 0), 0);
+  const totalAreaAcres = farms.reduce((sum, f) => sum + (Number(f.areaAcres) || 0), 0);
+
+  // Check real availability for data status cards
+  const satelliteInfo = selectedFarm?.satelliteData || null;
+  const weatherInfo = selectedFarm?.weatherData || null;
+  const cropHealthInfo = selectedFarm?.cropHealthData || selectedFarm?.indices || null;
+  const riskInfo = selectedFarm?.riskData || (selectedFarm?.riskScore !== undefined ? selectedFarm?.riskScore : null);
+  const yieldInfo = selectedFarm?.yieldData || (selectedFarm?.predictedYield !== undefined ? selectedFarm?.predictedYield : null);
+  const recommendationsList = selectedFarm?.recommendations && Array.isArray(selectedFarm.recommendations) ? selectedFarm.recommendations : [];
+
+  if (isLoading) {
+    return (
+      <div style={styles.loadingContainer}>
+        <Sprout size={36} color="#16a34a" className="animate-spin" />
+        <p style={{ color: '#475569', fontSize: '0.95rem', fontWeight: '500' }}>Loading your farm dashboard...</p>
+      </div>
+    );
+  }
 
   return (
     <div style={styles.container} className="animate-fade-in">
-      {/* Executive Mission Banner */}
-      <div style={styles.topRibbon} className="hud-glow">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-          <div style={styles.avatarBadge}>
-            <User size={26} color="#22e58a" />
+      {/* Header Section */}
+      <div style={styles.headerCard}>
+        <div style={styles.headerMainText}>
+          <div style={styles.avatarIcon}>
+            <Sprout size={24} color="#15803d" />
           </div>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-              <h1 style={styles.ribbonTitle}>
-                Welcome, {currentUser?.fullName || 'Rajesh Patil'}
-              </h1>
-              <span className="badge badge-teal font-mono">
-                AGRI-AI MISSION ACTIVE
-              </span>
-            </div>
-            <p style={styles.ribbonSubtitle}>
-              Executive Farm Overview & Agro-AI Intelligence Hub • {totalFarms} Active Plots ({totalAreaHectares.toFixed(2)} Ha)
+            <h1 style={styles.welcomeTitle}>
+              Welcome, {currentUser?.fullName || 'Farmer'}
+            </h1>
+            <p style={styles.welcomeSub}>
+              Monitor your farms, satellite observations and crop analysis from one place.
             </p>
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-          {farms.length > 1 && (
+        <div style={styles.headerBtnGroup}>
+          <Link to="/farms/add" className="btn btn-primary" style={styles.greenBtn}>
+            <PlusCircle size={16} />
+            <span>+ Add Farm</span>
+          </Link>
+          <Link
+            to={selectedFarm ? `/farms/${selectedFarm.id}/digital-twin` : '/digital-twin'}
+            className="btn btn-secondary"
+            style={styles.secondaryBtn}
+          >
+            <Compass size={16} />
+            <span>View Digital Twin</span>
+          </Link>
+        </div>
+      </div>
+
+      {/* Farm Selector & Overview Section */}
+      {totalFarms > 0 ? (
+        <div style={styles.selectorBar}>
+          <div style={styles.selectorGroup}>
+            <label htmlFor="farmSelector" style={styles.selectorLabel}>
+              Selected Farm:
+            </label>
             <select
+              id="farmSelector"
               value={selectedFarm?.id || ''}
-              onChange={(e) => {
-                const f = farms.find(farm => String(farm.id) === e.target.value);
-                if (f) handleSelectFarm(f);
-              }}
-              style={styles.farmSelect}
+              onChange={(e) => handleSelectFarm(e.target.value)}
+              style={styles.farmSelectInput}
             >
-              {farms.map(f => (
-                <option key={f.id} value={f.id}>{f.farmName} ({f.cropType || 'Crop'})</option>
+              {farms.map((f) => (
+                <option key={f.id} value={f.id}>
+                  {f.farmName} ({f.cropType || 'Crop Unspecified'})
+                </option>
               ))}
             </select>
-          )}
-
-          <Link to="/digital-twin" className="cyber-gradient-btn" style={{ padding: '0.55rem 1.1rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.4rem', textDecoration: 'none' }}>
-            <Cpu size={16} />
-            <span>Launch 3D Twin 🌐</span>
-          </Link>
-
-          <Link to="/farms" style={styles.secondaryBtn}>
-            <List size={16} color="#00d9ff" />
-            <span>Farms Directory 📋</span>
-          </Link>
-
-          <Link to="/farms/add" className="btn btn-primary cyber-gradient-btn" style={styles.actionBtn}>
-            <PlusCircle size={16} />
-            <span>+ {t('add_farm_btn')}</span>
-          </Link>
-        </div>
-      </div>
-
-      {/* AI Agro-Precision Telemetry Grid */}
-      <div style={styles.telemetryGrid}>
-        {/* Card 1: Crop Vigor & NDVI Health */}
-        <div style={styles.telemetryCard} className="hud-glow">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <div style={{ ...styles.cardIconBadge, backgroundColor: 'rgba(34, 229, 138, 0.15)', borderColor: 'var(--color-primary)' }}>
-                <Sprout size={18} color="var(--color-primary)" />
-              </div>
-              <h3 style={styles.cardHeading}>Crop Vigor & NDVI Status</h3>
-            </div>
-            <span style={{ fontSize: '0.7rem', color: '#22e58a', background: 'rgba(34, 229, 138, 0.15)', padding: '2px 8px', borderRadius: '12px', fontFamily: 'JetBrains Mono, monospace' }}>
-              HEALTHY • 0.78
-            </span>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
-            <div style={styles.metricRow}>
-              <span style={styles.metricLabel}>Active Crop Plot:</span>
-              <span style={styles.metricVal}>{selectedFarm ? selectedFarm.farmName : 'Green Valley Plot'}</span>
+          <div style={styles.quickOverviewPills}>
+            <div style={styles.pillItem}>
+              <span style={styles.pillLabel}>Registered Farms:</span>
+              <span style={styles.pillValue}>{totalFarms} Plot(s)</span>
             </div>
-            <div style={styles.metricRow}>
-              <span style={styles.metricLabel}>Crop Phenology:</span>
-              <span style={styles.metricVal}>{selectedFarm ? selectedFarm.cropType : 'Soybean (Pioneer)'} • Stage R3</span>
+            <div style={styles.pillItem}>
+              <span style={styles.pillLabel}>Total Farm Area:</span>
+              <span style={styles.pillValue}>
+                {totalAreaHectares.toFixed(2)} Ha ({totalAreaAcres.toFixed(2)} Acres)
+              </span>
             </div>
-            <div style={styles.metricRow}>
-              <span style={styles.metricLabel}>Canopy Chlorophyll:</span>
-              <span style={{ color: '#22e58a', fontWeight: 'bold' }}>82.4 SPAD Index</span>
+            <div style={styles.pillItem}>
+              <span style={styles.pillLabel}>Selected Crop:</span>
+              <span style={styles.pillValue}>{selectedFarm?.cropType || 'Not specified'}</span>
             </div>
-
-            <div style={styles.aiAdvisoryBox}>
-              <Sparkles size={16} color="#22e58a" style={{ flexShrink: 0, marginTop: '2px' }} />
-              <p style={{ margin: 0, fontSize: '0.78rem', color: '#e2e8f0', lineHeight: '1.4' }}>
-                <strong style={{ color: '#22e58a' }}>AI Recommendation:</strong> Canopy density is optimal. Schedule light nitrogen top-dressing in 3 days.
-              </p>
+            <div style={styles.pillItem}>
+              <span style={styles.pillLabel}>Location:</span>
+              <span style={styles.pillValue}>
+                {selectedFarm
+                  ? `${Number(selectedFarm.latitude).toFixed(4)}° N, ${Number(selectedFarm.longitude).toFixed(4)}° E`
+                  : 'N/A'}
+              </span>
             </div>
           </div>
         </div>
+      ) : (
+        /* Empty State Component if 0 farms registered */
+        <div style={styles.emptyStateCard}>
+          <div style={styles.emptyIconCircle}>
+            <Sprout size={44} color="#16a34a" />
+          </div>
+          <h2 style={styles.emptyTitle}>No farm registered yet.</h2>
+          <p style={styles.emptyDesc}>
+            Register your farm location, plot boundary coordinates, and crop details to unlock satellite monitoring and digital twin capabilities.
+          </p>
+          <Link to="/farms/add" className="btn btn-primary" style={{ padding: '0.75rem 1.5rem', fontSize: '0.95rem' }}>
+            <PlusCircle size={18} />
+            <span>Register Your First Farm</span>
+          </Link>
+        </div>
+      )}
 
-        {/* Card 2: Micro-Climate & Irrigation */}
-        <div style={styles.telemetryCard} className="hud-glow">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <div style={{ ...styles.cardIconBadge, backgroundColor: 'rgba(0, 217, 255, 0.15)', borderColor: '#00d9ff' }}>
-                <CloudSun size={18} color="#00d9ff" />
-              </div>
-              <h3 style={styles.cardHeading}>Weather & Root Hydration</h3>
+      {/* Main Digital Twin Interactive Map Section (Primary Visual Element) */}
+      {selectedFarm && (
+        <div style={styles.mapSectionCard}>
+          <div style={styles.mapHeaderRow}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <Compass size={20} color="#15803d" />
+              <h2 style={styles.sectionTitle}>Digital Twin Field Map — {selectedFarm.farmName}</h2>
             </div>
-            <span style={{ fontSize: '0.7rem', color: '#00d9ff', background: 'rgba(0, 217, 255, 0.15)', padding: '2px 8px', borderRadius: '12px', fontFamily: 'JetBrains Mono, monospace' }}>
-              OPTIMAL
-            </span>
+            <Link
+              to={`/farms/${selectedFarm.id}/digital-twin`}
+              className="btn btn-primary"
+              style={styles.openTwinBtn}
+            >
+              <span>Open Digital Twin</span>
+              <ArrowRight size={15} />
+            </Link>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
-            <div style={styles.metricRow}>
-              <span style={styles.metricLabel}>Temperature / RH:</span>
-              <span style={styles.metricVal}>27.4°C • 65% RH</span>
-            </div>
-            <div style={styles.metricRow}>
-              <span style={styles.metricLabel}>Soil Moisture (VWC):</span>
-              <span style={styles.metricVal}>34.2% VWC (Root Zone 30cm)</span>
-            </div>
-            <div style={styles.metricRow}>
-              <span style={styles.metricLabel}>Wind Speed / Direction:</span>
-              <span style={styles.metricVal}>11 km/h • South-West</span>
+          <div style={styles.mapGrid}>
+            {/* Interactive Leaflet Boundary Map */}
+            <div style={styles.mapWrapper}>
+              <FarmMap
+                key={selectedFarm.id}
+                initialLat={Number(selectedFarm.latitude) || 18.5204}
+                initialLng={Number(selectedFarm.longitude) || 73.8567}
+                initialBoundary={selectedFarm.boundaryGeoJSON}
+                readOnly={true}
+              />
             </div>
 
-            <div style={{ ...styles.aiAdvisoryBox, borderColor: 'rgba(0, 217, 255, 0.3)', background: 'rgba(0, 217, 255, 0.08)' }}>
-              <Droplets size={16} color="#00d9ff" style={{ flexShrink: 0, marginTop: '2px' }} />
-              <p style={{ margin: 0, fontSize: '0.78rem', color: '#e2e8f0', lineHeight: '1.4' }}>
-                <strong style={{ color: '#00d9ff' }}>Irrigation Alert:</strong> Soil moisture is sufficient. Next drip cycle recommended tomorrow at 06:00 AM.
-              </p>
+            {/* Farm Database Fields Detail Sidebar */}
+            <div style={styles.mapDetailsSidebar}>
+              <h3 style={styles.sidebarHeading}>Plot Specifications</h3>
+              <div style={styles.detailsList}>
+                <div style={styles.detailRow}>
+                  <span style={styles.detailKey}>Farm Name:</span>
+                  <span style={styles.detailVal}>{selectedFarm.farmName}</span>
+                </div>
+                <div style={styles.detailRow}>
+                  <span style={styles.detailKey}>Calculated Area:</span>
+                  <span style={styles.detailVal}>
+                    {Number(selectedFarm.areaHectares || 0).toFixed(2)} Ha ({Number(selectedFarm.areaAcres || 0).toFixed(2)} Acres)
+                  </span>
+                </div>
+                <div style={styles.detailRow}>
+                  <span style={styles.detailKey}>Latitude:</span>
+                  <span style={styles.detailVal}>{Number(selectedFarm.latitude || 0).toFixed(6)}° N</span>
+                </div>
+                <div style={styles.detailRow}>
+                  <span style={styles.detailKey}>Longitude:</span>
+                  <span style={styles.detailVal}>{Number(selectedFarm.longitude || 0).toFixed(6)}° E</span>
+                </div>
+                <div style={styles.detailRow}>
+                  <span style={styles.detailKey}>Crop Type:</span>
+                  <span style={styles.detailVal}>{selectedFarm.cropType || 'Not specified'}</span>
+                </div>
+                <div style={styles.detailRow}>
+                  <span style={styles.detailKey}>Sowing Date:</span>
+                  <span style={styles.detailVal}>{selectedFarm.sowingDate || 'Not specified'}</span>
+                </div>
+                <div style={styles.detailRow}>
+                  <span style={styles.detailKey}>Boundary Data:</span>
+                  <span style={{ ...styles.detailVal, color: selectedFarm.boundaryGeoJSON ? '#16a34a' : '#d97706' }}>
+                    {selectedFarm.boundaryGeoJSON ? 'GeoJSON Defined' : 'Center Marker Only'}
+                  </span>
+                </div>
+              </div>
+
+              <div style={styles.sidebarActionBox}>
+                <Link
+                  to={`/farms/${selectedFarm.id}/digital-twin`}
+                  style={styles.fullTwinLink}
+                >
+                  <span>Explore Full Spatial Boundary &rarr;</span>
+                </Link>
+              </div>
             </div>
           </div>
         </div>
+      )}
 
-        {/* Card 3: Pest & Disease Risk Warning */}
-        <div style={styles.telemetryCard} className="hud-glow">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <div style={{ ...styles.cardIconBadge, backgroundColor: 'rgba(239, 68, 68, 0.15)', borderColor: 'rgba(239, 68, 68, 0.4)' }}>
-                <ShieldAlert size={18} color="#ffb4ab" />
+      {/* Data Status Section (6 Real Status Cards) */}
+      {selectedFarm && (
+        <div style={styles.dataStatusSection}>
+          <h2 style={styles.sectionTitle}>Analytical Modules Status</h2>
+
+          <div style={styles.statusCardsGrid}>
+            {/* 1. Satellite Data Card */}
+            <div style={styles.statusCard}>
+              <div style={styles.statusCardHeader}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Satellite size={18} color="#0284c7" />
+                  <h3 style={styles.statusCardTitle}>Satellite Data</h3>
+                </div>
+                <span style={satelliteInfo ? styles.badgeAvailable : styles.badgeAwaiting}>
+                  {satelliteInfo ? 'Available' : 'Awaiting Data'}
+                </span>
               </div>
-              <h3 style={styles.cardHeading}>Pest & Disease Intelligence</h3>
-            </div>
-            <span style={{ fontSize: '0.7rem', color: '#fbbf24', background: 'rgba(251, 191, 36, 0.15)', padding: '2px 8px', borderRadius: '12px', fontFamily: 'JetBrains Mono, monospace' }}>
-              18% LOW RISK
-            </span>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
-            <div style={styles.metricRow}>
-              <span style={styles.metricLabel}>Fungal Leaf Blight Risk:</span>
-              <span style={{ color: '#22e58a', fontWeight: 'bold' }}>Negligible (5%)</span>
-            </div>
-            <div style={styles.metricRow}>
-              <span style={styles.metricLabel}>Fall Armyworm Monitor:</span>
-              <span style={styles.metricVal}>Suppressed (Bio-Spray active)</span>
-            </div>
-            <div style={styles.metricRow}>
-              <span style={styles.metricLabel}>Thermal Canopy Variance:</span>
-              <span style={styles.metricVal}>Normal (&lt; 0.5°C variance)</span>
+              <div style={styles.statusCardBody}>
+                {satelliteInfo ? (
+                  <div style={styles.dataList}>
+                    <div><strong>Last Observation:</strong> {satelliteInfo.lastDate || 'Recent Pass'}</div>
+                    <div><strong>Cloud Cover:</strong> {satelliteInfo.cloudCover !== undefined ? `${satelliteInfo.cloudCover}%` : 'Low'}</div>
+                    <div><strong>Bands Available:</strong> Sentinel-2 L2A (10m)</div>
+                  </div>
+                ) : (
+                  <p style={styles.noDataText}>Satellite analysis is not available for this farm yet.</p>
+                )}
+              </div>
             </div>
 
-            <div style={{ ...styles.aiAdvisoryBox, borderColor: 'rgba(251, 191, 36, 0.3)', background: 'rgba(251, 191, 36, 0.08)' }}>
-              <CheckCircle2 size={16} color="#fbbf24" style={{ flexShrink: 0, marginTop: '2px' }} />
-              <p style={{ margin: 0, fontSize: '0.78rem', color: '#e2e8f0', lineHeight: '1.4' }}>
-                <strong style={{ color: '#fbbf24' }}>Pest Status:</strong> No intervention required. Pheromone trap density normal across Sub-Plot B.
-              </p>
+            {/* 2. Weather Data Card */}
+            <div style={styles.statusCard}>
+              <div style={styles.statusCardHeader}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <CloudSun size={18} color="#0284c7" />
+                  <h3 style={styles.statusCardTitle}>Weather Data</h3>
+                </div>
+                <span style={weatherInfo ? styles.badgeAvailable : styles.badgeNotConfigured}>
+                  {weatherInfo ? 'Connected' : 'Unavailable'}
+                </span>
+              </div>
+              <div style={styles.statusCardBody}>
+                {weatherInfo ? (
+                  <div style={styles.dataList}>
+                    <div><strong>Temperature:</strong> {weatherInfo.temperature}°C</div>
+                    <div><strong>Humidity:</strong> {weatherInfo.humidity}%</div>
+                    <div><strong>Rainfall:</strong> {weatherInfo.rainfall} mm</div>
+                    <div><strong>Wind Speed:</strong> {weatherInfo.windSpeed} km/h</div>
+                  </div>
+                ) : (
+                  <p style={styles.noDataText}>Weather data unavailable.</p>
+                )}
+              </div>
+            </div>
+
+            {/* 3. Crop Health Card */}
+            <div style={styles.statusCard}>
+              <div style={styles.statusCardHeader}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Sprout size={18} color="#15803d" />
+                  <h3 style={styles.statusCardTitle}>Crop Health</h3>
+                </div>
+                <span style={cropHealthInfo ? styles.badgeAvailable : styles.badgeAwaiting}>
+                  {cropHealthInfo ? 'Calculated' : 'Awaiting Data'}
+                </span>
+              </div>
+              <div style={styles.statusCardBody}>
+                {cropHealthInfo ? (
+                  <div style={styles.dataList}>
+                    {cropHealthInfo.ndvi !== undefined && <div><strong>NDVI:</strong> {cropHealthInfo.ndvi}</div>}
+                    {cropHealthInfo.ndre !== undefined && <div><strong>NDRE:</strong> {cropHealthInfo.ndre}</div>}
+                    {cropHealthInfo.savi !== undefined && <div><strong>SAVI:</strong> {cropHealthInfo.savi}</div>}
+                  </div>
+                ) : (
+                  <p style={styles.noDataText}>Awaiting satellite analysis.</p>
+                )}
+              </div>
+            </div>
+
+            {/* 4. Risk Card */}
+            <div style={styles.statusCard}>
+              <div style={styles.statusCardHeader}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <ShieldAlert size={18} color="#d97706" />
+                  <h3 style={styles.statusCardTitle}>Risk Analysis</h3>
+                </div>
+                <span style={riskInfo !== null ? styles.badgeAvailable : styles.badgePending}>
+                  {riskInfo !== null ? 'Evaluated' : 'Pending Analysis'}
+                </span>
+              </div>
+              <div style={styles.statusCardBody}>
+                {riskInfo !== null ? (
+                  <div style={styles.dataList}>
+                    <div><strong>Overall Risk Score:</strong> {typeof riskInfo === 'number' ? `${riskInfo}%` : riskInfo}</div>
+                  </div>
+                ) : (
+                  <p style={styles.noDataText}>Risk analysis pending.</p>
+                )}
+              </div>
+            </div>
+
+            {/* 5. Yield Card */}
+            <div style={styles.statusCard}>
+              <div style={styles.statusCardHeader}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <TrendingUp size={18} color="#15803d" />
+                  <h3 style={styles.statusCardTitle}>Yield Estimation</h3>
+                </div>
+                <span style={yieldInfo !== null ? styles.badgeAvailable : styles.badgePending}>
+                  {yieldInfo !== null ? 'Predicted' : 'Pending Analysis'}
+                </span>
+              </div>
+              <div style={styles.statusCardBody}>
+                {yieldInfo !== null ? (
+                  <div style={styles.dataList}>
+                    <div><strong>Predicted Yield:</strong> {typeof yieldInfo === 'number' ? `${yieldInfo} Tons/Ha` : yieldInfo}</div>
+                  </div>
+                ) : (
+                  <p style={styles.noDataText}>Yield estimation pending.</p>
+                )}
+              </div>
+            </div>
+
+            {/* 6. Recommendations Card */}
+            <div style={styles.statusCard}>
+              <div style={styles.statusCardHeader}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <FileText size={18} color="#0284c7" />
+                  <h3 style={styles.statusCardTitle}>Recommendations</h3>
+                </div>
+                <span style={recommendationsList.length > 0 ? styles.badgeAvailable : styles.badgeNoAdvisory}>
+                  {recommendationsList.length > 0 ? `${recommendationsList.length} Active` : 'No Active Advisory'}
+                </span>
+              </div>
+              <div style={styles.statusCardBody}>
+                {recommendationsList.length > 0 ? (
+                  <div style={styles.dataList}>
+                    {recommendationsList.map((rec, idx) => (
+                      <div key={idx}>• {rec.title || rec}</div>
+                    ))}
+                  </div>
+                ) : (
+                  <p style={styles.noDataText}>No recommendations generated yet.</p>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Operational Activity & Launch Grid Section */}
-      <div style={styles.sectionContainer}>
-        <h2 style={styles.sectionHeaderTitle}>AgriTwin Nexus Control Modules</h2>
+      {/* Core Platform Modules Navigation Grid */}
+      <div style={styles.modulesSection}>
+        <h2 style={styles.sectionTitle}>Platform Modules Overview</h2>
 
-        <div style={styles.quickActionsGrid}>
-          <Link to="/digital-twin" style={styles.actionCardLink}>
-            <div style={styles.actionCard}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-                <div style={{ ...styles.actionIconBadge, backgroundColor: 'rgba(34, 229, 138, 0.15)', borderColor: 'var(--color-primary)' }}>
-                  <Cpu size={22} color="var(--color-primary)" />
-                </div>
-                <div>
-                  <h4 style={styles.actionTitle}>3D Spatial Digital Twin</h4>
-                  <p style={styles.actionSub}>Full 3D WebGL topographic farm simulation & UAV patrol</p>
-                </div>
+        <div style={styles.modulesGrid}>
+          <Link to="/farms" style={styles.moduleCardLink}>
+            <div style={styles.moduleCard}>
+              <div style={styles.moduleIconBoxGreen}>
+                <Sprout size={20} color="#15803d" />
               </div>
-              <ChevronRight size={20} color="var(--color-primary)" />
+              <div style={{ flex: 1 }}>
+                <h4 style={styles.moduleTitle}>Farm Management</h4>
+                <p style={styles.moduleSub}>View, register and manage GeoJSON plot boundaries</p>
+              </div>
+              <span style={styles.moduleBadgeActive}>{farms.length > 0 ? `${farms.length} Active` : '0 Farms'}</span>
             </div>
           </Link>
 
-          <Link to="/farms" style={styles.actionCardLink}>
-            <div style={styles.actionCard}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-                <div style={{ ...styles.actionIconBadge, backgroundColor: 'rgba(0, 217, 255, 0.15)', borderColor: '#00d9ff' }}>
-                  <Sprout size={22} color="#00d9ff" />
-                </div>
-                <div>
-                  <h4 style={styles.actionTitle}>Registered Farms Directory</h4>
-                  <p style={styles.actionSub}>View & manage all registered farm plots, GPS boundaries & area</p>
-                </div>
+          <Link to={selectedFarm ? `/farms/${selectedFarm.id}/digital-twin` : '/digital-twin'} style={styles.moduleCardLink}>
+            <div style={styles.moduleCard}>
+              <div style={styles.moduleIconBoxGreen}>
+                <Compass size={20} color="#15803d" />
               </div>
-              <ChevronRight size={20} color="#00d9ff" />
+              <div style={{ flex: 1 }}>
+                <h4 style={styles.moduleTitle}>Digital Twin</h4>
+                <p style={styles.moduleSub}>Vector map geometry and spatial field specs</p>
+              </div>
+              <span style={selectedFarm ? styles.moduleBadgeActive : styles.moduleBadgePending}>
+                {selectedFarm ? 'Ready' : 'Awaiting Farm'}
+              </span>
             </div>
           </Link>
 
-          <Link to="/satellite" style={styles.actionCardLink}>
-            <div style={styles.actionCard}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-                <div style={{ ...styles.actionIconBadge, backgroundColor: 'rgba(56, 189, 248, 0.15)', borderColor: '#38bdf8' }}>
-                  <Satellite size={22} color="#38bdf8" />
-                </div>
-                <div>
-                  <h4 style={styles.actionTitle}>Satellite Remote Sensing</h4>
-                  <p style={styles.actionSub}>Copernicus Sentinel-2 multispectral RGB, NDVI & EVI analytics</p>
-                </div>
+          <Link to={selectedFarm ? `/farms/${selectedFarm.id}/satellite` : '/satellite'} style={styles.moduleCardLink}>
+            <div style={styles.moduleCard}>
+              <div style={styles.moduleIconBoxBlue}>
+                <Satellite size={20} color="#0284c7" />
               </div>
-              <ChevronRight size={20} color="#38bdf8" />
+              <div style={{ flex: 1 }}>
+                <h4 style={styles.moduleTitle}>Satellite Data</h4>
+                <p style={styles.moduleSub}>Copernicus Sentinel-2 multispectral imagery</p>
+              </div>
+              <span style={satelliteInfo ? styles.moduleBadgeActive : styles.moduleBadgePending}>
+                {satelliteInfo ? 'Available' : 'Awaiting Data'}
+              </span>
             </div>
           </Link>
 
-          <Link to="/pest-risk" style={styles.actionCardLink}>
-            <div style={styles.actionCard}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-                <div style={{ ...styles.actionIconBadge, backgroundColor: 'rgba(251, 191, 36, 0.15)', borderColor: '#fbbf24' }}>
-                  <ShieldAlert size={22} color="#fbbf24" />
-                </div>
-                <div>
-                  <h4 style={styles.actionTitle}>Pest & Disease AI Diagnostics</h4>
-                  <p style={styles.actionSub}>Real-time crop infection risk modeling & biological control</p>
-                </div>
+          <Link to={selectedFarm ? `/farms/${selectedFarm.id}/weather` : '/weather'} style={styles.moduleCardLink}>
+            <div style={styles.moduleCard}>
+              <div style={styles.moduleIconBoxBlue}>
+                <CloudSun size={20} color="#0284c7" />
               </div>
-              <ChevronRight size={20} color="#fbbf24" />
+              <div style={{ flex: 1 }}>
+                <h4 style={styles.moduleTitle}>Weather</h4>
+                <p style={styles.moduleSub}>Micro-climate forecasts and telemetry</p>
+              </div>
+              <span style={weatherInfo ? styles.moduleBadgeActive : styles.moduleBadgePending}>
+                {weatherInfo ? 'Connected' : 'Unavailable'}
+              </span>
+            </div>
+          </Link>
+
+          <Link to="/crop-health" style={styles.moduleCardLink}>
+            <div style={styles.moduleCard}>
+              <div style={styles.moduleIconBoxGreen}>
+                <Layers size={20} color="#15803d" />
+              </div>
+              <div style={{ flex: 1 }}>
+                <h4 style={styles.moduleTitle}>Crop Health</h4>
+                <p style={styles.moduleSub}>NDVI / NDRE / SAVI vegetation indices</p>
+              </div>
+              <span style={cropHealthInfo ? styles.moduleBadgeActive : styles.moduleBadgePending}>
+                {cropHealthInfo ? 'Calculated' : 'Pending Analysis'}
+              </span>
+            </div>
+          </Link>
+
+          <Link to={selectedFarm ? `/farms/${selectedFarm.id}/risk` : '/pest-risk'} style={styles.moduleCardLink}>
+            <div style={styles.moduleCard}>
+              <div style={styles.moduleIconBoxAmber}>
+                <ShieldAlert size={20} color="#d97706" />
+              </div>
+              <div style={{ flex: 1 }}>
+                <h4 style={styles.moduleTitle}>Risk Analysis</h4>
+                <p style={styles.moduleSub}>Pest and infection vulnerability model</p>
+              </div>
+              <span style={riskInfo !== null ? styles.moduleBadgeActive : styles.moduleBadgePending}>
+                {riskInfo !== null ? 'Evaluated' : 'Pending Analysis'}
+              </span>
+            </div>
+          </Link>
+
+          <Link to={selectedFarm ? `/farms/${selectedFarm.id}/yield` : '/yield'} style={styles.moduleCardLink}>
+            <div style={styles.moduleCard}>
+              <div style={styles.moduleIconBoxGreen}>
+                <TrendingUp size={20} color="#15803d" />
+              </div>
+              <div style={{ flex: 1 }}>
+                <h4 style={styles.moduleTitle}>Yield Estimation</h4>
+                <p style={styles.moduleSub}>Crop production & yield model</p>
+              </div>
+              <span style={yieldInfo !== null ? styles.moduleBadgeActive : styles.moduleBadgePending}>
+                {yieldInfo !== null ? 'Predicted' : 'Pending Analysis'}
+              </span>
+            </div>
+          </Link>
+
+          <Link to="/recommendations" style={styles.moduleCardLink}>
+            <div style={styles.moduleCard}>
+              <div style={styles.moduleIconBoxBlue}>
+                <FileText size={20} color="#0284c7" />
+              </div>
+              <div style={{ flex: 1 }}>
+                <h4 style={styles.moduleTitle}>Recommendations</h4>
+                <p style={styles.moduleSub}>Agronomic advisory rules engine</p>
+              </div>
+              <span style={recommendationsList.length > 0 ? styles.moduleBadgeActive : styles.moduleBadgePending}>
+                {recommendationsList.length > 0 ? `${recommendationsList.length} Active` : 'No Active Advisory'}
+              </span>
+            </div>
+          </Link>
+
+          <Link to="/reports" style={styles.moduleCardLink}>
+            <div style={styles.moduleCard}>
+              <div style={styles.moduleIconBoxGreen}>
+                <BarChart3 size={20} color="#15803d" />
+              </div>
+              <div style={{ flex: 1 }}>
+                <h4 style={styles.moduleTitle}>Reports</h4>
+                <p style={styles.moduleSub}>Exportable spatial & crop summary reports</p>
+              </div>
+              <span style={styles.moduleBadgeActive}>Ready</span>
             </div>
           </Link>
         </div>
@@ -313,182 +558,444 @@ const styles = {
   container: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '1.5rem'
+    gap: '1.75rem',
+    maxWidth: '1280px',
+    margin: '0 auto',
+    padding: '0.5rem'
   },
-  topRibbon: {
-    backgroundColor: 'rgba(15, 28, 22, 0.85)',
-    backdropFilter: 'blur(20px)',
+  loadingContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: '350px',
+    gap: '1rem'
+  },
+  headerCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: '16px',
+    border: '1px solid #e2e8f0',
+    padding: '1.5rem 1.75rem',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '1.5rem',
+    flexWrap: 'wrap',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+  },
+  headerMainText: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '1rem'
+  },
+  avatarIcon: {
+    width: '46px',
+    height: '46px',
+    borderRadius: '12px',
+    backgroundColor: '#dcfce7',
+    border: '1px solid #bbf7d0',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0
+  },
+  welcomeTitle: {
+    fontSize: '1.45rem',
+    fontWeight: '800',
+    color: '#0f172a',
+    margin: 0,
+    lineHeight: '1.2'
+  },
+  welcomeSub: {
+    fontSize: '0.875rem',
+    color: '#475569',
+    margin: '3px 0 0 0'
+  },
+  headerBtnGroup: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem'
+  },
+  greenBtn: {
+    backgroundColor: '#15803d',
+    color: '#ffffff',
+    border: 'none',
+    padding: '0.625rem 1.15rem',
+    borderRadius: '10px',
+    fontSize: '0.85rem',
+    fontWeight: '600',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.4rem',
+    textDecoration: 'none'
+  },
+  secondaryBtn: {
+    backgroundColor: '#f1f5f9',
+    color: '#0f172a',
+    border: '1px solid #cbd5e1',
+    padding: '0.625rem 1.15rem',
+    borderRadius: '10px',
+    fontSize: '0.85rem',
+    fontWeight: '600',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.4rem',
+    textDecoration: 'none'
+  },
+  selectorBar: {
+    backgroundColor: '#ffffff',
+    borderRadius: '16px',
+    border: '1px solid #e2e8f0',
     padding: '1.25rem 1.5rem',
-    borderRadius: '20px',
-    border: '1px solid var(--color-border)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+  },
+  selectorGroup: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.85rem'
+  },
+  selectorLabel: {
+    fontSize: '0.9rem',
+    fontWeight: '700',
+    color: '#0f172a',
+    whiteSpace: 'nowrap'
+  },
+  farmSelectInput: {
+    padding: '0.55rem 1rem',
+    fontSize: '0.875rem',
+    borderRadius: '10px',
+    border: '1px solid #cbd5e1',
+    backgroundColor: '#f8fafc',
+    color: '#0f172a',
+    fontWeight: '600',
+    minWidth: '240px',
+    cursor: 'pointer'
+  },
+  quickOverviewPills: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '1.5rem',
+    flexWrap: 'wrap',
+    paddingTop: '0.85rem',
+    borderTop: '1px solid #f1f5f9'
+  },
+  pillItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.4rem',
+    fontSize: '0.825rem'
+  },
+  pillLabel: {
+    color: '#64748b'
+  },
+  pillValue: {
+    fontWeight: '700',
+    color: '#0f172a'
+  },
+  emptyStateCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: '16px',
+    border: '1px solid #e2e8f0',
+    borderTop: '4px solid #16a34a',
+    padding: '3.5rem 2rem',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    textAlign: 'center',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+  },
+  emptyIconCircle: {
+    width: '72px',
+    height: '72px',
+    borderRadius: '50%',
+    backgroundColor: '#dcfce7',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: '1rem'
+  },
+  emptyTitle: {
+    fontSize: '1.5rem',
+    fontWeight: '800',
+    color: '#0f172a',
+    margin: '0 0 0.5rem 0'
+  },
+  emptyDesc: {
+    fontSize: '0.95rem',
+    color: '#475569',
+    maxWidth: '560px',
+    lineHeight: '1.5',
+    margin: '0 0 1.5rem 0'
+  },
+  mapSectionCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: '16px',
+    border: '1px solid #e2e8f0',
+    padding: '1.5rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1.25rem',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+  },
+  mapHeaderRow: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: '1rem',
     flexWrap: 'wrap'
   },
-  avatarBadge: {
-    width: '46px',
-    height: '46px',
-    borderRadius: '14px',
-    backgroundColor: 'rgba(34, 229, 138, 0.15)',
-    border: '1px solid rgba(34, 229, 138, 0.3)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0
-  },
-  ribbonTitle: {
-    fontSize: '1.35rem',
+  sectionTitle: {
+    fontSize: '1.2rem',
     fontWeight: '800',
+    color: '#0f172a',
+    margin: 0
+  },
+  openTwinBtn: {
+    backgroundColor: '#15803d',
     color: '#ffffff',
-    margin: 0,
-    fontFamily: 'Space Grotesk, sans-serif'
-  },
-  ribbonSubtitle: {
-    fontSize: '0.82rem',
-    color: 'var(--color-text-secondary)',
-    margin: 0,
-    marginTop: '3px'
-  },
-  farmSelect: {
-    padding: '0.55rem 0.85rem',
-    fontSize: '0.8rem',
-    borderRadius: '12px',
-    backgroundColor: 'rgba(23, 34, 29, 0.8)',
-    border: '1px solid var(--color-border)',
-    color: '#ffffff',
-    cursor: 'pointer'
-  },
-  secondaryBtn: {
-    padding: '0.55rem 1rem',
-    fontSize: '0.8rem',
-    borderRadius: '12px',
-    backgroundColor: 'rgba(0, 217, 255, 0.12)',
-    border: '1px solid rgba(0, 217, 255, 0.3)',
-    color: '#00d9ff',
+    padding: '0.5rem 1rem',
+    fontSize: '0.825rem',
+    borderRadius: '8px',
+    textDecoration: 'none',
     display: 'flex',
     alignItems: 'center',
     gap: '0.4rem',
-    textDecoration: 'none',
-    fontWeight: '700',
-    fontFamily: 'Space Grotesk, sans-serif'
+    fontWeight: '600'
   },
-  actionBtn: {
-    padding: '0.55rem 1.1rem',
-    fontSize: '0.8rem'
-  },
-  telemetryGrid: {
+  mapGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
     gap: '1.25rem'
   },
-  telemetryCard: {
-    backgroundColor: 'rgba(15, 27, 21, 0.72)',
-    backdropFilter: 'blur(20px)',
-    border: '1px solid rgba(34, 229, 138, 0.18)',
-    borderRadius: '20px',
+  mapWrapper: {
+    height: '380px',
+    borderRadius: '12px',
+    overflow: 'hidden',
+    border: '1px solid #cbd5e1'
+  },
+  mapDetailsSidebar: {
+    backgroundColor: '#f8fafc',
+    borderRadius: '12px',
+    border: '1px solid #e2e8f0',
     padding: '1.25rem',
     display: 'flex',
-    flexDirection: 'column'
+    flexDirection: 'column',
+    gap: '1rem'
   },
-  cardIconBadge: {
-    width: '36px',
-    height: '36px',
-    borderRadius: '10px',
-    border: '1px solid',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0
-  },
-  cardHeading: {
+  sidebarHeading: {
     fontSize: '1.05rem',
     fontWeight: '700',
-    color: '#ffffff',
+    color: '#0f172a',
     margin: 0,
-    fontFamily: 'Space Grotesk, sans-serif'
+    paddingBottom: '0.5rem',
+    borderBottom: '1px solid #e2e8f0'
   },
-  metricRow: {
+  detailsList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.65rem'
+  },
+  detailRow: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    fontSize: '0.82rem',
-    paddingBottom: '0.4rem',
-    borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
+    fontSize: '0.85rem'
   },
-  metricLabel: {
-    color: 'var(--color-text-secondary)'
+  detailKey: {
+    color: '#64748b'
   },
-  metricVal: {
-    fontWeight: '600',
-    color: '#ffffff',
-    fontFamily: 'Space Grotesk, sans-serif'
+  detailVal: {
+    fontWeight: '700',
+    color: '#0f172a'
   },
-  aiAdvisoryBox: {
-    marginTop: '0.5rem',
-    padding: '0.75rem',
-    borderRadius: '12px',
-    backgroundColor: 'rgba(34, 229, 138, 0.08)',
-    border: '1px solid rgba(34, 229, 138, 0.25)',
+  sidebarActionBox: {
+    marginTop: 'auto',
+    paddingTop: '0.85rem',
+    borderTop: '1px solid #e2e8f0'
+  },
+  fullTwinLink: {
+    fontSize: '0.85rem',
+    fontWeight: '700',
+    color: '#15803d',
+    textDecoration: 'none'
+  },
+  dataStatusSection: {
     display: 'flex',
-    alignItems: 'flex-start',
-    gap: '0.6rem'
+    flexDirection: 'column',
+    gap: '1rem'
   },
-  sectionContainer: {
+  statusCardsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+    gap: '1.25rem'
+  },
+  statusCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: '14px',
+    border: '1px solid #e2e8f0',
+    padding: '1.25rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+  },
+  statusCardHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingBottom: '0.5rem',
+    borderBottom: '1px solid #f1f5f9'
+  },
+  statusCardTitle: {
+    fontSize: '0.95rem',
+    fontWeight: '700',
+    color: '#0f172a',
+    margin: 0
+  },
+  statusCardBody: {
+    fontSize: '0.85rem',
+    color: '#334155'
+  },
+  dataList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.35rem',
+    lineHeight: '1.4'
+  },
+  noDataText: {
+    fontSize: '0.825rem',
+    color: '#64748b',
+    fontStyle: 'italic',
+    margin: 0
+  },
+  badgeAvailable: {
+    backgroundColor: '#dcfce7',
+    color: '#15803d',
+    padding: '0.2rem 0.55rem',
+    borderRadius: '6px',
+    fontSize: '0.725rem',
+    fontWeight: '700'
+  },
+  badgeAwaiting: {
+    backgroundColor: '#e0f2fe',
+    color: '#0369a1',
+    padding: '0.2rem 0.55rem',
+    borderRadius: '6px',
+    fontSize: '0.725rem',
+    fontWeight: '700'
+  },
+  badgeNotConfigured: {
+    backgroundColor: '#f1f5f9',
+    color: '#64748b',
+    padding: '0.2rem 0.55rem',
+    borderRadius: '6px',
+    fontSize: '0.725rem',
+    fontWeight: '700'
+  },
+  badgePending: {
+    backgroundColor: '#fef3c7',
+    color: '#b45309',
+    padding: '0.2rem 0.55rem',
+    borderRadius: '6px',
+    fontSize: '0.725rem',
+    fontWeight: '700'
+  },
+  badgeNoAdvisory: {
+    backgroundColor: '#f1f5f9',
+    color: '#64748b',
+    padding: '0.2rem 0.55rem',
+    borderRadius: '6px',
+    fontSize: '0.725rem',
+    fontWeight: '700'
+  },
+  modulesSection: {
     display: 'flex',
     flexDirection: 'column',
     gap: '1rem',
     marginTop: '0.5rem'
   },
-  sectionHeaderTitle: {
-    fontSize: '1.15rem',
-    fontWeight: '700',
-    color: '#ffffff',
-    margin: 0,
-    fontFamily: 'Space Grotesk, sans-serif'
-  },
-  quickActionsGrid: {
+  modulesGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-    gap: '1.25rem'
+    gap: '1rem'
   },
-  actionCardLink: {
+  moduleCardLink: {
     textDecoration: 'none'
   },
-  actionCard: {
+  moduleCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: '12px',
+    border: '1px solid #e2e8f0',
+    padding: '1rem 1.15rem',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '1.25rem',
-    background: 'rgba(15, 27, 21, 0.72)',
-    backdropFilter: 'blur(20px)',
-    border: '1px solid rgba(34, 229, 138, 0.18)',
-    borderRadius: '18px',
-    cursor: 'pointer',
-    transition: 'all 0.15s ease'
+    gap: '0.85rem',
+    transition: 'all 0.15s ease',
+    boxShadow: '0 1px 2px rgba(0,0,0,0.03)'
   },
-  actionIconBadge: {
-    width: '44px',
-    height: '44px',
-    borderRadius: '12px',
-    border: '1px solid',
+  moduleIconBoxGreen: {
+    width: '38px',
+    height: '38px',
+    borderRadius: '10px',
+    backgroundColor: '#dcfce7',
+    border: '1px solid #bbf7d0',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0
   },
-  actionTitle: {
-    fontSize: '0.95rem',
-    fontWeight: '700',
-    color: '#ffffff',
-    margin: 0,
-    fontFamily: 'Space Grotesk, sans-serif'
+  moduleIconBoxBlue: {
+    width: '38px',
+    height: '38px',
+    borderRadius: '10px',
+    backgroundColor: '#e0f2fe',
+    border: '1px solid #bae6fd',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0
   },
-  actionSub: {
-    fontSize: '0.76rem',
-    color: '#94a3b8',
-    margin: '3px 0 0 0',
-    lineHeight: '1.3'
+  moduleIconBoxAmber: {
+    width: '38px',
+    height: '38px',
+    borderRadius: '10px',
+    backgroundColor: '#fef3c7',
+    border: '1px solid #fde68a',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0
+  },
+  moduleTitle: {
+    fontSize: '0.9rem',
+    fontWeight: '700',
+    color: '#0f172a',
+    margin: 0
+  },
+  moduleSub: {
+    fontSize: '0.75rem',
+    color: '#64748b',
+    margin: '2px 0 0 0'
+  },
+  moduleBadgeActive: {
+    backgroundColor: '#dcfce7',
+    color: '#15803d',
+    padding: '0.2rem 0.5rem',
+    borderRadius: '6px',
+    fontSize: '0.7rem',
+    fontWeight: '700',
+    whiteSpace: 'nowrap'
+  },
+  moduleBadgePending: {
+    backgroundColor: '#f1f5f9',
+    color: '#64748b',
+    padding: '0.2rem 0.5rem',
+    borderRadius: '6px',
+    fontSize: '0.7rem',
+    fontWeight: '700',
+    whiteSpace: 'nowrap'
   }
 };
