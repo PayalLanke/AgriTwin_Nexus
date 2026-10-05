@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authService } from '../services/authService';
-import { Sprout, User, Mail, Phone, Lock, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Sprout, User, Mail, Phone, Lock, CheckCircle2, ArrowRight, ArrowLeft } from 'lucide-react';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -61,6 +61,11 @@ export default function RegisterPage() {
       <div style={styles.ambientAuraBottom}></div>
 
       <div style={styles.card} className="animate-fade-in">
+        <Link to="/" style={styles.backHomeBtn}>
+          <ArrowLeft size={16} />
+          <span>Back to Homepage</span>
+        </Link>
+
         {/* Branding Header */}
         <div style={styles.brandHeader}>
           <div style={styles.logoBadge} className="hud-glow">
@@ -241,6 +246,15 @@ const styles = {
     flexDirection: 'column',
     gap: '1.25rem',
     zIndex: 10
+  },
+  backHomeBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.375rem',
+    color: '#94a3b8',
+    textDecoration: 'none',
+    fontSize: '0.8rem',
+    fontWeight: '600'
   },
   brandHeader: {
     textAlign: 'center',
