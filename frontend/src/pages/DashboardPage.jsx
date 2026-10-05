@@ -79,8 +79,8 @@ export default function DashboardPage() {
   if (isLoading) {
     return (
       <div style={styles.loadingContainer}>
-        <Sprout size={36} color="#16a34a" className="animate-spin" />
-        <p style={{ color: '#475569', fontSize: '0.95rem', fontWeight: '500' }}>Loading your farm dashboard...</p>
+        <Sprout size={40} color="#22e58a" className="animate-spin" />
+        <p style={{ color: '#94a3b8', fontSize: '0.95rem', fontWeight: '500' }}>Loading your farm dashboard...</p>
       </div>
     );
   }
@@ -91,7 +91,7 @@ export default function DashboardPage() {
       <div style={styles.headerCard}>
         <div style={styles.headerMainText}>
           <div style={styles.avatarIcon}>
-            <Sprout size={24} color="#15803d" />
+            <Sprout size={24} color="#22e58a" />
           </div>
           <div>
             <h1 style={styles.welcomeTitle}>
@@ -133,7 +133,7 @@ export default function DashboardPage() {
               style={styles.farmSelectInput}
             >
               {farms.map((f) => (
-                <option key={f.id} value={f.id}>
+                <option key={f.id} value={f.id} style={{ backgroundColor: '#0f172a', color: '#ffffff' }}>
                   {f.farmName} ({f.cropType || 'Crop Unspecified'})
                 </option>
               ))}
@@ -169,7 +169,7 @@ export default function DashboardPage() {
         /* Empty State Component if 0 farms registered */
         <div style={styles.emptyStateCard}>
           <div style={styles.emptyIconCircle}>
-            <Sprout size={44} color="#16a34a" />
+            <Sprout size={44} color="#22e58a" />
           </div>
           <h2 style={styles.emptyTitle}>No farm registered yet.</h2>
           <p style={styles.emptyDesc}>
@@ -187,7 +187,7 @@ export default function DashboardPage() {
         <div style={styles.mapSectionCard}>
           <div style={styles.mapHeaderRow}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-              <Compass size={20} color="#15803d" />
+              <Compass size={20} color="#22e58a" />
               <h2 style={styles.sectionTitle}>Digital Twin Field Map — {selectedFarm.farmName}</h2>
             </div>
             <Link
@@ -244,7 +244,7 @@ export default function DashboardPage() {
                 </div>
                 <div style={styles.detailRow}>
                   <span style={styles.detailKey}>Boundary Data:</span>
-                  <span style={{ ...styles.detailVal, color: selectedFarm.boundaryGeoJSON ? '#16a34a' : '#d97706' }}>
+                  <span style={{ ...styles.detailVal, color: selectedFarm.boundaryGeoJSON ? '#22e58a' : '#fbbf24' }}>
                     {selectedFarm.boundaryGeoJSON ? 'GeoJSON Defined' : 'Center Marker Only'}
                   </span>
                 </div>
@@ -273,7 +273,7 @@ export default function DashboardPage() {
             <div style={styles.statusCard}>
               <div style={styles.statusCardHeader}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Satellite size={18} color="#0284c7" />
+                  <Satellite size={18} color="#00d9ff" />
                   <h3 style={styles.statusCardTitle}>Satellite Data</h3>
                 </div>
                 <span style={satelliteInfo ? styles.badgeAvailable : styles.badgeAwaiting}>
@@ -297,7 +297,7 @@ export default function DashboardPage() {
             <div style={styles.statusCard}>
               <div style={styles.statusCardHeader}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <CloudSun size={18} color="#0284c7" />
+                  <CloudSun size={18} color="#00d9ff" />
                   <h3 style={styles.statusCardTitle}>Weather Data</h3>
                 </div>
                 <span style={weatherInfo ? styles.badgeAvailable : styles.badgeNotConfigured}>
@@ -322,7 +322,7 @@ export default function DashboardPage() {
             <div style={styles.statusCard}>
               <div style={styles.statusCardHeader}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Sprout size={18} color="#15803d" />
+                  <Sprout size={18} color="#22e58a" />
                   <h3 style={styles.statusCardTitle}>Crop Health</h3>
                 </div>
                 <span style={cropHealthInfo ? styles.badgeAvailable : styles.badgeAwaiting}>
@@ -346,7 +346,7 @@ export default function DashboardPage() {
             <div style={styles.statusCard}>
               <div style={styles.statusCardHeader}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <ShieldAlert size={18} color="#d97706" />
+                  <ShieldAlert size={18} color="#fbbf24" />
                   <h3 style={styles.statusCardTitle}>Risk Analysis</h3>
                 </div>
                 <span style={riskInfo !== null ? styles.badgeAvailable : styles.badgePending}>
@@ -368,7 +368,7 @@ export default function DashboardPage() {
             <div style={styles.statusCard}>
               <div style={styles.statusCardHeader}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <TrendingUp size={18} color="#15803d" />
+                  <TrendingUp size={18} color="#22e58a" />
                   <h3 style={styles.statusCardTitle}>Yield Estimation</h3>
                 </div>
                 <span style={yieldInfo !== null ? styles.badgeAvailable : styles.badgePending}>
@@ -390,7 +390,7 @@ export default function DashboardPage() {
             <div style={styles.statusCard}>
               <div style={styles.statusCardHeader}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <FileText size={18} color="#0284c7" />
+                  <FileText size={18} color="#00d9ff" />
                   <h3 style={styles.statusCardTitle}>Recommendations</h3>
                 </div>
                 <span style={recommendationsList.length > 0 ? styles.badgeAvailable : styles.badgeNoAdvisory}>
@@ -421,7 +421,7 @@ export default function DashboardPage() {
           <Link to="/farms" style={styles.moduleCardLink}>
             <div style={styles.moduleCard}>
               <div style={styles.moduleIconBoxGreen}>
-                <Sprout size={20} color="#15803d" />
+                <Sprout size={20} color="#22e58a" />
               </div>
               <div style={{ flex: 1 }}>
                 <h4 style={styles.moduleTitle}>Farm Management</h4>
@@ -434,7 +434,7 @@ export default function DashboardPage() {
           <Link to={selectedFarm ? `/farms/${selectedFarm.id}/digital-twin` : '/digital-twin'} style={styles.moduleCardLink}>
             <div style={styles.moduleCard}>
               <div style={styles.moduleIconBoxGreen}>
-                <Compass size={20} color="#15803d" />
+                <Compass size={20} color="#22e58a" />
               </div>
               <div style={{ flex: 1 }}>
                 <h4 style={styles.moduleTitle}>Digital Twin</h4>
@@ -449,7 +449,7 @@ export default function DashboardPage() {
           <Link to={selectedFarm ? `/farms/${selectedFarm.id}/satellite` : '/satellite'} style={styles.moduleCardLink}>
             <div style={styles.moduleCard}>
               <div style={styles.moduleIconBoxBlue}>
-                <Satellite size={20} color="#0284c7" />
+                <Satellite size={20} color="#00d9ff" />
               </div>
               <div style={{ flex: 1 }}>
                 <h4 style={styles.moduleTitle}>Satellite Data</h4>
@@ -464,7 +464,7 @@ export default function DashboardPage() {
           <Link to={selectedFarm ? `/farms/${selectedFarm.id}/weather` : '/weather'} style={styles.moduleCardLink}>
             <div style={styles.moduleCard}>
               <div style={styles.moduleIconBoxBlue}>
-                <CloudSun size={20} color="#0284c7" />
+                <CloudSun size={20} color="#00d9ff" />
               </div>
               <div style={{ flex: 1 }}>
                 <h4 style={styles.moduleTitle}>Weather</h4>
@@ -479,7 +479,7 @@ export default function DashboardPage() {
           <Link to="/crop-health" style={styles.moduleCardLink}>
             <div style={styles.moduleCard}>
               <div style={styles.moduleIconBoxGreen}>
-                <Layers size={20} color="#15803d" />
+                <Layers size={20} color="#22e58a" />
               </div>
               <div style={{ flex: 1 }}>
                 <h4 style={styles.moduleTitle}>Crop Health</h4>
@@ -494,7 +494,7 @@ export default function DashboardPage() {
           <Link to={selectedFarm ? `/farms/${selectedFarm.id}/risk` : '/pest-risk'} style={styles.moduleCardLink}>
             <div style={styles.moduleCard}>
               <div style={styles.moduleIconBoxAmber}>
-                <ShieldAlert size={20} color="#d97706" />
+                <ShieldAlert size={20} color="#fbbf24" />
               </div>
               <div style={{ flex: 1 }}>
                 <h4 style={styles.moduleTitle}>Risk Analysis</h4>
@@ -509,7 +509,7 @@ export default function DashboardPage() {
           <Link to={selectedFarm ? `/farms/${selectedFarm.id}/yield` : '/yield'} style={styles.moduleCardLink}>
             <div style={styles.moduleCard}>
               <div style={styles.moduleIconBoxGreen}>
-                <TrendingUp size={20} color="#15803d" />
+                <TrendingUp size={20} color="#22e58a" />
               </div>
               <div style={{ flex: 1 }}>
                 <h4 style={styles.moduleTitle}>Yield Estimation</h4>
@@ -524,7 +524,7 @@ export default function DashboardPage() {
           <Link to="/recommendations" style={styles.moduleCardLink}>
             <div style={styles.moduleCard}>
               <div style={styles.moduleIconBoxBlue}>
-                <FileText size={20} color="#0284c7" />
+                <FileText size={20} color="#00d9ff" />
               </div>
               <div style={{ flex: 1 }}>
                 <h4 style={styles.moduleTitle}>Recommendations</h4>
@@ -539,7 +539,7 @@ export default function DashboardPage() {
           <Link to="/reports" style={styles.moduleCardLink}>
             <div style={styles.moduleCard}>
               <div style={styles.moduleIconBoxGreen}>
-                <BarChart3 size={20} color="#15803d" />
+                <BarChart3 size={20} color="#22e58a" />
               </div>
               <div style={{ flex: 1 }}>
                 <h4 style={styles.moduleTitle}>Reports</h4>
@@ -572,16 +572,17 @@ const styles = {
     gap: '1rem'
   },
   headerCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(15, 27, 21, 0.85)',
+    backdropFilter: 'blur(20px)',
     borderRadius: '16px',
-    border: '1px solid #e2e8f0',
+    border: '1px solid rgba(34, 229, 138, 0.25)',
     padding: '1.5rem 1.75rem',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: '1.5rem',
     flexWrap: 'wrap',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
   },
   headerMainText: {
     display: 'flex',
@@ -592,8 +593,8 @@ const styles = {
     width: '46px',
     height: '46px',
     borderRadius: '12px',
-    backgroundColor: '#dcfce7',
-    border: '1px solid #bbf7d0',
+    backgroundColor: 'rgba(34, 229, 138, 0.15)',
+    border: '1px solid rgba(34, 229, 138, 0.3)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -602,13 +603,13 @@ const styles = {
   welcomeTitle: {
     fontSize: '1.45rem',
     fontWeight: '800',
-    color: '#0f172a',
+    color: '#ffffff',
     margin: 0,
     lineHeight: '1.2'
   },
   welcomeSub: {
     fontSize: '0.875rem',
-    color: '#475569',
+    color: '#94a3b8',
     margin: '3px 0 0 0'
   },
   headerBtnGroup: {
@@ -617,7 +618,7 @@ const styles = {
     gap: '0.75rem'
   },
   greenBtn: {
-    backgroundColor: '#15803d',
+    backgroundColor: '#16a34a',
     color: '#ffffff',
     border: 'none',
     padding: '0.625rem 1.15rem',
@@ -630,9 +631,9 @@ const styles = {
     textDecoration: 'none'
   },
   secondaryBtn: {
-    backgroundColor: '#f1f5f9',
-    color: '#0f172a',
-    border: '1px solid #cbd5e1',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    color: '#ffffff',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
     padding: '0.625rem 1.15rem',
     borderRadius: '10px',
     fontSize: '0.85rem',
@@ -643,14 +644,15 @@ const styles = {
     textDecoration: 'none'
   },
   selectorBar: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(15, 27, 21, 0.85)',
+    backdropFilter: 'blur(20px)',
     borderRadius: '16px',
-    border: '1px solid #e2e8f0',
+    border: '1px solid rgba(34, 229, 138, 0.25)',
     padding: '1.25rem 1.5rem',
     display: 'flex',
     flexDirection: 'column',
     gap: '1rem',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
   },
   selectorGroup: {
     display: 'flex',
@@ -660,16 +662,16 @@ const styles = {
   selectorLabel: {
     fontSize: '0.9rem',
     fontWeight: '700',
-    color: '#0f172a',
+    color: '#ffffff',
     whiteSpace: 'nowrap'
   },
   farmSelectInput: {
     padding: '0.55rem 1rem',
     fontSize: '0.875rem',
     borderRadius: '10px',
-    border: '1px solid #cbd5e1',
-    backgroundColor: '#f8fafc',
-    color: '#0f172a',
+    border: '1px solid rgba(34, 229, 138, 0.3)',
+    backgroundColor: 'rgba(23, 34, 29, 0.9)',
+    color: '#ffffff',
     fontWeight: '600',
     minWidth: '240px',
     cursor: 'pointer'
@@ -680,7 +682,7 @@ const styles = {
     gap: '1.5rem',
     flexWrap: 'wrap',
     paddingTop: '0.85rem',
-    borderTop: '1px solid #f1f5f9'
+    borderTop: '1px solid rgba(255, 255, 255, 0.1)'
   },
   pillItem: {
     display: 'flex',
@@ -689,29 +691,31 @@ const styles = {
     fontSize: '0.825rem'
   },
   pillLabel: {
-    color: '#64748b'
+    color: '#94a3b8'
   },
   pillValue: {
     fontWeight: '700',
-    color: '#0f172a'
+    color: '#ffffff'
   },
   emptyStateCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(15, 27, 21, 0.85)',
+    backdropFilter: 'blur(20px)',
     borderRadius: '16px',
-    border: '1px solid #e2e8f0',
-    borderTop: '4px solid #16a34a',
+    border: '1px solid rgba(34, 229, 138, 0.3)',
+    borderTop: '4px solid #22e58a',
     padding: '3.5rem 2rem',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     textAlign: 'center',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
   },
   emptyIconCircle: {
     width: '72px',
     height: '72px',
     borderRadius: '50%',
-    backgroundColor: '#dcfce7',
+    backgroundColor: 'rgba(34, 229, 138, 0.15)',
+    border: '1px solid rgba(34, 229, 138, 0.3)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -720,25 +724,26 @@ const styles = {
   emptyTitle: {
     fontSize: '1.5rem',
     fontWeight: '800',
-    color: '#0f172a',
+    color: '#ffffff',
     margin: '0 0 0.5rem 0'
   },
   emptyDesc: {
     fontSize: '0.95rem',
-    color: '#475569',
+    color: '#94a3b8',
     maxWidth: '560px',
     lineHeight: '1.5',
     margin: '0 0 1.5rem 0'
   },
   mapSectionCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(15, 27, 21, 0.85)',
+    backdropFilter: 'blur(20px)',
     borderRadius: '16px',
-    border: '1px solid #e2e8f0',
+    border: '1px solid rgba(34, 229, 138, 0.25)',
     padding: '1.5rem',
     display: 'flex',
     flexDirection: 'column',
     gap: '1.25rem',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
   },
   mapHeaderRow: {
     display: 'flex',
@@ -750,11 +755,11 @@ const styles = {
   sectionTitle: {
     fontSize: '1.2rem',
     fontWeight: '800',
-    color: '#0f172a',
+    color: '#ffffff',
     margin: 0
   },
   openTwinBtn: {
-    backgroundColor: '#15803d',
+    backgroundColor: '#16a34a',
     color: '#ffffff',
     padding: '0.5rem 1rem',
     fontSize: '0.825rem',
@@ -774,12 +779,12 @@ const styles = {
     height: '380px',
     borderRadius: '12px',
     overflow: 'hidden',
-    border: '1px solid #cbd5e1'
+    border: '1px solid rgba(34, 229, 138, 0.3)'
   },
   mapDetailsSidebar: {
-    backgroundColor: '#f8fafc',
+    backgroundColor: 'rgba(7, 14, 11, 0.6)',
     borderRadius: '12px',
-    border: '1px solid #e2e8f0',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
     padding: '1.25rem',
     display: 'flex',
     flexDirection: 'column',
@@ -788,10 +793,10 @@ const styles = {
   sidebarHeading: {
     fontSize: '1.05rem',
     fontWeight: '700',
-    color: '#0f172a',
+    color: '#ffffff',
     margin: 0,
     paddingBottom: '0.5rem',
-    borderBottom: '1px solid #e2e8f0'
+    borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
   },
   detailsList: {
     display: 'flex',
@@ -805,21 +810,21 @@ const styles = {
     fontSize: '0.85rem'
   },
   detailKey: {
-    color: '#64748b'
+    color: '#94a3b8'
   },
   detailVal: {
     fontWeight: '700',
-    color: '#0f172a'
+    color: '#ffffff'
   },
   sidebarActionBox: {
     marginTop: 'auto',
     paddingTop: '0.85rem',
-    borderTop: '1px solid #e2e8f0'
+    borderTop: '1px solid rgba(255, 255, 255, 0.1)'
   },
   fullTwinLink: {
     fontSize: '0.85rem',
     fontWeight: '700',
-    color: '#15803d',
+    color: '#22e58a',
     textDecoration: 'none'
   },
   dataStatusSection: {
@@ -833,31 +838,32 @@ const styles = {
     gap: '1.25rem'
   },
   statusCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(15, 27, 21, 0.85)',
+    backdropFilter: 'blur(20px)',
     borderRadius: '14px',
-    border: '1px solid #e2e8f0',
+    border: '1px solid rgba(34, 229, 138, 0.2)',
     padding: '1.25rem',
     display: 'flex',
     flexDirection: 'column',
     gap: '0.75rem',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.3)'
   },
   statusCardHeader: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingBottom: '0.5rem',
-    borderBottom: '1px solid #f1f5f9'
+    borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
   },
   statusCardTitle: {
     fontSize: '0.95rem',
     fontWeight: '700',
-    color: '#0f172a',
+    color: '#ffffff',
     margin: 0
   },
   statusCardBody: {
     fontSize: '0.85rem',
-    color: '#334155'
+    color: '#cbd5e1'
   },
   dataList: {
     display: 'flex',
@@ -867,45 +873,50 @@ const styles = {
   },
   noDataText: {
     fontSize: '0.825rem',
-    color: '#64748b',
+    color: '#94a3b8',
     fontStyle: 'italic',
     margin: 0
   },
   badgeAvailable: {
-    backgroundColor: '#dcfce7',
-    color: '#15803d',
+    backgroundColor: 'rgba(34, 229, 138, 0.15)',
+    color: '#22e58a',
+    border: '1px solid rgba(34, 229, 138, 0.3)',
     padding: '0.2rem 0.55rem',
     borderRadius: '6px',
     fontSize: '0.725rem',
     fontWeight: '700'
   },
   badgeAwaiting: {
-    backgroundColor: '#e0f2fe',
-    color: '#0369a1',
+    backgroundColor: 'rgba(0, 217, 255, 0.15)',
+    color: '#00d9ff',
+    border: '1px solid rgba(0, 217, 255, 0.3)',
     padding: '0.2rem 0.55rem',
     borderRadius: '6px',
     fontSize: '0.725rem',
     fontWeight: '700'
   },
   badgeNotConfigured: {
-    backgroundColor: '#f1f5f9',
-    color: '#64748b',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    color: '#94a3b8',
+    border: '1px solid rgba(255, 255, 255, 0.15)',
     padding: '0.2rem 0.55rem',
     borderRadius: '6px',
     fontSize: '0.725rem',
     fontWeight: '700'
   },
   badgePending: {
-    backgroundColor: '#fef3c7',
-    color: '#b45309',
+    backgroundColor: 'rgba(251, 191, 36, 0.15)',
+    color: '#fbbf24',
+    border: '1px solid rgba(251, 191, 36, 0.3)',
     padding: '0.2rem 0.55rem',
     borderRadius: '6px',
     fontSize: '0.725rem',
     fontWeight: '700'
   },
   badgeNoAdvisory: {
-    backgroundColor: '#f1f5f9',
-    color: '#64748b',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    color: '#94a3b8',
+    border: '1px solid rgba(255, 255, 255, 0.15)',
     padding: '0.2rem 0.55rem',
     borderRadius: '6px',
     fontSize: '0.725rem',
@@ -926,22 +937,23 @@ const styles = {
     textDecoration: 'none'
   },
   moduleCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'rgba(15, 27, 21, 0.85)',
+    backdropFilter: 'blur(20px)',
     borderRadius: '12px',
-    border: '1px solid #e2e8f0',
+    border: '1px solid rgba(34, 229, 138, 0.2)',
     padding: '1rem 1.15rem',
     display: 'flex',
     alignItems: 'center',
     gap: '0.85rem',
     transition: 'all 0.15s ease',
-    boxShadow: '0 1px 2px rgba(0,0,0,0.03)'
+    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)'
   },
   moduleIconBoxGreen: {
     width: '38px',
     height: '38px',
     borderRadius: '10px',
-    backgroundColor: '#dcfce7',
-    border: '1px solid #bbf7d0',
+    backgroundColor: 'rgba(34, 229, 138, 0.15)',
+    border: '1px solid rgba(34, 229, 138, 0.3)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -951,8 +963,8 @@ const styles = {
     width: '38px',
     height: '38px',
     borderRadius: '10px',
-    backgroundColor: '#e0f2fe',
-    border: '1px solid #bae6fd',
+    backgroundColor: 'rgba(0, 217, 255, 0.15)',
+    border: '1px solid rgba(0, 217, 255, 0.3)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -962,8 +974,8 @@ const styles = {
     width: '38px',
     height: '38px',
     borderRadius: '10px',
-    backgroundColor: '#fef3c7',
-    border: '1px solid #fde68a',
+    backgroundColor: 'rgba(251, 191, 36, 0.15)',
+    border: '1px solid rgba(251, 191, 36, 0.3)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -972,17 +984,18 @@ const styles = {
   moduleTitle: {
     fontSize: '0.9rem',
     fontWeight: '700',
-    color: '#0f172a',
+    color: '#ffffff',
     margin: 0
   },
   moduleSub: {
     fontSize: '0.75rem',
-    color: '#64748b',
+    color: '#94a3b8',
     margin: '2px 0 0 0'
   },
   moduleBadgeActive: {
-    backgroundColor: '#dcfce7',
-    color: '#15803d',
+    backgroundColor: 'rgba(34, 229, 138, 0.15)',
+    color: '#22e58a',
+    border: '1px solid rgba(34, 229, 138, 0.3)',
     padding: '0.2rem 0.5rem',
     borderRadius: '6px',
     fontSize: '0.7rem',
@@ -990,8 +1003,9 @@ const styles = {
     whiteSpace: 'nowrap'
   },
   moduleBadgePending: {
-    backgroundColor: '#f1f5f9',
-    color: '#64748b',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    color: '#94a3b8',
+    border: '1px solid rgba(255, 255, 255, 0.15)',
     padding: '0.2rem 0.5rem',
     borderRadius: '6px',
     fontSize: '0.7rem',
