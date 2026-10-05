@@ -21,20 +21,20 @@ export default function AdminRegisterPage() {
     setError('');
     setSuccess('');
 
-    if (!fullName.trim()) {
-      setError('Please enter your full name.');
+    if (!fullName.trim() || fullName.trim().length < 2) {
+      setError('Please enter your official full name (minimum 2 characters).');
       return;
     }
     if (!email || !email.includes('@')) {
       setError('Please enter a valid official email address.');
       return;
     }
-    if (!mobileNumber || mobileNumber.length < 10) {
-      setError('Please enter a valid mobile phone number.');
+    if (!mobileNumber || mobileNumber.replace(/\D/g, '').length < 10) {
+      setError('Please enter a valid 10-digit mobile number.');
       return;
     }
-    if (!password || password.length < 6) {
-      setError('Password must be at least 6 characters long.');
+    if (!password || password.length < 8) {
+      setError('Password must be at least 8 characters long.');
       return;
     }
     if (password !== confirmPassword) {
@@ -95,7 +95,7 @@ export default function AdminRegisterPage() {
               <input
                 id="fullName"
                 type="text"
-                placeholder="Dr. Anand Sharma"
+                placeholder="Enter official full name"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 style={styles.inputWithIcon}
@@ -111,7 +111,7 @@ export default function AdminRegisterPage() {
               <input
                 id="email"
                 type="email"
-                placeholder="admin.anand@agritwin.com"
+                placeholder="Enter official email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 style={styles.inputWithIcon}
@@ -127,7 +127,7 @@ export default function AdminRegisterPage() {
               <input
                 id="mobileNumber"
                 type="tel"
-                placeholder="+91 98123 45678"
+                placeholder="Enter 10-digit mobile number"
                 value={mobileNumber}
                 onChange={(e) => setMobileNumber(e.target.value)}
                 style={styles.inputWithIcon}
@@ -161,7 +161,7 @@ export default function AdminRegisterPage() {
               <input
                 id="password"
                 type="password"
-                placeholder="At least 6 characters"
+                placeholder="Min. 8 characters"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 style={styles.inputWithIcon}

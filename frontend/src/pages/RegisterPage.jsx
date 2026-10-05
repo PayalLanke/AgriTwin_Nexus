@@ -20,20 +20,20 @@ export default function RegisterPage() {
     setError('');
     setSuccess('');
 
-    if (!fullName.trim()) {
-      setError('Please enter your full name.');
+    if (!fullName.trim() || fullName.trim().length < 2) {
+      setError('Please enter your full name (minimum 2 characters).');
       return;
     }
     if (!email || !email.includes('@')) {
       setError('Please enter a valid email address.');
       return;
     }
-    if (!mobileNumber || mobileNumber.length < 10) {
-      setError('Please enter a valid mobile number.');
+    if (!mobileNumber || mobileNumber.replace(/\D/g, '').length < 10) {
+      setError('Please enter a valid 10-digit mobile number.');
       return;
     }
-    if (!password || password.length < 6) {
-      setError('Password must be at least 6 characters long.');
+    if (!password || password.length < 8) {
+      setError('Password must be at least 8 characters long.');
       return;
     }
     if (password !== confirmPassword) {
@@ -92,7 +92,7 @@ export default function RegisterPage() {
               <input
                 id="fullName"
                 type="text"
-                placeholder="Ramesh Kumar"
+                placeholder="Enter your full name"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 style={styles.input}
@@ -108,7 +108,7 @@ export default function RegisterPage() {
               <input
                 id="email"
                 type="email"
-                placeholder="ramesh@agritwin.com"
+                placeholder="Enter email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 style={styles.input}
@@ -124,7 +124,7 @@ export default function RegisterPage() {
               <input
                 id="mobileNumber"
                 type="tel"
-                placeholder="+91 98765 43210"
+                placeholder="Enter 10-digit mobile number"
                 value={mobileNumber}
                 onChange={(e) => setMobileNumber(e.target.value)}
                 style={styles.input}
@@ -141,7 +141,7 @@ export default function RegisterPage() {
                 <input
                   id="password"
                   type="password"
-                  placeholder="Min. 6 chars"
+                  placeholder="Min. 8 characters"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   style={styles.input}
@@ -157,7 +157,7 @@ export default function RegisterPage() {
                 <input
                   id="confirmPassword"
                   type="password"
-                  placeholder="Re-enter"
+                  placeholder="Re-enter password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   style={styles.input}
