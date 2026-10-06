@@ -72,7 +72,7 @@ export default function AdminDashboardPage() {
 
   const loadAdminData = async () => {
     try {
-      const allFarms = await farmService.getFarms();
+      const allFarms = await farmService.getAllFarmsForAdmin();
       setFarms(allFarms);
 
       const storedFarmers = JSON.parse(localStorage.getItem('agritwin_users') || '[]');

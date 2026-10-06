@@ -21,15 +21,17 @@ export const CROP_OPTIONS = [
 
 export const farmService = {
   /**
-   * Fetch all registered farms for active farmer
+   * Fetch all registered farms for active logged-in farmer (Enforces User Isolation)
    */
   async getFarms() {
+    let allFarms = [];
     try {
       if (await isBackendAvailable()) {
         const response = await apiClient.get('/farms/');
         if (Array.isArray(response.data) && response.data.length > 0) {
-          return response.data.map(f => ({
+          allFarms = response.data.map(f => ({
             id: f.id || f.farm_id,
+            userId: f.userId || f.user_id || 'usr_demo_1',
             farmName: f.farmName || f.farm_name || f.name,
             cropType: f.cropType || f.crop_type || 'Soybean',
             sowingDate: f.sowingDate || f.sowing_date || new Date().toISOString().split('T')[0],
@@ -46,14 +48,51 @@ export const farmService = {
       console.warn('Backend API unavailable, fetching from local storage:', e);
     }
 
-    // Fallback to localStorage
-    await new Promise((resolve) => setTimeout(resolve, 150));
+    if (allFarms.length === 0) {
+      const farmsStr = localStorage.getItem(FARMS_STORAGE_KEY);
+      if (farmsStr) {
+        try {
+          allFarms = JSON.parse(farmsStr);
+        } catch (e) {
+          console.error('Failed to parse farms from storage:', e);
+        }
+      }
+    }
+
+    // Filter farms so each farmer only sees their own farms
+    const currentUserStr = localStorage.getItem('agritwin_current_user');
+    if (currentUserStr) {
+      try {
+        const currentUser = JSON.parse(currentUserStr);
+        if (currentUser && currentUser.id) {
+          const userFarms = allFarms.filter(
+            f => String(f.userId) === String(currentUser.id) || String(f.userId) === String(currentUser.email)
+          );
+          // If demo user 'usr_demo_1' or legacy farm without userId, allow if user has no farms yet
+          if (userFarms.length > 0) {
+            return userFarms;
+          } else if (currentUser.id === 'usr_demo_1') {
+            return allFarms;
+          }
+          return [];
+        }
+      } catch (err) {
+        console.error('Error filtering user farms:', err);
+      }
+    }
+
+    return allFarms;
+  },
+
+  /**
+   * Fetch all farms across all farmers for Platform Administrator Oversight
+   */
+  async getAllFarmsForAdmin() {
     const farmsStr = localStorage.getItem(FARMS_STORAGE_KEY);
     if (!farmsStr) return [];
     try {
       return JSON.parse(farmsStr);
     } catch (e) {
-      console.error('Failed to parse farms from storage:', e);
       return [];
     }
   },
@@ -115,9 +154,18 @@ export const farmService = {
 
     const areaStats = calculatePolygonArea(farmPayload.boundary);
 
+    const currentUserStr = localStorage.getItem('agritwin_current_user');
+    let activeUserId = 'usr_default';
+    if (currentUserStr) {
+      try {
+        const u = JSON.parse(currentUserStr);
+        if (u && u.id) activeUserId = u.id;
+      } catch (err) {}
+    }
+
     const newFarm = {
       id: 'farm_' + Date.now(),
-      userId: farmPayload.userId || 'usr_default',
+      userId: farmPayload.userId || activeUserId,
       farmName: farmPayload.farmName.trim(),
       cropType: farmPayload.cropType,
       sowingDate: farmPayload.sowingDate,
@@ -153,9 +201,13 @@ export const farmService = {
     }
 
     // Always persist locally for offline reliability
-    const existingFarms = await this.getFarms();
-    existingFarms.unshift(newFarm);
-    localStorage.setItem(FARMS_STORAGE_KEY, JSON.stringify(existingFarms));
+    const allFarmsStr = localStorage.getItem(FARMS_STORAGE_KEY);
+    let allFarms = [];
+    if (allFarmsStr) {
+      try { allFarms = JSON.parse(allFarmsStr); } catch (e) {}
+    }
+    allFarms.unshift(newFarm);
+    localStorage.setItem(FARMS_STORAGE_KEY, JSON.stringify(allFarms));
 
     return newFarm;
   },
