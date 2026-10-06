@@ -17,6 +17,8 @@ import {
   MapPin
 } from 'lucide-react';
 
+import { cropDetectionEngine } from '../services/cropDetectionEngine';
+
 export default function AddFarmPage() {
   const navigate = useNavigate();
   const { t } = useLanguage();
@@ -28,6 +30,7 @@ export default function AddFarmPage() {
   const [latitude, setLatitude] = useState(18.5204);
   const [longitude, setLongitude] = useState(73.8567);
   const [boundaryGeoJSON, setBoundaryGeoJSON] = useState(null);
+  const [detectedCropInfo, setDetectedCropInfo] = useState(null);
   const [showGeoJsonModal, setShowGeoJsonModal] = useState(false);
 
   const [error, setError] = useState('');
@@ -38,9 +41,21 @@ export default function AddFarmPage() {
     setLongitude(newLng);
   };
 
-  const handleBoundaryChange = (geojson) => {
+  const handleBoundaryChange = async (geojson) => {
     setBoundaryGeoJSON(geojson);
     if (error) setError('');
+
+    if (geojson) {
+      try {
+        const detection = await cropDetectionEngine.detectCropFromSpectralSignature(geojson, latitude, longitude);
+        setDetectedCropInfo(detection);
+        if (!cropType) {
+          setCropType(detection.detectedCropName);
+        }
+      } catch (err) {
+        console.error('Crop detection error:', err);
+      }
+    }
   };
 
   const calculatedAreaHa = boundaryGeoJSON?.properties?.areaHectares || 0;
@@ -165,6 +180,35 @@ export default function AddFarmPage() {
                   ))}
                 </select>
               </div>
+
+              {/* AI Satellite Crop Detection Result Banner */}
+              {detectedCropInfo && (
+                <div style={{
+                  marginTop: '0.65rem',
+                  padding: '0.65rem 0.85rem',
+                  borderRadius: '12px',
+                  background: 'rgba(0, 217, 255, 0.08)',
+                  border: '1px solid rgba(0, 217, 255, 0.3)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.35rem'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: '0.725rem', fontWeight: '700', color: '#00d9ff', fontFamily: 'Space Grotesk, sans-serif' }}>
+                      🛰️ SATELLITE SPECTRAL CROP CLASSIFIER
+                    </span>
+                    <span style={{ fontSize: '0.7rem', fontWeight: '700', color: '#22e58a', background: 'rgba(34, 229, 138, 0.15)', padding: '0.15rem 0.45rem', borderRadius: '9999px' }}>
+                      {detectedCropInfo.confidenceScore}% MATCH
+                    </span>
+                  </div>
+                  <p style={{ margin: 0, fontSize: '0.825rem', color: '#f1f5f9', fontWeight: '600' }}>
+                    Detected Crop: <span style={{ color: '#22e58a' }}>{detectedCropInfo.detectedCropName}</span>
+                  </p>
+                  <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                    Optimal Temp Range: {detectedCropInfo.optimalTempRange} &bull; Stage: {detectedCropInfo.criticalStage}
+                  </span>
+                </div>
+              )}
             </div>
 
             <div style={styles.formGroup}>

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { farmService } from '../services/farmService';
 import { authService } from '../services/authService';
 import { useLanguage } from '../context/LanguageContext';
+import { cropDetectionEngine } from '../services/cropDetectionEngine';
 import FarmMap from '../components/FarmMap';
 import {
   Sprout,
@@ -263,6 +264,39 @@ export default function DashboardPage() {
                   </span>
                 </div>
               </div>
+
+              {/* Dynamic Detected Crop Parameter & Sensitivity Box */}
+              {(() => {
+                const profile = cropDetectionEngine.getCropProfile(selectedFarm.cropType);
+                return (
+                  <div style={{
+                    marginTop: '0.85rem',
+                    padding: '0.75rem 0.85rem',
+                    borderRadius: '12px',
+                    background: 'rgba(34, 229, 138, 0.05)',
+                    border: '1px solid rgba(34, 229, 138, 0.25)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.35rem'
+                  }}>
+                    <span style={{ fontSize: '0.7rem', fontWeight: '700', color: '#22e58a', fontFamily: 'Space Grotesk, sans-serif' }}>
+                      🌱 DETECTED CROP SPECIFICATIONS
+                    </span>
+                    <div style={{ fontSize: '0.8rem', color: '#cbd5e1', display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Optimal Temp Window:</span>
+                      <b style={{ color: '#00d9ff' }}>{profile.optimalTempMin}°C – {profile.optimalTempMax}°C</b>
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: '#cbd5e1', display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Water Requirement:</span>
+                      <b style={{ color: '#ffffff' }}>{profile.waterRequirementMm}</b>
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: '#cbd5e1', display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Critical Stage:</span>
+                      <b style={{ color: '#fbbf24' }}>{profile.criticalStage}</b>
+                    </div>
+                  </div>
+                );
+              })()}
 
               <div style={styles.sidebarActionBox}>
                 <Link

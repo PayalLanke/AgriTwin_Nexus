@@ -7,16 +7,29 @@ import { calculatePolygonArea } from '../utils/geoUtils';
 const FARMS_STORAGE_KEY = 'agritwin_farms';
 
 export const CROP_OPTIONS = [
-  'Wheat',
-  'Rice / Paddy',
-  'Maize (Corn)',
-  'Cotton',
-  'Sugarcane',
-  'Soybean',
-  'Potato',
-  'Tomato',
-  'Mustard',
-  'Pulses / Gram'
+  'Papaya (पपई / पपीता)',
+  'Guinea Grass / Fodder Grass (गिनी गवत / चारा पिके)',
+  'Mango (आंबा / आम)',
+  'Custard Apple / Seetaphal (सीताफळ)',
+  'Wheat (गहू / गेहूं)',
+  'Rice / Paddy (भात / चावल)',
+  'Sugarcane (ऊस / गन्ना)',
+  'Cotton (कापूस / कपास)',
+  'Soybean (सोयाबीन)',
+  'Maize / Corn (मका / मक्का)',
+  'Turmeric (हळद / हल्दी)',
+  'Onion (कांदा / प्याज)',
+  'Pomegranate (डाळिंब / अनार)',
+  'Grapes (द्राक्षे / अंगूर)',
+  'Banana (केळी / केला)',
+  'Chickpea / Harbara (हरभरा / चना)',
+  'Tur / Pigeon Pea (तूर / अरहर)',
+  'Bajra / Pearl Millet (बाजरी / बाजरा)',
+  'Jowar / Sorghum (ज्वारी / ज्वार)',
+  'Groundnut (भुईमूग / मूंगफली)',
+  'Citrus / Sweet Lime (मोसंबी / संत्रा)',
+  'Tomato (टोमॅटो / टमाटर)',
+  'Chili (मिरची / मिर्च)'
 ];
 
 export const farmService = {

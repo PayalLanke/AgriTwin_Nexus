@@ -14,6 +14,7 @@ import {
 export default function RecommendationsPage() {
   const [farms, setFarms] = useState([]);
   const [selectedFarm, setSelectedFarm] = useState(null);
+  const [primaryFactor, setPrimaryFactor] = useState(null);
   const [advisories, setAdvisories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -31,8 +32,9 @@ export default function RecommendationsPage() {
         const indices = getFarmIndicesAnalysis(data[0].cropType, data[0].sowingDate);
         const weather = await weatherService.getFarmWeather(data[0].latitude, data[0].longitude);
         const risks = await riskEngine.evaluateFarmRisks(data[0], indices, weather);
-        const advs = await recommendationEngine.getAdvisories(data[0], indices, weather, risks);
-        setAdvisories(advs);
+        const res = await recommendationEngine.getAdvisories(data[0], indices, weather, risks);
+        setPrimaryFactor(res.primaryAffectingFactor);
+        setAdvisories(res.advisories);
       }
     } catch (e) {
       console.error(e);
@@ -49,8 +51,9 @@ export default function RecommendationsPage() {
       const indices = getFarmIndicesAnalysis(f.cropType, f.sowingDate);
       const weather = await weatherService.getFarmWeather(f.latitude, f.longitude);
       const risks = await riskEngine.evaluateFarmRisks(f, indices, weather);
-      const advs = await recommendationEngine.getAdvisories(f, indices, weather, risks);
-      setAdvisories(advs);
+      const res = await recommendationEngine.getAdvisories(f, indices, weather, risks);
+      setPrimaryFactor(res.primaryAffectingFactor);
+      setAdvisories(res.advisories);
       setIsLoading(false);
     }
   };
@@ -82,14 +85,14 @@ export default function RecommendationsPage() {
       <div style={styles.header}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <h1 style={styles.title}>Autonomous Agronomic Action Protocols</h1>
+            <h1 style={styles.title}>Agronomic Interventions & Recommendations</h1>
             <span style={styles.rulesBadge}>
               <Cpu size={12} color="#22e58a" />
-              DIGITAL TWIN EXPERT SYSTEM ACTIVE
+              SATELLITE & AI DIAGNOSTIC ENGINE ACTIVE
             </span>
           </div>
           <p style={styles.subtitle}>
-            Machine-generated precision interventions balancing canopy transpiration, soil VWC depletion, and fungal pressure.
+            Field-specific nutrient prescriptions, fertilizer dosages, and diagnostic action plans for your farm boundary.
           </p>
         </div>
 
@@ -118,76 +121,133 @@ export default function RecommendationsPage() {
           <p style={{ color: '#94a3b8', margin: 0 }}>Register a farm boundary to receive precision agronomic advisories.</p>
         </div>
       ) : (
-        <div style={styles.advisoriesList}>
-          {advisories.map((adv) => {
-            const isCompleted = adv.status === 'Completed';
-            const isHigh = adv.priority === 'High';
-            return (
-              <div
-                key={adv.id}
-                style={{
-                  ...styles.advCard,
-                  borderColor: isCompleted
-                    ? 'rgba(255, 255, 255, 0.08)'
-                    : isHigh
-                    ? 'rgba(245, 158, 11, 0.4)'
-                    : 'rgba(34, 229, 138, 0.25)',
-                  opacity: isCompleted ? 0.6 : 1
-                }}
-              >
-                <div style={styles.advHeader}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
-                    <div style={{
-                      ...styles.advIconCircle,
-                      background: isCompleted ? 'rgba(255, 255, 255, 0.05)' : isHigh ? 'rgba(245, 158, 11, 0.15)' : 'rgba(34, 229, 138, 0.15)',
-                      borderColor: isCompleted ? 'rgba(255, 255, 255, 0.1)' : isHigh ? 'rgba(245, 158, 11, 0.35)' : 'rgba(34, 229, 138, 0.35)'
-                    }}>
-                      <Sparkles size={18} color={isCompleted ? '#64748b' : isHigh ? '#fbbf24' : '#22e58a'} />
-                    </div>
-                    <div>
-                      <span style={styles.advCategory}>
-                        {adv.category} PROTOCOL
-                      </span>
-                      <h3 style={styles.advTitle}>{adv.title}</h3>
-                    </div>
-                  </div>
-
-                  <span style={{
-                    ...styles.priorityBadge,
-                    background: isCompleted ? 'rgba(255, 255, 255, 0.05)' : isHigh ? 'rgba(245, 158, 11, 0.15)' : 'rgba(34, 229, 138, 0.12)',
-                    color: isCompleted ? '#94a3b8' : isHigh ? '#fbbf24' : '#22e58a',
-                    border: `1px solid ${isCompleted ? 'rgba(255, 255, 255, 0.15)' : isHigh ? 'rgba(245, 158, 11, 0.35)' : 'rgba(34, 229, 138, 0.35)'}`
-                  }}>
-                    {isCompleted ? 'ACTION DISPATCHED' : `${adv.priority.toUpperCase()} PRIORITY`}
-                  </span>
-                </div>
-
-                <p style={styles.advDesc}>{adv.description}</p>
-
-                <div style={styles.advFooter}>
-                  <div style={styles.impactBadge}>
-                    <ShieldCheck size={16} color="#22e58a" />
-                    <span>Expected Agronomic ROI: <b style={{ color: '#22e58a' }}>{adv.impact}</b></span>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => toggleAdvisoryStatus(adv.id)}
-                    style={{
-                      ...styles.actionBtn,
-                      background: isCompleted ? 'rgba(255, 255, 255, 0.05)' : 'linear-gradient(135deg, #22e58a 0%, #00d9ff 100%)',
-                      color: isCompleted ? '#94a3b8' : '#070e0b',
-                      border: isCompleted ? '1px solid rgba(255, 255, 255, 0.15)' : 'none'
-                    }}
-                  >
-                    <CheckCircle2 size={16} />
-                    <span>{isCompleted ? 'Re-open Prescription' : 'Execute & Dispatch UAV'}</span>
-                  </button>
-                </div>
+        <>
+          {/* Primary Affecting Health Factor Diagnostic Card */}
+          {primaryFactor && (
+            <div style={styles.factorCard}>
+              <div style={styles.factorHeader}>
+                <span style={styles.factorTag}>PRIMARY AFFECTING CROP HEALTH FACTOR</span>
+                <span style={{
+                  ...styles.severityBadge,
+                  background: primaryFactor.severity === 'High' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+                  color: primaryFactor.severity === 'High' ? '#ef4444' : '#f59e0b',
+                  borderColor: primaryFactor.severity === 'High' ? 'rgba(239, 68, 68, 0.4)' : 'rgba(245, 158, 11, 0.4)'
+                }}>
+                  {primaryFactor.severity.toUpperCase()} SEVERITY
+                </span>
               </div>
-            );
-          })}
-        </div>
+
+              <h2 style={styles.factorTitle}>{primaryFactor.factorName}</h2>
+              <p style={styles.factorCause}><b>Root Cause & Diagnostic:</b> {primaryFactor.cause}</p>
+              <div style={styles.factorImpact}>
+                <ShieldCheck size={16} color="#22e58a" />
+                <span><b>Yield Impact Warning:</b> {primaryFactor.impactLevel}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Advisories List */}
+          <div style={styles.advisoriesList}>
+            {advisories.map((adv) => {
+              const isCompleted = adv.status === 'Completed';
+              const isHigh = adv.priority === 'High';
+              return (
+                <div
+                  key={adv.id}
+                  style={{
+                    ...styles.advCard,
+                    borderColor: isCompleted
+                      ? 'rgba(255, 255, 255, 0.08)'
+                      : isHigh
+                      ? 'rgba(245, 158, 11, 0.4)'
+                      : 'rgba(34, 229, 138, 0.25)',
+                    opacity: isCompleted ? 0.6 : 1
+                  }}
+                >
+                  <div style={styles.advHeader}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
+                      <div style={{
+                        ...styles.advIconCircle,
+                        background: isCompleted ? 'rgba(255, 255, 255, 0.05)' : isHigh ? 'rgba(245, 158, 11, 0.15)' : 'rgba(34, 229, 138, 0.15)',
+                        borderColor: isCompleted ? 'rgba(255, 255, 255, 0.1)' : isHigh ? 'rgba(245, 158, 11, 0.35)' : 'rgba(34, 229, 138, 0.35)'
+                      }}>
+                        <Sparkles size={18} color={isCompleted ? '#64748b' : isHigh ? '#fbbf24' : '#22e58a'} />
+                      </div>
+                      <div>
+                        <span style={styles.advCategory}>{adv.category}</span>
+                        <h3 style={styles.advTitle}>{adv.title}</h3>
+                      </div>
+                    </div>
+
+                    <span style={{
+                      ...styles.priorityBadge,
+                      background: isCompleted ? 'rgba(255, 255, 255, 0.05)' : isHigh ? 'rgba(245, 158, 11, 0.15)' : 'rgba(34, 229, 138, 0.12)',
+                      color: isCompleted ? '#94a3b8' : isHigh ? '#fbbf24' : '#22e58a',
+                      border: `1px solid ${isCompleted ? 'rgba(255, 255, 255, 0.15)' : isHigh ? 'rgba(245, 158, 11, 0.35)' : 'rgba(34, 229, 138, 0.35)'}`
+                    }}>
+                      {isCompleted ? 'PROTOCOL COMPLETED' : `${adv.priority.toUpperCase()} PRIORITY`}
+                    </span>
+                  </div>
+
+                  <p style={styles.advDesc}>{adv.description}</p>
+
+                  {/* Specific Fertilizer / Treatment Table */}
+                  {adv.recommendedFertilizers && (
+                    <div style={styles.fertilizerBox}>
+                      <h4 style={styles.fertHeader}>Recommended Fertilizers & Specific Dosages:</h4>
+                      <div style={styles.fertGrid}>
+                        {adv.recommendedFertilizers.map((f, i) => (
+                          <div key={i} style={styles.fertItem}>
+                            <span style={styles.fertName}>{f.name}</span>
+                            <span style={styles.fertDose}>{f.dose}</span>
+                            <span style={styles.fertMethod}>{f.method}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {adv.recommendedTreatment && (
+                    <div style={styles.fertilizerBox}>
+                      <h4 style={styles.fertHeader}>Recommended Treatments & Dosages:</h4>
+                      <div style={styles.fertGrid}>
+                        {adv.recommendedTreatment.map((t, i) => (
+                          <div key={i} style={styles.fertItem}>
+                            <span style={styles.fertName}>{t.name}</span>
+                            <span style={styles.fertDose}>{t.dose}</span>
+                            <span style={styles.fertMethod}>{t.useCase}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {adv.precautions && (
+                    <p style={styles.precautionText}>
+                      <b>Mandatory Precautions:</b> {adv.precautions}
+                    </p>
+                  )}
+
+                  <div style={styles.advFooter}>
+                    <button
+                      type="button"
+                      onClick={() => toggleAdvisoryStatus(adv.id)}
+                      style={{
+                        ...styles.actionBtn,
+                        background: isCompleted ? 'rgba(255, 255, 255, 0.05)' : 'linear-gradient(135deg, #22e58a 0%, #00d9ff 100%)',
+                        color: isCompleted ? '#94a3b8' : '#070e0b',
+                        border: isCompleted ? '1px solid rgba(255, 255, 255, 0.15)' : 'none'
+                      }}
+                    >
+                      <CheckCircle2 size={16} />
+                      <span>{isCompleted ? 'Re-open Prescription' : 'Mark Protocol Completed'}</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
       )}
     </div>
   );
@@ -365,5 +425,113 @@ const styles = {
     fontFamily: 'Space Grotesk, sans-serif',
     cursor: 'pointer',
     transition: 'all 0.2s ease'
+  },
+  factorCard: {
+    background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(15, 27, 21, 0.95) 100%)',
+    border: '1px solid rgba(245, 158, 11, 0.35)',
+    borderRadius: '18px',
+    padding: '1.5rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
+  },
+  factorHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: '0.5rem'
+  },
+  factorTag: {
+    fontSize: '0.7rem',
+    fontWeight: '700',
+    color: '#fbbf24',
+    letterSpacing: '0.08em',
+    fontFamily: 'Space Grotesk, sans-serif'
+  },
+  severityBadge: {
+    padding: '0.2rem 0.65rem',
+    borderRadius: '9999px',
+    fontSize: '0.7rem',
+    fontWeight: '700',
+    border: '1px solid',
+    fontFamily: 'Space Grotesk, sans-serif'
+  },
+  factorTitle: {
+    margin: 0,
+    fontSize: '1.35rem',
+    fontWeight: '800',
+    color: '#ffffff',
+    fontFamily: 'Space Grotesk, sans-serif'
+  },
+  factorCause: {
+    margin: 0,
+    fontSize: '0.875rem',
+    color: '#cbd5e1',
+    lineHeight: '1.5'
+  },
+  factorImpact: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    fontSize: '0.825rem',
+    color: '#22e58a',
+    marginTop: '0.25rem'
+  },
+  fertilizerBox: {
+    background: 'rgba(9, 18, 14, 0.75)',
+    border: '1px solid rgba(34, 229, 138, 0.2)',
+    borderRadius: '14px',
+    padding: '1rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem'
+  },
+  fertHeader: {
+    margin: 0,
+    fontSize: '0.825rem',
+    color: '#22e58a',
+    fontWeight: '700',
+    fontFamily: 'Space Grotesk, sans-serif'
+  },
+  fertGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+    gap: '0.75rem'
+  },
+  fertItem: {
+    background: 'rgba(255, 255, 255, 0.03)',
+    border: '1px solid rgba(255, 255, 255, 0.07)',
+    borderRadius: '10px',
+    padding: '0.75rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem'
+  },
+  fertName: {
+    fontSize: '0.875rem',
+    fontWeight: '700',
+    color: '#ffffff',
+    fontFamily: 'Space Grotesk, sans-serif'
+  },
+  fertDose: {
+    fontSize: '0.8rem',
+    color: '#00d9ff',
+    fontWeight: '600'
+  },
+  fertMethod: {
+    fontSize: '0.75rem',
+    color: '#94a3b8'
+  },
+  precautionText: {
+    margin: 0,
+    fontSize: '0.825rem',
+    color: '#fbbf24',
+    lineHeight: '1.45',
+    background: 'rgba(245, 158, 11, 0.08)',
+    border: '1px solid rgba(245, 158, 11, 0.25)',
+    borderRadius: '10px',
+    padding: '0.65rem 0.85rem'
   }
 };
