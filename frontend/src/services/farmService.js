@@ -209,26 +209,35 @@ export const farmService = {
       localStorage.setItem(FARMS_STORAGE_KEY, JSON.stringify(DEFAULT_DEMO_FARMS));
     }
 
-    // Filter farms so each farmer sees their own farms (or default demo farms)
-    let resultFarms = allFarms;
+    // Strict user isolation filter: each farmer sees ONLY their registered farms
+    let resultFarms = [];
     const currentUserStr = localStorage.getItem('agritwin_current_user');
     if (currentUserStr) {
       try {
         const currentUser = JSON.parse(currentUserStr);
-        if (currentUser && currentUser.id) {
-          const userFarms = allFarms.filter(
-            f => String(f.userId) === String(currentUser.id) || String(f.userId) === String(currentUser.email)
-          );
-          if (userFarms.length > 0) {
-            resultFarms = userFarms;
-          } else {
-            // Fall back to default demo farms so user always sees initial farms
-            resultFarms = allFarms;
-          }
+        if (currentUser && (currentUser.id || currentUser.email)) {
+          const userIdStr = String(currentUser.id || '');
+          const userEmailStr = String(currentUser.email || '').toLowerCase();
+
+          const isDemoUser = userIdStr === 'usr_demo_1' || userEmailStr === 'farmer@agritwin.com';
+
+          resultFarms = allFarms.filter((f) => {
+            const farmUserId = String(f.userId || '');
+            if (farmUserId === userIdStr || farmUserId.toLowerCase() === userEmailStr) {
+              return true;
+            }
+            if (isDemoUser && (farmUserId === 'usr_demo_1' || !f.userId)) {
+              return true;
+            }
+            return false;
+          });
         }
       } catch (err) {
         console.error('Error filtering user farms:', err);
       }
+    } else {
+      // Default fallback if no active session
+      resultFarms = allFarms.filter(f => f.userId === 'usr_demo_1' || !f.userId);
     }
 
     // Enrich all farms with dynamic live telemetry
