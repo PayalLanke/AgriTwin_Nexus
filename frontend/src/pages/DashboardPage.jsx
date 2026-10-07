@@ -490,7 +490,7 @@ export default function DashboardPage() {
                         if (crop) {
                           await farmService.confirmCrop(selectedFarm.id, crop);
                           setSelectedFarm(prev => ({ ...prev, farmer_confirmed_crop: crop, cropType: crop, crop_prediction_status: 'farmer_confirmed' }));
-                          loadFarmsData();
+                          loadFarms();
                         }
                       }}
                       style={{
