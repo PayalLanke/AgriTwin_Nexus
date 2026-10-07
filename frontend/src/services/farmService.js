@@ -33,9 +33,138 @@ export const CROP_OPTIONS = [
   'Chili (मिरची / मिर्च)'
 ];
 
+const DEFAULT_DEMO_FARMS = [
+  {
+    id: 'farm_khemnar_1',
+    userId: 'usr_demo_1',
+    farmName: 'Khemnar Farm',
+    cropType: 'Wheat (गहू / गेहूं)',
+    sowingDate: '2026-07-07',
+    latitude: 19.923135,
+    longitude: 74.546445,
+    areaHectares: 0.04,
+    areaAcres: 0.09,
+    status: 'Active Twin Ready',
+    boundary: {
+      type: 'Feature',
+      geometry: {
+        type: 'Polygon',
+        coordinates: [
+          [
+            [74.5460, 19.9228],
+            [74.5468, 19.9228],
+            [74.5468, 19.9234],
+            [74.5460, 19.9234],
+            [74.5460, 19.9228]
+          ]
+        ]
+      }
+    },
+    boundaryGeoJSON: {
+      type: 'Feature',
+      geometry: {
+        type: 'Polygon',
+        coordinates: [
+          [
+            [74.5460, 19.9228],
+            [74.5468, 19.9228],
+            [74.5468, 19.9234],
+            [74.5460, 19.9234],
+            [74.5460, 19.9228]
+          ]
+        ]
+      }
+    }
+  },
+  {
+    id: 'farm_badnapur_2',
+    userId: 'usr_demo_1',
+    farmName: 'Badnapur Papaya Orchard',
+    cropType: 'Papaya (पपई / पपीता)',
+    sowingDate: '2026-06-15',
+    latitude: 19.8654,
+    longitude: 75.9231,
+    areaHectares: 1.20,
+    areaAcres: 2.96,
+    status: 'Active Twin Ready',
+    boundary: {
+      type: 'Feature',
+      geometry: {
+        type: 'Polygon',
+        coordinates: [
+          [
+            [75.9220, 19.8645],
+            [75.9242, 19.8645],
+            [75.9242, 19.8662],
+            [75.9220, 19.8662],
+            [75.9220, 19.8645]
+          ]
+        ]
+      }
+    },
+    boundaryGeoJSON: {
+      type: 'Feature',
+      geometry: {
+        type: 'Polygon',
+        coordinates: [
+          [
+            [75.9220, 19.8645],
+            [75.9242, 19.8645],
+            [75.9242, 19.8662],
+            [75.9220, 19.8662],
+            [75.9220, 19.8645]
+          ]
+        ]
+      }
+    }
+  },
+  {
+    id: 'farm_kopargaon_3',
+    userId: 'usr_demo_1',
+    farmName: 'Kopargaon Sugarcane Field',
+    cropType: 'Sugarcane (ऊस / गन्ना)',
+    sowingDate: '2026-05-10',
+    latitude: 19.8912,
+    longitude: 74.4789,
+    areaHectares: 2.50,
+    areaAcres: 6.17,
+    status: 'Active Twin Ready',
+    boundary: {
+      type: 'Feature',
+      geometry: {
+        type: 'Polygon',
+        coordinates: [
+          [
+            [74.4770, 19.8900],
+            [74.4808, 19.8900],
+            [74.4808, 19.8924],
+            [74.4770, 19.8924],
+            [74.4770, 19.8900]
+          ]
+        ]
+      }
+    },
+    boundaryGeoJSON: {
+      type: 'Feature',
+      geometry: {
+        type: 'Polygon',
+        coordinates: [
+          [
+            [74.4770, 19.8900],
+            [74.4808, 19.8900],
+            [74.4808, 19.8924],
+            [74.4770, 19.8924],
+            [74.4770, 19.8900]
+          ]
+        ]
+      }
+    }
+  }
+];
+
 export const farmService = {
   /**
-   * Fetch all registered farms for active logged-in farmer (Enforces User Isolation)
+   * Fetch all registered farms for active logged-in farmer
    */
   async getFarms() {
     let allFarms = [];
@@ -47,20 +176,20 @@ export const farmService = {
             id: f.id || f.farm_id,
             userId: f.userId || f.user_id || 'usr_demo_1',
             farmName: f.farmName || f.farm_name || f.name,
-            cropType: f.cropType || f.crop_type || 'Soybean',
-            sowingDate: f.sowingDate || f.sowing_date || new Date().toISOString().split('T')[0],
-            latitude: parseFloat(f.latitude || f.center_lat || 19.8347),
-            longitude: parseFloat(f.longitude || f.center_lon || 75.8816),
+            cropType: f.cropType || f.crop_type || 'Wheat (गहू / गेहूं)',
+            sowingDate: f.sowingDate || f.sowing_date || '2026-07-07',
+            latitude: parseFloat(f.latitude || f.center_lat || 19.923135),
+            longitude: parseFloat(f.longitude || f.center_lon || 74.546445),
             boundary: f.boundary || f.geojson_boundary,
             boundaryGeoJSON: f.boundary || f.geojson_boundary,
-            areaHectares: parseFloat(f.areaHectares || f.area_ha || 0.76),
-            areaAcres: parseFloat(f.areaAcres || f.area_acres || 1.88),
+            areaHectares: parseFloat(f.areaHectares || f.area_ha || 0.04),
+            areaAcres: parseFloat(f.areaAcres || f.area_acres || 0.09),
             status: f.status || 'Active Twin Ready'
           }));
         }
       }
     } catch (e) {
-      console.warn('Backend API unavailable, fetching from local storage:', e);
+      console.warn('Backend API unavailable, fetching from local storage');
     }
 
     if (allFarms.length === 0) {
@@ -74,7 +203,13 @@ export const farmService = {
       }
     }
 
-    // Filter farms so each farmer only sees their own farms
+    // Auto-seed default demo farms if storage is empty
+    if (!allFarms || allFarms.length === 0) {
+      allFarms = DEFAULT_DEMO_FARMS;
+      localStorage.setItem(FARMS_STORAGE_KEY, JSON.stringify(DEFAULT_DEMO_FARMS));
+    }
+
+    // Filter farms so each farmer sees their own farms (or default demo farms)
     let resultFarms = allFarms;
     const currentUserStr = localStorage.getItem('agritwin_current_user');
     if (currentUserStr) {
@@ -86,10 +221,9 @@ export const farmService = {
           );
           if (userFarms.length > 0) {
             resultFarms = userFarms;
-          } else if (currentUser.id === 'usr_demo_1') {
-            resultFarms = allFarms;
           } else {
-            resultFarms = [];
+            // Fall back to default demo farms so user always sees initial farms
+            resultFarms = allFarms;
           }
         }
       } catch (err) {
@@ -106,11 +240,12 @@ export const farmService = {
    */
   async getAllFarmsForAdmin() {
     const farmsStr = localStorage.getItem(FARMS_STORAGE_KEY);
-    if (!farmsStr) return [];
+    if (!farmsStr) return DEFAULT_DEMO_FARMS;
     try {
-      return JSON.parse(farmsStr);
+      const parsed = JSON.parse(farmsStr);
+      return parsed.length > 0 ? parsed : DEFAULT_DEMO_FARMS;
     } catch (e) {
-      return [];
+      return DEFAULT_DEMO_FARMS;
     }
   },
 
@@ -127,14 +262,14 @@ export const farmService = {
             id: f.id || f.farm_id,
             userId: f.userId || f.user_id || 'usr_demo_1',
             farmName: f.farmName || f.farm_name || f.name,
-            cropType: f.cropType || f.crop_type || 'Soybean',
-            sowingDate: f.sowingDate || f.sowing_date || new Date().toISOString().split('T')[0],
-            latitude: parseFloat(f.latitude || f.center_lat || 19.8347),
-            longitude: parseFloat(f.longitude || f.center_lon || 75.8816),
+            cropType: f.cropType || f.crop_type || 'Wheat (गहू / गेहूं)',
+            sowingDate: f.sowingDate || f.sowing_date || '2026-07-07',
+            latitude: parseFloat(f.latitude || f.center_lat || 19.923135),
+            longitude: parseFloat(f.longitude || f.center_lon || 74.546445),
             boundary: f.boundary || f.geojson_boundary,
             boundaryGeoJSON: f.boundary || f.geojson_boundary,
-            areaHectares: parseFloat(f.areaHectares || f.area_ha || 0.76),
-            areaAcres: parseFloat(f.areaAcres || f.area_acres || 1.88),
+            areaHectares: parseFloat(f.areaHectares || f.area_ha || 0.04),
+            areaAcres: parseFloat(f.areaAcres || f.area_acres || 0.09),
             status: f.status || 'Active Twin Ready'
           };
           return telemetryOrchestrator.enrichFarmTelemetry(rawFarm);
@@ -147,7 +282,7 @@ export const farmService = {
     const farms = await this.getFarms();
     const farm = farms.find((f) => String(f.id) === String(id));
     if (!farm) {
-      throw new Error(`Farm with ID ${id} not found.`);
+      return farms[0] || telemetryOrchestrator.enrichFarmTelemetry(DEFAULT_DEMO_FARMS[0]);
     }
     return farm;
   },
@@ -175,7 +310,7 @@ export const farmService = {
     const areaStats = calculatePolygonArea(farmPayload.boundary);
 
     const currentUserStr = localStorage.getItem('agritwin_current_user');
-    let activeUserId = 'usr_default';
+    let activeUserId = 'usr_demo_1';
     if (currentUserStr) {
       try {
         const u = JSON.parse(currentUserStr);
@@ -192,6 +327,7 @@ export const farmService = {
       latitude: parseFloat(farmPayload.latitude),
       longitude: parseFloat(farmPayload.longitude),
       boundary: farmPayload.boundary,
+      boundaryGeoJSON: farmPayload.boundary,
       areaHectares: areaStats.hectares,
       areaAcres: areaStats.acres,
       areaSqMeters: areaStats.sqMeters,
@@ -255,6 +391,7 @@ export const farmService = {
     const updatedFarm = {
       ...existingFarms[index],
       ...updatePayload,
+      boundaryGeoJSON: updatePayload.boundary || existingFarms[index].boundaryGeoJSON,
       areaHectares: areaStats.hectares,
       areaAcres: areaStats.acres,
       areaSqMeters: areaStats.sqMeters,
