@@ -13,18 +13,24 @@ export const authService = {
    * Register a new farmer account (Full Name, Email, Mobile Number, Password)
    */
   async register({ fullName, email, mobileNumber = '', password }) {
-    // Check if FastAPI backend API is online
-    let backendSuccess = false;
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanName = fullName.trim();
+
+    // 1. Local storage check for existing duplicate account
+    const users = JSON.parse(localStorage.getItem(USERS_STORAGE_KEY) || '[]');
+    const existingUser = users.find((u) => u.email.toLowerCase() === cleanEmail);
+    if (existingUser) {
+      throw new Error('An account with this email address already exists.');
+    }
+
+    // 2. Register with FastAPI backend database if available
     try {
       if (await isBackendAvailable()) {
-        const response = await apiClient.post('/auth/register', {
-          full_name: fullName.trim(),
-          email: email.trim().toLowerCase(),
+        await apiClient.post('/auth/register', {
+          full_name: cleanName,
+          email: cleanEmail,
           password: password
         });
-        if (response.data && response.data.id) {
-          backendSuccess = true;
-        }
       }
     } catch (e) {
       console.warn('Backend API registration notice:', e?.response?.data?.detail || e.message);
@@ -33,26 +39,18 @@ export const authService = {
       }
     }
 
-    // Always maintain local storage registry for offline availability
-    const users = JSON.parse(localStorage.getItem(USERS_STORAGE_KEY) || '[]');
-    const existingUser = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
-    if (existingUser && !backendSuccess) {
-      throw new Error('An account with this email address already exists.');
-    }
-
-    if (!existingUser) {
-      const newUser = {
-        id: 'usr_' + Date.now(),
-        fullName,
-        email: email.toLowerCase(),
-        mobileNumber,
-        password,
-        role: 'farmer',
-        createdAt: new Date().toISOString()
-      };
-      users.push(newUser);
-      localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
-    }
+    // 3. Save account locally so login always works seamlessly everywhere
+    const newUser = {
+      id: 'usr_' + Date.now(),
+      fullName: cleanName,
+      email: cleanEmail,
+      mobileNumber,
+      password,
+      role: 'farmer',
+      createdAt: new Date().toISOString()
+    };
+    users.push(newUser);
+    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
 
     return { success: true, message: 'Farmer registration successful!' };
   },
@@ -88,12 +86,12 @@ export const authService = {
   },
 
   /**
-   * Login farmer against Backend API / Persistent Database
+   * Login farmer against Backend API or Local Registry
    */
   async login({ email, password }) {
     const cleanEmail = email.trim().toLowerCase();
-    
-    // 1. Try FastAPI Backend API Authentication
+
+    // 1. Try FastAPI Backend API Authentication first
     try {
       if (await isBackendAvailable()) {
         const response = await apiClient.post('/auth/login', {
@@ -116,10 +114,8 @@ export const authService = {
         }
       }
     } catch (e) {
-      console.warn('Backend authentication endpoint fallback to local storage:', e?.response?.data?.detail || e.message);
-      if (e?.response?.status === 401) {
-        throw new Error('Invalid email or password. Please check your credentials.');
-      }
+      console.warn('Backend login endpoint fallback to local storage:', e?.response?.data?.detail || e.message);
+      // Fall through to local storage registry if backend DB doesn't have the user yet
     }
 
     // 2. Local Storage Authentication Fallback
@@ -142,7 +138,7 @@ export const authService = {
     }
 
     if (!user) {
-      throw new Error('Invalid email or password. Please try again.');
+      throw new Error('Invalid email or password. Please check your credentials.');
     }
 
     const sessionUser = {
