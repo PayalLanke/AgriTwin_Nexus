@@ -348,17 +348,22 @@ export const farmService = {
     // Try posting to FastAPI backend API
     try {
       if (await isBackendAvailable()) {
-        const response = await apiClient.post('/farms/', {
+        const response = await apiClient.post(`/farms?user_id=${activeUserId}`, {
           farm_name: newFarm.farmName,
           crop_type: newFarm.cropType,
+          farmer_selected_crop: newFarm.cropType,
           sowing_date: newFarm.sowingDate,
-          center_lat: newFarm.latitude,
-          center_lon: newFarm.longitude,
-          geojson_boundary: newFarm.boundary,
-          area_ha: newFarm.areaHectares
+          latitude: newFarm.latitude,
+          longitude: newFarm.longitude,
+          boundary_geojson: newFarm.boundary
         });
         if (response.data && response.data.id) {
           newFarm.id = response.data.id;
+          newFarm.last_satellite_observation = response.data.last_satellite_observation;
+          newFarm.last_weather_update = response.data.last_weather_update;
+          newFarm.model_detected_crop = response.data.model_detected_crop;
+          newFarm.model_confidence = response.data.model_confidence;
+          newFarm.crop_prediction_status = response.data.crop_prediction_status;
         }
       }
     } catch (e) {
@@ -375,6 +380,37 @@ export const farmService = {
     localStorage.setItem(FARMS_STORAGE_KEY, JSON.stringify(allFarms));
 
     return newFarm;
+  },
+
+  /**
+   * Post ground-truth farmer crop confirmation
+   */
+  async confirmCrop(farmId, confirmedCrop) {
+    try {
+      if (await isBackendAvailable()) {
+        await apiClient.post(`/farms/${farmId}/crop-confirmation`, {
+          confirmed_crop: confirmedCrop
+        });
+      }
+    } catch (e) {
+      console.warn('Crop confirmation updated locally:', e);
+    }
+
+    const allFarmsStr = localStorage.getItem(FARMS_STORAGE_KEY);
+    if (allFarmsStr) {
+      try {
+        let allFarms = JSON.parse(allFarmsStr);
+        const idx = allFarms.findIndex((f) => String(f.id) === String(farmId));
+        if (idx !== -1) {
+          allFarms[idx].farmer_confirmed_crop = confirmedCrop;
+          allFarms[idx].cropType = confirmedCrop;
+          allFarms[idx].crop_prediction_status = 'farmer_confirmed';
+          localStorage.setItem(FARMS_STORAGE_KEY, JSON.stringify(allFarms));
+        }
+      } catch (err) {}
+    }
+
+    return { success: true, confirmedCrop };
   },
 
   /**
