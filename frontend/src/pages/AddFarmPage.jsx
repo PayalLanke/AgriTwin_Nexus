@@ -175,7 +175,7 @@ export default function AddFarmPage() {
                   <option value="" style={{ background: '#0b1612', color: '#94a3b8' }}>-- Select Crop Variety --</option>
                   {CROP_OPTIONS.map((c) => (
                     <option key={c} value={c} style={{ background: '#0b1612', color: '#f1f5f9' }}>
-                      {t(`crop_${c.toLowerCase()}`) || c}
+                      {c}
                     </option>
                   ))}
                 </select>
