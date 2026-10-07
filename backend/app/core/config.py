@@ -9,10 +9,10 @@ class Settings(BaseSettings):
     SECRET_KEY: str = os.getenv("SECRET_KEY", "agritwin_super_secret_jwt_key_2026")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7 # 7 days
     
-    # PostgreSQL Spatial Database URL
+    # SQLite / PostgreSQL Database URL (Defaults to SQLite agritwin.db for zero-config portable deployment)
     DATABASE_URL: str = os.getenv(
         "DATABASE_URL",
-        "postgresql://postgres:postgres@localhost:5432/agritwin_db"
+        "sqlite:///./agritwin.db"
     )
 
     class Config:

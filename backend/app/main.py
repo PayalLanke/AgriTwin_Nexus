@@ -1,8 +1,18 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
+from app.database.session import engine, Base
+import app.models.user
+import app.models.farm
 from app.api.v1.auth import router as auth_router
 from app.api.v1.farms import router as farms_router
+
+# Auto-create all Database Tables (users, farms) on startup
+try:
+    Base.metadata.create_all(bind=engine)
+    print("Database tables initialized successfully.")
+except Exception as e:
+    print("Database initialization notice:", e)
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
