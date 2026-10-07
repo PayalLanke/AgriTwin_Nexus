@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import FarmMap from '../components/FarmMap';
 import { farmService, CROP_OPTIONS } from '../services/farmService';
+import { cropDetectionEngine } from '../services/cropDetectionEngine';
 import { useLanguage } from '../context/LanguageContext';
-import { ArrowLeft, Save, AlertCircle, Sprout, Layers, Calendar, FileText, Crosshair } from 'lucide-react';
+import { ArrowLeft, Save, AlertCircle, Sprout, Layers, Calendar, FileText, Crosshair, CheckCircle2, Sparkles, RefreshCw } from 'lucide-react';
 
 export default function EditFarmPage() {
   const { id } = useParams();
@@ -16,6 +17,8 @@ export default function EditFarmPage() {
   const [latitude, setLatitude] = useState(null);
   const [longitude, setLongitude] = useState(null);
   const [boundaryGeoJSON, setBoundaryGeoJSON] = useState(null);
+  const [detectedCropInfo, setDetectedCropInfo] = useState(null);
+  const [isDetecting, setIsDetecting] = useState(false);
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -35,6 +38,10 @@ export default function EditFarmPage() {
       setLatitude(farm.latitude);
       setLongitude(farm.longitude);
       setBoundaryGeoJSON(farm.boundary);
+
+      if (farm.boundary && farm.latitude && farm.longitude) {
+        runCropDetection(farm.boundary, farm.latitude, farm.longitude, farm.cropType);
+      }
     } catch (err) {
       setError(err.message || 'Failed to load farm for editing.');
     } finally {
@@ -42,14 +49,32 @@ export default function EditFarmPage() {
     }
   };
 
+  const runCropDetection = async (boundary, lat, lng, currentCrop = null) => {
+    setIsDetecting(true);
+    try {
+      const result = await cropDetectionEngine.detectCropFromSpectralSignature(boundary, lat, lng);
+      setDetectedCropInfo(result);
+    } catch (err) {
+      console.error('Crop detection error in EditFarmPage:', err);
+    } finally {
+      setIsDetecting(false);
+    }
+  };
+
   const handleLocationChange = (newLat, newLng) => {
     setLatitude(newLat);
     setLongitude(newLng);
+    if (boundaryGeoJSON) {
+      runCropDetection(boundaryGeoJSON, newLat, newLng);
+    }
   };
 
   const handleBoundaryChange = (geojson) => {
     setBoundaryGeoJSON(geojson);
     if (error) setError('');
+    if (geojson && latitude && longitude) {
+      runCropDetection(geojson, latitude, longitude);
+    }
   };
 
   const calculatedAreaHa = boundaryGeoJSON?.properties?.areaHectares || 0;
@@ -163,7 +188,30 @@ export default function EditFarmPage() {
             </div>
 
             <div style={styles.formGroup}>
-              <label style={styles.label} htmlFor="cropType">{t('crop_type')}</label>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <label style={styles.label} htmlFor="cropType">{t('crop_type')}</label>
+                {boundaryGeoJSON && (
+                  <button
+                    type="button"
+                    onClick={() => runCropDetection(boundaryGeoJSON, latitude, longitude)}
+                    disabled={isDetecting}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: '#00d9ff',
+                      fontSize: '0.725rem',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.3rem'
+                    }}
+                  >
+                    <RefreshCw size={12} className={isDetecting ? 'animate-spin' : ''} />
+                    {isDetecting ? 'Analyzing Satellite Radar...' : 'Re-Scan Satellite AI'}
+                  </button>
+                )}
+              </div>
               <div style={styles.inputIconWrapper}>
                 <Sprout size={16} color="#64748b" style={styles.inputIcon} />
                 <select
@@ -180,6 +228,65 @@ export default function EditFarmPage() {
                   ))}
                 </select>
               </div>
+
+              {/* AI Satellite Crop Detection Result Banner */}
+              {detectedCropInfo && (
+                <div style={{
+                  marginTop: '0.75rem',
+                  padding: '0.85rem 1rem',
+                  borderRadius: '14px',
+                  background: 'rgba(0, 217, 255, 0.08)',
+                  border: '1px solid rgba(0, 217, 255, 0.35)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.45rem',
+                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.3)'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#00d9ff', fontFamily: 'Space Grotesk, sans-serif' }}>
+                      🛰️ SATELLITE SPECTRAL CROP CLASSIFIER
+                    </span>
+                    <span style={{ fontSize: '0.725rem', fontWeight: '700', color: '#22e58a', background: 'rgba(34, 229, 138, 0.15)', border: '1px solid rgba(34, 229, 138, 0.3)', padding: '0.15rem 0.55rem', borderRadius: '9999px' }}>
+                      {detectedCropInfo.confidenceScore}% MATCH
+                    </span>
+                  </div>
+
+                  <p style={{ margin: 0, fontSize: '0.9rem', color: '#ffffff', fontWeight: '700' }}>
+                    AI Spectral Detection: <span style={{ color: '#22e58a' }}>{detectedCropInfo.detectedCropName}</span>
+                  </p>
+
+                  <p style={{ margin: 0, fontSize: '0.775rem', color: '#cbd5e1', lineHeight: '1.4' }}>
+                    {detectedCropInfo.reasoning}
+                  </p>
+
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.25rem', paddingTop: '0.45rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                    <span style={{ fontSize: '0.725rem', color: '#94a3b8' }}>
+                      Opt Temp: {detectedCropInfo.optimalTempRange} &bull; Stage: {detectedCropInfo.criticalStage}
+                    </span>
+
+                    <button
+                      type="button"
+                      onClick={() => setCropType(detectedCropInfo.detectedCropName)}
+                      style={{
+                        padding: '0.35rem 0.75rem',
+                        fontSize: '0.75rem',
+                        fontWeight: '700',
+                        borderRadius: '8px',
+                        backgroundColor: '#16a34a',
+                        color: '#ffffff',
+                        border: 'none',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.3rem'
+                      }}
+                    >
+                      <CheckCircle2 size={13} />
+                      Apply AI Detection
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div style={styles.formGroup}>

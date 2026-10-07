@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+
+# Node / Frontend
+node_modules/
+frontend/dist/
+frontend/node_modules/
+*.log
+*.timestamp-*.mjs
+
+# OS / Editor
+.DS_Store
+.vscode/
+.idea/

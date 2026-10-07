@@ -400,7 +400,50 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* 6. ACCOUNT & SECURITY SECTION */}
+        {/* 6. AI & SATELLITE ENGINE API KEY SECTION */}
+        <div style={styles.cardSection}>
+          <div style={styles.cardHeader}>
+            <div style={styles.iconCircle}>
+              <Key size={20} color="#00d9ff" />
+            </div>
+            <div>
+              <span style={styles.sectionCategory}>AI & SATELLITE ENGINE</span>
+              <h2 style={styles.cardTitle}>Gemini Vision & Satellite API Keys</h2>
+            </div>
+          </div>
+
+          <p style={{ margin: 0, fontSize: '0.85rem', color: '#94a3b8', lineHeight: '1.45' }}>
+            Configure optional Google Gemini API Key for real-time visual satellite map crop classification and high-resolution band spectral processing.
+          </p>
+
+          <div style={styles.formGridTwo}>
+            <div style={styles.inputGroup}>
+              <label style={styles.inputLabel}>Google Gemini API Key (Optional)</label>
+              <input
+                type="password"
+                placeholder="AIzaSy..."
+                value={localStorage.getItem('agritwin_gemini_api_key') || ''}
+                onChange={(e) => {
+                  if (e.target.value.trim()) {
+                    localStorage.setItem('agritwin_gemini_api_key', e.target.value.trim());
+                  } else {
+                    localStorage.removeItem('agritwin_gemini_api_key');
+                  }
+                }}
+                style={styles.textInput}
+              />
+            </div>
+            <div style={styles.inputGroup}>
+              <label style={styles.inputLabel}>Detection Classifier Engine</label>
+              <div style={{ padding: '0.75rem 1rem', background: 'rgba(34, 229, 138, 0.08)', borderRadius: '12px', border: '1px solid rgba(34, 229, 138, 0.3)', color: '#22e58a', fontSize: '0.85rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <CheckCircle2 size={16} />
+                <span>Active: Sentinel-2 Multispectral + Agro-GIS Engine</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 7. ACCOUNT & SECURITY SECTION */}
         <div style={styles.cardSection}>
           <div style={styles.cardHeader}>
             <div style={styles.iconCircle}>

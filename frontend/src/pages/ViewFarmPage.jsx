@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { farmService } from '../services/farmService';
+import { farmService, CROP_OPTIONS } from '../services/farmService';
+import { cropDetectionEngine } from '../services/cropDetectionEngine';
 import FarmMap from '../components/FarmMap';
 import { useLanguage } from '../context/LanguageContext';
 import {
@@ -18,7 +19,10 @@ import {
   ShieldAlert,
   TrendingUp,
   Sparkles,
-  CloudSun
+  CloudSun,
+  RefreshCw,
+  CheckCircle2,
+  ChevronDown
 } from 'lucide-react';
 
 export default function ViewFarmPage() {
@@ -28,6 +32,10 @@ export default function ViewFarmPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [showGeoJson, setShowGeoJson] = useState(false);
+  const [isChangingCrop, setIsChangingCrop] = useState(false);
+  const [selectedCrop, setSelectedCrop] = useState('');
+  const [detectedInfo, setDetectedInfo] = useState(null);
+  const [isDetecting, setIsDetecting] = useState(false);
 
   useEffect(() => {
     loadFarm();
@@ -38,10 +46,45 @@ export default function ViewFarmPage() {
     try {
       const data = await farmService.getFarmById(id);
       setFarm(data);
+      if (data) {
+        setSelectedCrop(data.cropType);
+        if (data.boundary && data.latitude && data.longitude) {
+          runAiDetection(data.boundary, data.latitude, data.longitude);
+        }
+      }
     } catch (err) {
       setError(err.message || 'Failed to load farm details.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const runAiDetection = async (boundary, lat, lng) => {
+    setIsDetecting(true);
+    try {
+      const res = await cropDetectionEngine.detectCropFromSpectralSignature(boundary, lat, lng);
+      setDetectedInfo(res);
+    } catch (err) {
+      console.error('AI Detection Error:', err);
+    } finally {
+      setIsDetecting(false);
+    }
+  };
+
+  const handleUpdateCrop = async (newCrop) => {
+    if (!farm || !newCrop) return;
+    setIsChangingCrop(true);
+    try {
+      const updated = await farmService.updateFarm(farm.id, {
+        ...farm,
+        cropType: newCrop
+      });
+      setFarm(updated || { ...farm, cropType: newCrop });
+      setSelectedCrop(newCrop);
+    } catch (err) {
+      console.error('Failed to update crop:', err);
+    } finally {
+      setIsChangingCrop(false);
     }
   };
 
@@ -126,8 +169,129 @@ export default function ViewFarmPage() {
                   <Sprout size={15} color="#22e58a" />
                   <span style={styles.specLabel}>{t('crop_type')}</span>
                 </div>
-                <span style={styles.specVal}>{farm.cropType}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <select
+                    value={farm.cropType}
+                    onChange={(e) => handleUpdateCrop(e.target.value)}
+                    disabled={isChangingCrop}
+                    style={{
+                      padding: '0.35rem 0.65rem',
+                      fontSize: '0.85rem',
+                      fontWeight: '700',
+                      borderRadius: '8px',
+                      border: '1px solid rgba(34, 229, 138, 0.35)',
+                      backgroundColor: 'rgba(15, 27, 21, 0.9)',
+                      color: '#22e58a',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {CROP_OPTIONS.map((c) => (
+                      <option key={c} value={c} style={{ background: '#0b1612', color: '#ffffff' }}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
+
+              {/* Dynamic Active Crop Specifications Box */}
+              {(() => {
+                const profile = cropDetectionEngine.getCropProfile(farm.cropType);
+                return (
+                  <div style={{
+                    padding: '0.75rem 0.85rem',
+                    borderRadius: '12px',
+                    background: 'rgba(34, 229, 138, 0.05)',
+                    border: '1px solid rgba(34, 229, 138, 0.25)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.4rem',
+                    marginTop: '0.4rem',
+                    marginBottom: '0.4rem'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ fontSize: '0.7rem', fontWeight: '800', color: '#22e58a', fontFamily: 'Space Grotesk, sans-serif' }}>
+                        🌱 ACTIVE CROP AGRONOMIC PROFILE
+                      </span>
+                      <span style={{ fontSize: '0.68rem', color: '#94a3b8' }}>
+                        {profile.category}
+                      </span>
+                    </div>
+
+                    <div style={{ fontSize: '0.8rem', color: '#cbd5e1', display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Optimal Temp Window:</span>
+                      <b style={{ color: '#00d9ff' }}>{profile.optimalTempMin}°C – {profile.optimalTempMax}°C</b>
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: '#cbd5e1', display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Water Requirement:</span>
+                      <b style={{ color: '#ffffff' }}>{profile.waterRequirementMm}</b>
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: '#cbd5e1', display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Critical Stage:</span>
+                      <b style={{ color: '#fbbf24' }}>{profile.criticalStage}</b>
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.2rem', borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '0.35rem' }}>
+                      <strong style={{ color: '#f87171' }}>Key Risk Vectors:</strong> {profile.primaryThreats?.join(', ')}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* AI Spectral Signature Detection Result Box */}
+              {detectedInfo && (
+                <div style={{
+                  padding: '0.75rem 0.85rem',
+                  borderRadius: '12px',
+                  background: 'rgba(0, 217, 255, 0.06)',
+                  border: '1px solid rgba(0, 217, 255, 0.25)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.35rem'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: '0.7rem', fontWeight: '800', color: '#00d9ff', fontFamily: 'Space Grotesk, sans-serif' }}>
+                      🛰️ SATELLITE RADAR AI DETECTION
+                    </span>
+                    <span style={{ fontSize: '0.7rem', fontWeight: '700', color: '#22e58a', background: 'rgba(34, 229, 138, 0.15)', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>
+                      {detectedInfo.confidenceScore}% MATCH
+                    </span>
+                  </div>
+
+                  <div style={{ fontSize: '0.825rem', color: '#ffffff', fontWeight: '700' }}>
+                    Spectral Prediction: <span style={{ color: '#22e58a' }}>{detectedInfo.detectedCropName}</span>
+                  </div>
+
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8', lineHeight: '1.35' }}>
+                    {detectedInfo.reasoning}
+                  </p>
+
+                  {farm.cropType !== detectedInfo.detectedCropName && (
+                    <button
+                      type="button"
+                      onClick={() => handleUpdateCrop(detectedInfo.detectedCropName)}
+                      disabled={isChangingCrop}
+                      style={{
+                        marginTop: '0.2rem',
+                        padding: '0.3rem 0.6rem',
+                        fontSize: '0.725rem',
+                        fontWeight: '700',
+                        borderRadius: '6px',
+                        backgroundColor: '#16a34a',
+                        color: '#ffffff',
+                        border: 'none',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.3rem'
+                      }}
+                    >
+                      <CheckCircle2 size={12} />
+                      Sync Farm Crop to AI Detection ({detectedInfo.detectedCropName})
+                    </button>
+                  )}
+                </div>
+              )}
 
               <div style={styles.specItem}>
                 <div style={styles.specLabelGroup}>

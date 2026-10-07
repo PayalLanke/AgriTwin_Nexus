@@ -3,6 +3,7 @@
 
 import { apiClient, isBackendAvailable } from './api';
 import { calculatePolygonArea } from '../utils/geoUtils';
+import { telemetryOrchestrator } from './telemetryOrchestrator';
 
 const FARMS_STORAGE_KEY = 'agritwin_farms';
 
@@ -51,6 +52,7 @@ export const farmService = {
             latitude: parseFloat(f.latitude || f.center_lat || 19.8347),
             longitude: parseFloat(f.longitude || f.center_lon || 75.8816),
             boundary: f.boundary || f.geojson_boundary,
+            boundaryGeoJSON: f.boundary || f.geojson_boundary,
             areaHectares: parseFloat(f.areaHectares || f.area_ha || 0.76),
             areaAcres: parseFloat(f.areaAcres || f.area_acres || 1.88),
             status: f.status || 'Active Twin Ready'
@@ -73,6 +75,7 @@ export const farmService = {
     }
 
     // Filter farms so each farmer only sees their own farms
+    let resultFarms = allFarms;
     const currentUserStr = localStorage.getItem('agritwin_current_user');
     if (currentUserStr) {
       try {
@@ -81,20 +84,21 @@ export const farmService = {
           const userFarms = allFarms.filter(
             f => String(f.userId) === String(currentUser.id) || String(f.userId) === String(currentUser.email)
           );
-          // If demo user 'usr_demo_1' or legacy farm without userId, allow if user has no farms yet
           if (userFarms.length > 0) {
-            return userFarms;
+            resultFarms = userFarms;
           } else if (currentUser.id === 'usr_demo_1') {
-            return allFarms;
+            resultFarms = allFarms;
+          } else {
+            resultFarms = [];
           }
-          return [];
         }
       } catch (err) {
         console.error('Error filtering user farms:', err);
       }
     }
 
-    return allFarms;
+    // Enrich all farms with dynamic live telemetry
+    return resultFarms.map(f => telemetryOrchestrator.enrichFarmTelemetry(f));
   },
 
   /**
@@ -119,18 +123,21 @@ export const farmService = {
         const response = await apiClient.get(`/farms/${id}`);
         if (response.data) {
           const f = response.data;
-          return {
+          const rawFarm = {
             id: f.id || f.farm_id,
+            userId: f.userId || f.user_id || 'usr_demo_1',
             farmName: f.farmName || f.farm_name || f.name,
             cropType: f.cropType || f.crop_type || 'Soybean',
             sowingDate: f.sowingDate || f.sowing_date || new Date().toISOString().split('T')[0],
             latitude: parseFloat(f.latitude || f.center_lat || 19.8347),
             longitude: parseFloat(f.longitude || f.center_lon || 75.8816),
             boundary: f.boundary || f.geojson_boundary,
+            boundaryGeoJSON: f.boundary || f.geojson_boundary,
             areaHectares: parseFloat(f.areaHectares || f.area_ha || 0.76),
             areaAcres: parseFloat(f.areaAcres || f.area_acres || 1.88),
             status: f.status || 'Active Twin Ready'
           };
+          return telemetryOrchestrator.enrichFarmTelemetry(rawFarm);
         }
       }
     } catch (e) {

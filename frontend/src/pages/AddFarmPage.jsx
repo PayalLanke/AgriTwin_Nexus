@@ -184,29 +184,59 @@ export default function AddFarmPage() {
               {/* AI Satellite Crop Detection Result Banner */}
               {detectedCropInfo && (
                 <div style={{
-                  marginTop: '0.65rem',
-                  padding: '0.65rem 0.85rem',
-                  borderRadius: '12px',
+                  marginTop: '0.75rem',
+                  padding: '0.85rem 1rem',
+                  borderRadius: '14px',
                   background: 'rgba(0, 217, 255, 0.08)',
-                  border: '1px solid rgba(0, 217, 255, 0.3)',
+                  border: '1px solid rgba(0, 217, 255, 0.35)',
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: '0.35rem'
+                  gap: '0.45rem',
+                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.3)'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: '0.725rem', fontWeight: '700', color: '#00d9ff', fontFamily: 'Space Grotesk, sans-serif' }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#00d9ff', fontFamily: 'Space Grotesk, sans-serif' }}>
                       🛰️ SATELLITE SPECTRAL CROP CLASSIFIER
                     </span>
-                    <span style={{ fontSize: '0.7rem', fontWeight: '700', color: '#22e58a', background: 'rgba(34, 229, 138, 0.15)', padding: '0.15rem 0.45rem', borderRadius: '9999px' }}>
+                    <span style={{ fontSize: '0.725rem', fontWeight: '700', color: '#22e58a', background: 'rgba(34, 229, 138, 0.15)', border: '1px solid rgba(34, 229, 138, 0.3)', padding: '0.15rem 0.55rem', borderRadius: '9999px' }}>
                       {detectedCropInfo.confidenceScore}% MATCH
                     </span>
                   </div>
-                  <p style={{ margin: 0, fontSize: '0.825rem', color: '#f1f5f9', fontWeight: '600' }}>
-                    Detected Crop: <span style={{ color: '#22e58a' }}>{detectedCropInfo.detectedCropName}</span>
+
+                  <p style={{ margin: 0, fontSize: '0.9rem', color: '#ffffff', fontWeight: '700' }}>
+                    AI Detected Crop: <span style={{ color: '#22e58a' }}>{detectedCropInfo.detectedCropName}</span>
                   </p>
-                  <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-                    Optimal Temp Range: {detectedCropInfo.optimalTempRange} &bull; Stage: {detectedCropInfo.criticalStage}
-                  </span>
+
+                  <p style={{ margin: 0, fontSize: '0.775rem', color: '#cbd5e1', lineHeight: '1.4' }}>
+                    {detectedCropInfo.reasoning}
+                  </p>
+
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.25rem', paddingTop: '0.45rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                    <span style={{ fontSize: '0.725rem', color: '#94a3b8' }}>
+                      Opt Temp: {detectedCropInfo.optimalTempRange} &bull; Stage: {detectedCropInfo.criticalStage}
+                    </span>
+
+                    <button
+                      type="button"
+                      onClick={() => setCropType(detectedCropInfo.detectedCropName)}
+                      style={{
+                        padding: '0.35rem 0.75rem',
+                        fontSize: '0.75rem',
+                        fontWeight: '700',
+                        borderRadius: '8px',
+                        backgroundColor: '#16a34a',
+                        color: '#ffffff',
+                        border: 'none',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.3rem'
+                      }}
+                    >
+                      <CheckCircle2 size={13} />
+                      Set as Crop
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
