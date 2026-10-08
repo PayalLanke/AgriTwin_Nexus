@@ -4,6 +4,7 @@ import { farmService } from '../services/farmService';
 import { authService } from '../services/authService';
 import { useLanguage } from '../context/LanguageContext';
 import { cropDetectionEngine } from '../services/cropDetectionEngine';
+import { telemetryOrchestrator } from '../services/telemetryOrchestrator';
 import FarmMap from '../components/FarmMap';
 import {
   Sprout,
@@ -44,9 +45,10 @@ export default function DashboardPage() {
     setIsLoading(true);
     try {
       const data = await farmService.getFarms();
-      setFarms(data || []);
-      if (data && data.length > 0) {
-        setSelectedFarm(data[0]);
+      const enriched = (data || []).map((f) => telemetryOrchestrator.enrichFarmTelemetry(f));
+      setFarms(enriched);
+      if (enriched && enriched.length > 0) {
+        setSelectedFarm(enriched[0]);
       } else {
         setSelectedFarm(null);
       }
