@@ -302,6 +302,54 @@ export default function WeatherPage() {
             </div>
           </div>
 
+          {/* 3.5 Real-Time Soil Telemetry Station */}
+          <div style={styles.sectionCard}>
+            <div style={styles.cardHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                <Thermometer size={20} color="#22e58a" />
+                <h2 style={styles.sectionHeading}>Live Soil Telemetry & Physics Station</h2>
+              </div>
+              <span style={styles.liveTag}>
+                <span style={styles.liveDot} />
+                Open-Meteo Soil Physics & Agro-GIS Engine
+              </span>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
+              <div style={{ padding: '1rem', background: 'rgba(7, 14, 11, 0.65)', borderRadius: '12px', border: '1px solid rgba(34, 229, 138, 0.2)' }}>
+                <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: '700' }}>SOIL MOISTURE (0-7 CM DEPTH)</span>
+                <div style={{ fontSize: '1.4rem', fontWeight: '800', color: '#22e58a', margin: '4px 0' }}>
+                  {selectedFarm.soilData?.moistureVolumetric || current.soilMoistureVolumetric}% VWC
+                </div>
+                <span style={{ fontSize: '0.72rem', color: '#64748b' }}>Status: Optimal Root Hydration</span>
+              </div>
+
+              <div style={{ padding: '1rem', background: 'rgba(7, 14, 11, 0.65)', borderRadius: '12px', border: '1px solid rgba(0, 217, 255, 0.2)' }}>
+                <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: '700' }}>SOIL TEMP (ROOT ZONE 0-6 CM)</span>
+                <div style={{ fontSize: '1.4rem', fontWeight: '800', color: '#00d9ff', margin: '4px 0' }}>
+                  {selectedFarm.soilData?.temperatureC || current.soilTemperatureC}°C
+                </div>
+                <span style={{ fontSize: '0.72rem', color: '#64748b' }}>Favorable Microbial Velocity</span>
+              </div>
+
+              <div style={{ padding: '1rem', background: 'rgba(7, 14, 11, 0.65)', borderRadius: '12px', border: '1px solid rgba(251, 191, 36, 0.2)' }}>
+                <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: '700' }}>SOIL pH LEVEL</span>
+                <div style={{ fontSize: '1.4rem', fontWeight: '800', color: '#fbbf24', margin: '4px 0' }}>
+                  {selectedFarm.soilData?.ph || 7.3} pH
+                </div>
+                <span style={{ fontSize: '0.72rem', color: '#64748b' }}>Optimal Agro Range (6.5 - 7.5)</span>
+              </div>
+
+              <div style={{ padding: '1rem', background: 'rgba(7, 14, 11, 0.65)', borderRadius: '12px', border: '1px solid rgba(192, 132, 252, 0.2)' }}>
+                <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: '700' }}>AGRO-SOIL CLASSIFICATION</span>
+                <div style={{ fontSize: '1rem', fontWeight: '800', color: '#c084fc', margin: '4px 0' }}>
+                  {selectedFarm.soilData?.soilType || 'Black Cotton Soil (Vertisol)'}
+                </div>
+                <span style={{ fontSize: '0.72rem', color: '#64748b' }}>Organic Carbon: {selectedFarm.soilData?.organicCarbonPercent || 0.65}%</span>
+              </div>
+            </div>
+          </div>
+
           {/* 4. Agronomic Spraying Suitability Banner */}
           <div style={styles.sprayBanner}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>

@@ -35,7 +35,6 @@ export default function Sidebar() {
     { label: t('nav_satellite'), path: '/satellite', icon: Satellite, badge: 'GEE' },
     { label: t('nav_weather'), path: '/weather', icon: CloudSun },
     { label: t('nav_pest_risk'), path: '/pest-risk', icon: ShieldAlert },
-    { label: t('nav_yield'), path: '/yield', icon: TrendingUp },
     { label: t('nav_recommendations'), path: '/recommendations', icon: Sparkles },
     { label: t('nav_reports'), path: '/reports', icon: FileBarChart },
     { label: t('nav_settings'), path: '/settings', icon: Settings },

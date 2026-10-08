@@ -16,7 +16,6 @@ import DigitalTwinPage from './pages/DigitalTwinPage';
 import SatellitePage from './pages/SatellitePage';
 import WeatherPage from './pages/WeatherPage';
 import PestRiskPage from './pages/PestRiskPage';
-import YieldPage from './pages/YieldPage';
 import RecommendationsPage from './pages/RecommendationsPage';
 import ReportsPage from './pages/ReportsPage';
 import SettingsPage from './pages/SettingsPage';
@@ -95,9 +94,6 @@ export default function App() {
 
           <Route path="/pest-risk" element={<PestRiskPage />} />
           <Route path="/farms/:id/risk" element={<PestRiskPage />} />
-
-          <Route path="/yield" element={<YieldPage />} />
-          <Route path="/farms/:id/yield" element={<YieldPage />} />
 
           <Route path="/recommendations" element={<RecommendationsPage />} />
           <Route path="/farms/:id/recommendations" element={<RecommendationsPage />} />

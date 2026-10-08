@@ -47,7 +47,48 @@ export const recommendationEngine = {
       };
     }
 
-    // 2. Build Specific Agronomic & Fertilizer Advisories
+    // 2. Build Crop-Specific Authentic CPCB/ICAR Prescriptions
+    const normalizedCrop = (crop || '').toLowerCase();
+    let treatments = [
+      { name: 'Propiconazole 25% EC', dose: '1 ml / Liter water', useCase: 'Fungal Rust & Leaf Spot Control' },
+      { name: 'Azadirachtin (10,000 PPM Neem)', dose: '2 ml / Liter water', useCase: 'Organic Sucking Pest & Whitefly Repellent' },
+      { name: 'Trichoderma Viride', dose: '5 g / Liter water', useCase: 'Bio-Fungicide Root Soil Drenching' }
+    ];
+
+    if (normalizedCrop.includes('papaya') || normalizedCrop.includes('पपई')) {
+      treatments = [
+        { name: 'Azadirachtin 10,000 PPM (Neem Oil)', dose: '2 ml / Liter water', useCase: 'Whitefly & Aphid Repellent (PRSV Vector Control)' },
+        { name: 'Wettable Sulfur 80% WP', dose: '2 g / Liter water', useCase: 'Spider Mite & Powdery Mildew Defense' },
+        { name: 'Imidacloprid 17.8% SL', dose: '0.5 ml / Liter water', useCase: 'Systemic Sucking Insecticide' },
+        { name: 'Copper Oxychloride 50% WP', dose: '2.5 g / Liter water', useCase: 'Collar Rot & Stem Anthracnose Control' }
+      ];
+    } else if (normalizedCrop.includes('sugarcane') || normalizedCrop.includes('ऊस')) {
+      treatments = [
+        { name: 'Carbendazim 50% WP', dose: '2 g / Liter water', useCase: 'Red Rot & Sett Rot Fungal Protection' },
+        { name: 'Chlorantraniliprole 18.5% SC', dose: '0.4 ml / Liter water', useCase: 'Early Shoot Borer & Top Borer Management' },
+        { name: 'Emamectin Benzoate 5% SG', dose: '0.5 g / Liter water', useCase: 'Stalk Borer Control' },
+        { name: 'Trichogramma Chilonis Parasitoid', dose: '50,000 eggs / Hectare', useCase: 'Biological Egg Parasite Deployment' }
+      ];
+    } else if (normalizedCrop.includes('maize') || normalizedCrop.includes('मका')) {
+      treatments = [
+        { name: 'Emamectin Benzoate 5% SG', dose: '0.4 g / Liter water (Whorl Drop)', useCase: 'Fall Armyworm (Spodoptera frugiperda) Control' },
+        { name: 'Spinetoram 11.7% SC', dose: '0.5 ml / Liter water', useCase: 'Advanced Fall Armyworm Foliar Spray' },
+        { name: 'Mancozeb 75% WP', dose: '2.5 g / Liter water', useCase: 'Turcicum & Maydis Leaf Blight Fungicide' }
+      ];
+    } else if (normalizedCrop.includes('cotton') || normalizedCrop.includes('कापूस')) {
+      treatments = [
+        { name: 'Chlorantraniliprole 18.5% SC', dose: '0.3 ml / Liter water', useCase: 'Pink Bollworm & American Bollworm Spray' },
+        { name: 'Flonicamid 50% WG', dose: '0.3 g / Liter water', useCase: 'Sucking Pest (Jassids & Whiteflies) Control' },
+        { name: 'Pink Bollworm Pheromone Trap', dose: '5 Traps / Acre', useCase: 'Moth Trap Monitoring' }
+      ];
+    } else if (normalizedCrop.includes('wheat') || normalizedCrop.includes('गहू')) {
+      treatments = [
+        { name: 'Propiconazole 25% EC', dose: '1 ml / Liter water', useCase: 'Yellow Stripe Rust & Karnal Bunt Control' },
+        { name: 'Mancozeb 75% WP', dose: '2 g / Liter water', useCase: 'Alternaria Leaf Blight Fungicide' },
+        { name: 'Chlorpyrifos 20% EC', dose: '2 ml / Liter water', useCase: 'Termite & Root Pest Soil Drench' }
+      ];
+    }
+
     const advisories = [
       {
         id: 'adv_101',
@@ -81,19 +122,15 @@ export const recommendationEngine = {
       },
       {
         id: 'adv_103',
-        category: 'Crop Protection & Disease Defense',
-        title: highRisk ? `Preventive Protocol: ${highRisk.name}` : 'Bio-Pesticide Preventive Spray',
-        priority: highRisk ? 'High' : 'Low',
-        affectingFactor: highRisk ? highRisk.name + ' Fungal Vector' : 'Micro-climate Humidity',
+        category: 'CPCB/ICAR Pesticide & Plant Protection',
+        title: highRisk ? `Preventive Protocol: ${highRisk.name}` : `${crop} Standard Pesticide & Fungicide Shield`,
+        priority: highRisk ? 'High' : 'Medium',
+        affectingFactor: highRisk ? highRisk.name + ' Risk Vector' : 'Micro-climate Pathogen Threshold',
         description: highRisk
-          ? `Micro-climate conditions trigger moderate/high risk of ${highRisk.name} in ${crop}. Apply protective fungicide spray window open today.`
-          : `Canopy health is stable. Apply bio-preventive spray to maintain resistance.`,
-        recommendedTreatment: [
-          { name: 'Propiconazole 25% EC', dose: '1 ml / Liter water', useCase: 'Fungal Rust / Leaf Blight Control' },
-          { name: 'Neem Oil (10,000 PPM)', dose: '2 ml / Liter water', useCase: 'Organic Pest & Sucking Insect Repellent' },
-          { name: 'Trichoderma Viride', dose: '5 g / Liter water', useCase: 'Bio-Fungicide Root Soil Drenching' }
-        ],
-        precautions: 'Spray during low wind velocity (<12 km/h) between 04:00 PM and 06:30 PM for optimal droplet coverage.',
+          ? `Micro-climate conditions trigger risk of ${highRisk.name} in ${crop}. Apply protective registered spray during open weather window.`
+          : `Canopy health is stable for ${crop}. Apply approved CPCB/ICAR registered pesticide/fungicide for preventive crop protection.`,
+        recommendedTreatment: treatments,
+        precautions: 'Spray during low wind velocity (<15 km/h) between 04:00 PM and 06:30 PM for optimal leaf coverage.',
         status: 'Pending Action'
       }
     ];
