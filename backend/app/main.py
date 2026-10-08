@@ -14,8 +14,9 @@ try:
     Base.metadata.create_all(bind=engine)
     with engine.connect() as conn:
         try:
-            columns = [row[1] for row in conn.execute(text("PRAGMA table_info(farms)")).fetchall()]
-            new_cols = [
+            # 1. Farms Table Migration
+            columns_farms = [row[1] for row in conn.execute(text("PRAGMA table_info(farms)")).fetchall()]
+            new_cols_farms = [
                 ("farmer_selected_crop", "VARCHAR"),
                 ("model_detected_crop", "VARCHAR"),
                 ("model_confidence", "FLOAT"),
@@ -24,10 +25,24 @@ try:
                 ("last_satellite_observation", "JSON"),
                 ("last_weather_update", "JSON")
             ]
-            for col_name, col_type in new_cols:
-                if col_name not in columns:
+            for col_name, col_type in new_cols_farms:
+                if col_name not in columns_farms:
                     conn.execute(text(f"ALTER TABLE farms ADD COLUMN {col_name} {col_type}"))
                     print(f"Migrated column '{col_name}' into farms table.")
+
+            # 2. Users Table Migration
+            columns_users = [row[1] for row in conn.execute(text("PRAGMA table_info(users)")).fetchall()]
+            new_cols_users = [
+                ("mobile_number", "VARCHAR"),
+                ("state", "VARCHAR"),
+                ("district", "VARCHAR"),
+                ("village", "VARCHAR")
+            ]
+            for col_name, col_type in new_cols_users:
+                if col_name not in columns_users:
+                    conn.execute(text(f"ALTER TABLE users ADD COLUMN {col_name} {col_type}"))
+                    print(f"Migrated column '{col_name}' into users table.")
+
             conn.commit()
         except Exception as mig_err:
             print("Migration notice:", mig_err)

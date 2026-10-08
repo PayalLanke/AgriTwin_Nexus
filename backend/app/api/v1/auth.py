@@ -5,7 +5,7 @@ from datetime import datetime
 
 from app.database.session import get_db
 from app.models.user import User
-from app.schemas.user import UserRegister, UserLogin, Token, UserResponse
+from app.schemas.user import UserRegister, UserLogin, UserProfileUpdate, Token, UserResponse
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -56,6 +56,10 @@ def login_farmer(credentials: UserLogin, db: Session = Depends(get_db)):
                     "id": db_user.id,
                     "full_name": db_user.full_name,
                     "email": db_user.email,
+                    "mobile_number": db_user.mobile_number,
+                    "state": db_user.state,
+                    "district": db_user.district,
+                    "village": db_user.village,
                     "created_at": db_user.created_at.isoformat() if db_user.created_at else datetime.utcnow().isoformat()
                 }
             }
@@ -79,3 +83,47 @@ def login_farmer(credentials: UserLogin, db: Session = Depends(get_db)):
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Invalid email or password. Please check your credentials."
     )
+
+@router.put("/profile/{user_id}", response_model=UserResponse)
+def update_farmer_profile(user_id: str, profile_in: UserProfileUpdate, db: Session = Depends(get_db)):
+    """
+    Update registered farmer profile details in database
+    """
+    try:
+        db_user = db.query(User).filter(User.id == user_id).first()
+        if not db_user and profile_in.email:
+            db_user = db.query(User).filter(User.email.lower() == profile_in.email.lower()).first()
+
+        if not db_user:
+            # Create if user record is missing in DB
+            db_user = User(
+                id=user_id,
+                full_name=profile_in.full_name or "Farmer",
+                email=(profile_in.email or "farmer@agritwin.com").lower(),
+                hashed_password="farmer123"
+            )
+            db.add(db_user)
+
+        if profile_in.full_name:
+            db_user.full_name = profile_in.full_name
+        if profile_in.email:
+            db_user.email = profile_in.email.lower()
+        if profile_in.mobile_number is not None:
+            db_user.mobile_number = profile_in.mobile_number
+        if profile_in.state is not None:
+            db_user.state = profile_in.state
+        if profile_in.district is not None:
+            db_user.district = profile_in.district
+        if profile_in.village is not None:
+            db_user.village = profile_in.village
+
+        db.commit()
+        db.refresh(db_user)
+        return db_user
+    except Exception as e:
+        db.rollback()
+        print("Error updating profile in backend:", e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update profile: {str(e)}"
+        )

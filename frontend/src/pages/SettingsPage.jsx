@@ -35,6 +35,10 @@ export default function SettingsPage() {
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [profileName, setProfileName] = useState(currentUser.fullName || 'Lanke Payal');
   const [profileEmail, setProfileEmail] = useState(currentUser.email || 'farmer@agritwin.com');
+  const [profilePhone, setProfilePhone] = useState(currentUser.mobileNumber || currentUser.phone || '9876543210');
+  const [profileState, setProfileState] = useState(currentUser.state || 'Maharashtra');
+  const [profileDistrict, setProfileDistrict] = useState(currentUser.district || 'Ahmednagar');
+  const [profileVillage, setProfileVillage] = useState(currentUser.village || 'Rahata');
 
   // Preferences Form State
   const [localAreaUnit, setLocalAreaUnit] = useState(areaUnit);
@@ -64,13 +68,31 @@ export default function SettingsPage() {
     }));
   };
 
-  const handleSaveProfile = (e) => {
-    e.preventDefault();
-    const updated = { ...currentUser, fullName: profileName, email: profileEmail };
-    authService.setCurrentUser(updated);
-    setIsEditingProfile(false);
-    setSuccessMsg(t('settings_saved_success'));
-    setTimeout(() => setSuccessMsg(''), 3500);
+  const handleSaveProfile = async (e) => {
+    if (e) e.preventDefault();
+    setIsSaving(true);
+    setErrorMsg('');
+    try {
+      const updated = {
+        ...currentUser,
+        fullName: profileName,
+        email: profileEmail,
+        mobileNumber: profilePhone,
+        phone: profilePhone,
+        state: profileState,
+        district: profileDistrict,
+        village: profileVillage
+      };
+      await authService.updateProfile(updated);
+      setIsEditingProfile(false);
+      setSuccessMsg(t('settings_saved_success') || 'Farmer details saved successfully!');
+      setTimeout(() => setSuccessMsg(''), 3500);
+    } catch (err) {
+      console.error('Error saving profile:', err);
+      setErrorMsg('Failed to save farmer profile. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleSaveAllSettings = async (e) => {
@@ -78,16 +100,27 @@ export default function SettingsPage() {
     setIsSaving(true);
     setErrorMsg('');
     try {
-      // Simulate network save delay
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      const updatedUser = {
+        ...currentUser,
+        fullName: profileName,
+        email: profileEmail,
+        mobileNumber: profilePhone,
+        phone: profilePhone,
+        state: profileState,
+        district: profileDistrict,
+        village: profileVillage
+      };
+      await authService.updateProfile(updatedUser);
       savePreferences({
         areaUnit: localAreaUnit,
         tempUnit: localTempUnit,
         notifications: notifState
       });
-      setSuccessMsg(t('settings_saved_success'));
+      setIsEditingProfile(false);
+      setSuccessMsg(t('settings_saved_success') || 'Settings & farmer details saved successfully!');
       setTimeout(() => setSuccessMsg(''), 3500);
     } catch (err) {
+      console.error('Failed to save settings:', err);
       setErrorMsg('Failed to save settings. Please try again.');
     } finally {
       setIsSaving(false);
@@ -174,6 +207,14 @@ export default function SettingsPage() {
                   <span style={styles.infoValue}>{profileEmail}</span>
                 </div>
                 <div style={styles.infoField}>
+                  <span style={styles.infoLabel}>Mobile Number:</span>
+                  <span style={styles.infoValue}>{profilePhone}</span>
+                </div>
+                <div style={styles.infoField}>
+                  <span style={styles.infoLabel}>Location:</span>
+                  <span style={styles.infoValue}>{profileVillage}, {profileDistrict}, {profileState}</span>
+                </div>
+                <div style={styles.infoField}>
                   <span style={styles.infoLabel}>{t('settings_role')}:</span>
                   <span style={styles.rolePill}>{currentUser.role || 'Farmer'}</span>
                 </div>
@@ -209,6 +250,46 @@ export default function SettingsPage() {
                     onChange={(e) => setProfileEmail(e.target.value)}
                     style={styles.textInput}
                     required
+                  />
+                </div>
+                <div style={styles.inputGroup}>
+                  <label style={styles.inputLabel}>Mobile / Phone Number</label>
+                  <input
+                    type="tel"
+                    value={profilePhone}
+                    onChange={(e) => setProfilePhone(e.target.value)}
+                    style={styles.textInput}
+                    placeholder="+91 9876543210"
+                  />
+                </div>
+                <div style={styles.inputGroup}>
+                  <label style={styles.inputLabel}>State</label>
+                  <input
+                    type="text"
+                    value={profileState}
+                    onChange={(e) => setProfileState(e.target.value)}
+                    style={styles.textInput}
+                    placeholder="e.g. Maharashtra"
+                  />
+                </div>
+                <div style={styles.inputGroup}>
+                  <label style={styles.inputLabel}>District</label>
+                  <input
+                    type="text"
+                    value={profileDistrict}
+                    onChange={(e) => setProfileDistrict(e.target.value)}
+                    style={styles.textInput}
+                    placeholder="e.g. Ahmednagar"
+                  />
+                </div>
+                <div style={styles.inputGroup}>
+                  <label style={styles.inputLabel}>Village / Taluka</label>
+                  <input
+                    type="text"
+                    value={profileVillage}
+                    onChange={(e) => setProfileVillage(e.target.value)}
+                    style={styles.textInput}
+                    placeholder="e.g. Rahata"
                   />
                 </div>
               </div>

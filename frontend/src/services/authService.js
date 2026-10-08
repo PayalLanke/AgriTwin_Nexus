@@ -196,6 +196,59 @@ export const authService = {
   },
 
   /**
+   * Set and persist active user details locally and in storage
+   */
+  setCurrentUser(user) {
+    if (!user) {
+      localStorage.removeItem(CURRENT_USER_KEY);
+      return null;
+    }
+    const current = this.getCurrentUser() || {};
+    const updated = { ...current, ...user };
+    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(updated));
+
+    // Update in registered users storage array as well
+    try {
+      const usersStr = localStorage.getItem(USERS_STORAGE_KEY);
+      if (usersStr) {
+        const users = JSON.parse(usersStr);
+        const idx = users.findIndex(
+          (u) => u.id === updated.id || (u.email && u.email.toLowerCase() === (updated.email || '').toLowerCase())
+        );
+        if (idx !== -1) {
+          users[idx] = { ...users[idx], ...updated };
+          localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
+        }
+      }
+    } catch (e) {
+      console.error('Error updating local user list:', e);
+    }
+    return updated;
+  },
+
+  /**
+   * Update farmer profile in local storage and backend API
+   */
+  async updateProfile(profileData) {
+    const updated = this.setCurrentUser(profileData);
+    try {
+      if (await isBackendAvailable()) {
+        await apiClient.put(`/auth/profile/${updated.id || 'usr_demo_1'}`, {
+          full_name: updated.fullName,
+          email: updated.email,
+          mobile_number: updated.mobileNumber || updated.phone || '',
+          state: updated.state || '',
+          district: updated.district || '',
+          village: updated.village || ''
+        });
+      }
+    } catch (e) {
+      console.warn('Backend profile update notice:', e?.response?.data?.detail || e.message);
+    }
+    return { success: true, user: updated };
+  },
+
+  /**
    * Get active farmer session
    */
   getCurrentUser() {
