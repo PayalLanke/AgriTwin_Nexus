@@ -249,6 +249,45 @@ export const authService = {
   },
 
   /**
+   * Change user password in local storage & backend
+   */
+  async changePassword({ currentPassword, newPassword }) {
+    const currentUser = this.getCurrentUser();
+    if (!currentUser) throw new Error('User not logged in.');
+
+    // 1. Update password in registered users array in local storage
+    const users = JSON.parse(localStorage.getItem(USERS_STORAGE_KEY) || '[]');
+    const idx = users.findIndex(
+      (u) => u.id === currentUser.id || (u.email && u.email.toLowerCase() === (currentUser.email || '').toLowerCase())
+    );
+
+    if (idx !== -1) {
+      if (users[idx].password && users[idx].password !== currentPassword) {
+        throw new Error('Current password is incorrect. Please try again.');
+      }
+      users[idx].password = newPassword;
+      localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
+    }
+
+    // 2. Update session user password
+    this.setCurrentUser({ ...currentUser, password: newPassword });
+
+    // 3. Update backend API if available
+    try {
+      if (await isBackendAvailable()) {
+        await apiClient.put(`/auth/change-password`, {
+          current_password: currentPassword,
+          new_password: newPassword
+        });
+      }
+    } catch (e) {
+      console.warn('Backend password update notice:', e?.response?.data?.detail || e.message);
+    }
+
+    return { success: true, message: 'Password updated successfully!' };
+  },
+
+  /**
    * Get active farmer session
    */
   getCurrentUser() {

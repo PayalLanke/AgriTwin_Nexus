@@ -25,7 +25,8 @@ import {
   Compass,
   Cpu,
   Calendar,
-  Sparkles
+  Sparkles,
+  Thermometer
 } from 'lucide-react';
 
 export default function DashboardPage() {

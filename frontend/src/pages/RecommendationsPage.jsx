@@ -4,6 +4,7 @@ import { getFarmIndicesAnalysis } from '../utils/indicesEngine';
 import { weatherService } from '../services/weatherService';
 import { riskEngine } from '../services/riskEngine';
 import { recommendationEngine } from '../services/recommendationEngine';
+import { useLanguage } from '../context/LanguageContext';
 import {
   Sparkles,
   CheckCircle2,
@@ -12,6 +13,7 @@ import {
 } from 'lucide-react';
 
 export default function RecommendationsPage() {
+  const { t } = useLanguage();
   const [farms, setFarms] = useState([]);
   const [selectedFarm, setSelectedFarm] = useState(null);
   const [primaryFactor, setPrimaryFactor] = useState(null);

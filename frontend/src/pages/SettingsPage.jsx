@@ -127,15 +127,15 @@ export default function SettingsPage() {
     }
   };
 
-  const handleChangePasswordSubmit = (e) => {
+  const handleChangePasswordSubmit = async (e) => {
     e.preventDefault();
     setPasswordStatus({ type: '', msg: '' });
     if (!currentPassword || !newPassword || !confirmPassword) {
       setPasswordStatus({ type: 'error', msg: 'All password fields are required.' });
       return;
     }
-    if (newPassword.length < 8) {
-      setPasswordStatus({ type: 'error', msg: 'New password must be at least 8 characters long.' });
+    if (newPassword.length < 6) {
+      setPasswordStatus({ type: 'error', msg: 'New password must be at least 6 characters long.' });
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -143,14 +143,20 @@ export default function SettingsPage() {
       return;
     }
 
-    setPasswordStatus({ type: 'success', msg: 'Password updated successfully!' });
-    setTimeout(() => {
-      setIsPasswordModalOpen(false);
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-      setPasswordStatus({ type: '', msg: '' });
-    }, 1500);
+    try {
+      await authService.changePassword({ currentPassword, newPassword });
+      setPasswordStatus({ type: 'success', msg: t('settings_saved_success') || 'Password updated successfully!' });
+      setTimeout(() => {
+        setIsPasswordModalOpen(false);
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+        setPasswordStatus({ type: '', msg: '' });
+      }, 1500);
+    } catch (err) {
+      console.error('Password change error:', err);
+      setPasswordStatus({ type: 'error', msg: err.message || 'Failed to update password.' });
+    }
   };
 
   const handleLogout = () => {

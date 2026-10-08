@@ -4,6 +4,7 @@ import { farmService } from '../services/farmService';
 import { getFarmIndicesAnalysis } from '../utils/indicesEngine';
 import { weatherService } from '../services/weatherService';
 import { riskEngine } from '../services/riskEngine';
+import { useLanguage } from '../context/LanguageContext';
 import {
   ShieldAlert,
   AlertTriangle,
@@ -16,6 +17,7 @@ import {
 } from 'lucide-react';
 
 export default function PestRiskPage() {
+  const { t } = useLanguage();
   const [farms, setFarms] = useState([]);
   const [selectedFarm, setSelectedFarm] = useState(null);
   const [riskData, setRiskData] = useState(null);
