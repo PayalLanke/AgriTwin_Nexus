@@ -7,6 +7,7 @@ import {
   CloudSun,
   Sun,
   CloudRain,
+  Cloud,
   Wind,
   Droplets,
   Thermometer,
@@ -16,7 +17,9 @@ import {
   Gauge,
   MapPin,
   Sprout,
-  AlertTriangle
+  AlertTriangle,
+  Satellite,
+  Activity
 } from 'lucide-react';
 
 export default function WeatherPage() {
@@ -130,11 +133,17 @@ export default function WeatherPage() {
     leafWetnessHours: 3.2,
     windSpeedKmh: 11.5,
     windDirection: 'SSW',
+    pressureHpa: 1013,
+    rainfallMm: 0.0,
+    condition: 'Clear Sky',
+    iconEmoji: '☀️',
     soilMoistureVolumetric: 32.4,
     solarRadiationWm2: 780,
     spraySuitability: 'Optimal Window (Wind < 15 km/h, No Heavy Rain)',
     isOptimalSpray: true
   };
+  const dataSource = weatherData?.dataSource || null;
+  const lastUpdated = weatherData?.lastUpdated || null;
 
   return (
     <div style={styles.container} className="animate-fade-in">
@@ -145,11 +154,18 @@ export default function WeatherPage() {
             <CloudSun size={24} color="#22e58a" />
           </div>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
               <h1 style={styles.pageTitle}>{t('wx_title')}</h1>
-              <span style={styles.sourceTag}>{t('wx_subtitle')}</span>
+              {dataSource && (
+                <span style={styles.liveTag}>
+                  <span style={styles.liveDot} />
+                  LIVE · {dataSource}
+                </span>
+              )}
             </div>
-            <p style={styles.pageSub}>{t('wx_subtitle')}</p>
+            <p style={styles.pageSub}>
+              {lastUpdated ? `Last updated: ${lastUpdated}` : t('wx_subtitle')}
+            </p>
           </div>
         </div>
 
@@ -215,7 +231,7 @@ export default function WeatherPage() {
             </div>
           </div>
 
-          {/* 3. Top KPI Telemetry Cards (4 Cards) */}
+          {/* 3. Top KPI Telemetry Cards (6 Cards) */}
           <div style={styles.kpiGrid}>
             <div style={styles.kpiCard}>
               <div style={{ ...styles.kpiIconWrapper, backgroundColor: 'rgba(251, 191, 36, 0.12)', borderColor: 'rgba(251, 191, 36, 0.3)' }}>
@@ -225,7 +241,7 @@ export default function WeatherPage() {
                 <span style={styles.kpiLabel}>{t('dash_temp')}</span>
                 <div style={{ ...styles.kpiVal, color: '#fbbf24' }}>{current.tempCelsius}°C</div>
                 <span style={styles.kpiHelper}>
-                  {current.tempFahrenheit}°F &bull; Soil Temp: <b style={{ color: '#22e58a' }}>{current.soilTemperatureC}°C</b>
+                  {current.tempFahrenheit}°F · Soil: <b style={{ color: '#22e58a' }}>{current.soilTemperatureC}°C</b>
                 </span>
               </div>
             </div>
@@ -248,7 +264,7 @@ export default function WeatherPage() {
               <div style={{ flex: 1 }}>
                 <span style={styles.kpiLabel}>WIND VELOCITY</span>
                 <div style={{ ...styles.kpiVal, color: '#22e58a' }}>{current.windSpeedKmh} <span style={{ fontSize: '0.85rem' }}>km/h</span></div>
-                <span style={styles.kpiHelper}>Vector Direction: <b style={{ color: '#ffffff' }}>{current.windDirection}</b></span>
+                <span style={styles.kpiHelper}>Direction: <b style={{ color: '#ffffff' }}>{current.windDirection}</b></span>
               </div>
             </div>
 
@@ -260,6 +276,28 @@ export default function WeatherPage() {
                 <span style={styles.kpiLabel}>SOIL MOISTURE (VWC)</span>
                 <div style={{ ...styles.kpiVal, color: '#c084fc' }}>{current.soilMoistureVolumetric}%</div>
                 <span style={styles.kpiHelper}>Solar Rad: <b style={{ color: '#ffffff' }}>{current.solarRadiationWm2} W/m²</b></span>
+              </div>
+            </div>
+
+            <div style={styles.kpiCard}>
+              <div style={{ ...styles.kpiIconWrapper, backgroundColor: 'rgba(56, 189, 248, 0.12)', borderColor: 'rgba(56, 189, 248, 0.3)' }}>
+                <CloudRain size={22} color="#38bdf8" />
+              </div>
+              <div style={{ flex: 1 }}>
+                <span style={styles.kpiLabel}>PRECIPITATION</span>
+                <div style={{ ...styles.kpiVal, color: '#38bdf8' }}>{current.rainfallMm ?? 0} <span style={{ fontSize: '0.85rem' }}>mm</span></div>
+                <span style={styles.kpiHelper}>Current hour observation</span>
+              </div>
+            </div>
+
+            <div style={styles.kpiCard}>
+              <div style={{ ...styles.kpiIconWrapper, backgroundColor: 'rgba(251, 146, 60, 0.12)', borderColor: 'rgba(251, 146, 60, 0.3)' }}>
+                <Activity size={22} color="#fb923c" />
+              </div>
+              <div style={{ flex: 1 }}>
+                <span style={styles.kpiLabel}>PRESSURE</span>
+                <div style={{ ...styles.kpiVal, color: '#fb923c' }}>{current.pressureHpa ?? 1013} <span style={{ fontSize: '0.85rem' }}>hPa</span></div>
+                <span style={styles.kpiHelper}>Condition: <b style={{ color: '#ffffff' }}>{current.condition} {current.iconEmoji}</b></span>
               </div>
             </div>
           </div>
@@ -298,7 +336,7 @@ export default function WeatherPage() {
           </div>
 
           {/* 5. 7-Day Agronomic Forecast Section */}
-          {weatherData?.forecast && (
+          {weatherData?.forecast && weatherData.forecast.length > 0 && (
             <div style={styles.sectionCard}>
               <div style={styles.cardHeader}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
@@ -306,7 +344,7 @@ export default function WeatherPage() {
                   <h2 style={styles.sectionHeading}>7-Day Predictive Agronomic Micro-Forecast</h2>
                 </div>
                 <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
-                  ECMWF + GFS Machine Learning Ensemble Model
+                  Open-Meteo · ECMWF + GFS Ensemble · 1 km Resolution
                 </span>
               </div>
 
@@ -317,7 +355,9 @@ export default function WeatherPage() {
                     <span style={styles.dayDate}>{f.date}</span>
 
                     <div style={styles.dayIconRow}>
-                      {f.icon === 'rain' ? <CloudRain size={28} color="#00d9ff" /> : <Sun size={28} color="#fbbf24" />}
+                      {f.icon === 'rain' ? <CloudRain size={28} color="#00d9ff" /> :
+                       f.icon === 'cloudy' ? <Cloud size={28} color="#94a3b8" /> :
+                       <Sun size={28} color="#fbbf24" />}
                     </div>
 
                     <div style={styles.dayTempRow}>
@@ -330,6 +370,12 @@ export default function WeatherPage() {
                     <span style={{ fontSize: '0.75rem', color: '#38bdf8', fontWeight: '700' }}>
                       💧 {f.rainProbability}% Rain
                     </span>
+
+                    {f.rainfallMm > 0 && (
+                      <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+                        {f.rainfallMm} mm
+                      </span>
+                    )}
 
                     <div style={styles.dayAdviceBox}>
                       <span>{f.agronomicAdvice}</span>
@@ -422,6 +468,27 @@ const styles = {
     borderRadius: '6px',
     fontSize: '0.725rem',
     fontWeight: '700'
+  },
+  liveTag: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.4rem',
+    backgroundColor: 'rgba(34, 229, 138, 0.12)',
+    color: '#22e58a',
+    border: '1px solid rgba(34, 229, 138, 0.3)',
+    padding: '0.15rem 0.65rem',
+    borderRadius: '6px',
+    fontSize: '0.725rem',
+    fontWeight: '700'
+  },
+  liveDot: {
+    width: '6px',
+    height: '6px',
+    borderRadius: '50%',
+    backgroundColor: '#22e58a',
+    boxShadow: '0 0 6px #22e58a',
+    display: 'inline-block',
+    animation: 'pulse 1.5s infinite'
   },
   headerControls: {
     display: 'flex',

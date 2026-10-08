@@ -15,6 +15,13 @@ frontend/node_modules/
 *.log
 *.timestamp-*.mjs
 
+# Environment / Secrets
+.env
+.env.*
+
+# SQLite DB
+*.db
+
 # OS / Editor
 .DS_Store
 .vscode/

@@ -7,6 +7,7 @@ import app.models.user
 import app.models.farm
 from app.api.v1.auth import router as auth_router
 from app.api.v1.farms import router as farms_router
+from app.api.v1.weather import router as weather_router
 
 # Auto-create all Database Tables & Migrate New Columns
 try:
@@ -53,6 +54,7 @@ app.add_middleware(
 # Include API Routers
 app.include_router(auth_router, prefix=settings.API_V1_STR)
 app.include_router(farms_router, prefix=settings.API_V1_STR)
+app.include_router(weather_router, prefix=settings.API_V1_STR)
 
 @app.get("/", tags=["Health Check"])
 def root_health_check():

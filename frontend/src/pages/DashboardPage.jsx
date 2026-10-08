@@ -470,7 +470,7 @@ export default function DashboardPage() {
             <div style={styles.statusCard}>
               <div style={styles.statusCardHeader}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <CheckCircle size={18} color="#22e58a" />
+                  <CheckCircle2 size={18} color="#22e58a" />
                   <h3 style={styles.statusCardTitle}>Ground-Truth Crop</h3>
                 </div>
                 <span style={selectedFarm.farmer_confirmed_crop ? styles.badgeAvailable : styles.badgePending}>
